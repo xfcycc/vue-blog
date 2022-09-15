@@ -31,7 +31,7 @@ public class HTMLUtils {
      */
     public static String filter(String source) {
         // 敏感词过滤
-        source = WORD_BS.replace(source);
+        // source = WORD_BS.replace(source);
         // 保留图片标签
         source = source.replaceAll("(?!<(img).*?>)<.*?>", "")
                 .replaceAll("(onload(.*?)=)", "")
