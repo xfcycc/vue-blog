@@ -4,20 +4,25 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.minzheng.blog.constant.RedisPrefixConst;
 import com.minzheng.blog.dao.ArticleDao;
 import com.minzheng.blog.dao.TalkDao;
 import com.minzheng.blog.dao.UserInfoDao;
 import com.minzheng.blog.dto.*;
 import com.minzheng.blog.entity.Comment;
 import com.minzheng.blog.dao.CommentDao;
+import com.minzheng.blog.entity.UserInfo;
 import com.minzheng.blog.service.BlogInfoService;
 import com.minzheng.blog.service.CommentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.minzheng.blog.service.RedisService;
 import com.minzheng.blog.util.HTMLUtils;
+import com.minzheng.blog.util.IpUtils;
 import com.minzheng.blog.util.PageUtils;
 import com.minzheng.blog.util.UserUtils;
 import com.minzheng.blog.vo.*;
+import eu.bitwalker.useragentutils.UserAgent;
+import org.joda.time.LocalDateTime;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -25,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -118,14 +124,36 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
     }
 
     @Override
-    public void saveComment(CommentVO commentVO) {
+    public void saveComment(CommentVO commentVO, HttpServletRequest request) {
         // 判断是否需要审核
         WebsiteConfigVO websiteConfig = blogInfoService.getWebsiteConfig();
         Integer isReview = websiteConfig.getIsCommentReview();
         // 过滤标签
         commentVO.setCommentContent(HTMLUtils.filter(commentVO.getCommentContent()));
+        Integer userId = 0;
+        try {
+            UserDetailDTO loginUser = UserUtils.getLoginUser();
+            userId = loginUser.getUserInfoId();
+        } catch (Exception e) {
+            // 匿名用户评论
+            // 获取设备信息
+            String ipAddress = IpUtils.getIpAddress(request);
+            String ipSource = IpUtils.getIpSource(ipAddress);
+            UserAgent userAgent = IpUtils.getUserAgent(request);
+            String ipString = ipAddress.replaceAll("\\.", "");
+            if (redisService.hHasKey(RedisPrefixConst.ANONYMOUS_VISITOR, ipString)) {
+                userId = (Integer) redisService.hGet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString);
+            } else {
+                UserInfo userInfo = new UserInfo();
+                userInfo.setNickname("游客".concat("(").concat(ipAddress).concat(")"));
+                userInfo.setAvatar("https://vue-blog-cgy.oss-cn-shanghai.aliyuncs.com/config/miniq.png");
+                userInfoDao.insert(userInfo);
+                userId = userInfo.getId();
+                redisService.hSet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString, userId);
+            }
+        }
         Comment comment = Comment.builder()
-                .userId(UserUtils.getLoginUser().getUserInfoId())
+                .userId(userId)
                 .replyUserId(commentVO.getReplyUserId())
                 .topicId(commentVO.getTopicId())
                 .commentContent(commentVO.getCommentContent())
@@ -135,7 +163,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
                 .build();
         commentDao.insert(comment);
         // 判断是否开启邮箱通知,通知用户
-        if (websiteConfig.getIsEmailNotice().equals(TRUE)) {
+        if (userId != -1 && websiteConfig.getIsEmailNotice().equals(TRUE)) {
             CompletableFuture.runAsync(() -> notice(comment));
         }
     }

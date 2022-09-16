@@ -56,10 +56,10 @@ export default {
     },
     insertReply() {
       //判断登录
-      if (!this.$store.state.userId) {
-        this.$store.state.loginFlag = true;
-        return false;
-      }
+      // if (!this.$store.state.userId) {
+      //   this.$store.state.loginFlag = true;
+      //   return false;
+      // }
       if (this.commentContent.trim() == "") {
         this.$toast({ type: "error", message: "回复不能为空" });
         return false;
