@@ -2,7 +2,51 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.minzheng.blog.dao.CommentDao">
 
-    <select id="listComments" resultType="com.minzheng.blog.dto.CommentDTO">
+    <resultMap id="CommentBackDTOResultMap" type="com.minzheng.blog.dto.CommentDTO">
+        <id column="id" property="id"/>
+        <result column="nickname" property="nickname"/>
+        <result column="avatar" property="avatar"/>
+        <result column="web_site" property="webSite"/>
+        <result column="user_id" property="userId"/>
+        <result column="comment_content" property="commentContent"/>
+        <result column="create_time" property="createTime"/>
+        <collection property="commentInfo" ofType="com.minzheng.blog.entity.CommentInfo">
+            <id column="id" property="id"/>
+            <result column="comment_id" property="commentId"/>
+            <result column="ip_address" property="ipAddress"/>
+            <result column="ip_source" property="ipSource"/>
+            <result column="browser_name" property="browserName"/>
+            <result column="system_name" property="systemName"/>
+            <result column="agent" property="agent"/>
+            <result column="created_time" property="createdTime"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ReplyDTOMap" type="com.minzheng.blog.dto.ReplyDTO">
+        <id column="id" property="id"/>
+        <result column="nickname" property="nickname"/>
+        <result column="avatar" property="avatar"/>
+        <result column="web_site" property="webSite"/>
+        <result column="user_id" property="userId"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="comment_content" property="commentContent"/>
+        <result column="create_time" property="createTime"/>
+        <result column="reply_nickname" property="replyNickname"/>
+        <result column="reply_web_site" property="replyWebSite"/>
+        <result column="reply_user_id" property="replyUserId"/>
+        <collection property="commentInfo" ofType="com.minzheng.blog.entity.CommentInfo">
+            <id column="id" property="id"/>
+            <result column="comment_id" property="commentId"/>
+            <result column="ip_address" property="ipAddress"/>
+            <result column="ip_source" property="ipSource"/>
+            <result column="browser_name" property="browserName"/>
+            <result column="system_name" property="systemName"/>
+            <result column="agent" property="agent"/>
+            <result column="created_time" property="createdTime"/>
+        </collection>
+    </resultMap>
+
+    <select id="listComments" resultMap="CommentBackDTOResultMap">
         SELECT
         u.nickname,
         u.avatar,
@@ -10,10 +54,18 @@
         c.user_id,
         c.id,
         c.comment_content,
-        c.create_time
+        c.create_time,
+        tci.comment_id,
+        tci.ip_address,
+        tci.ip_source,
+        tci.browser_name,
+        tci.system_name,
+        tci.agent,
+        tci.created_time
         FROM
         tb_comment c
         JOIN tb_user_info u ON c.user_id = u.id
+        LEFT JOIN tb_comment_info tci on c.id = tci.comment_id
         <where>
             <if test="commentVO.topicId != null">
                 topic_id = #{commentVO.topicId}
@@ -27,7 +79,7 @@
         LIMIT #{current},#{size}
     </select>
 
-    <select id="listReplies" resultType="com.minzheng.blog.dto.ReplyDTO">
+    <select id="listReplies" resultMap="ReplyDTOMap">
         SELECT
         *
         FROM
@@ -44,11 +96,19 @@
          c.parent_id,
          c.comment_content,
          c.create_time,
+         tci.comment_id,
+         tci.ip_address,
+         tci.ip_source,
+         tci.browser_name,
+         tci.system_name,
+         tci.agent,
+         tci.created_time,
          row_number () over ( PARTITION BY parent_id ORDER BY create_time ASC ) row_num
          FROM
          tb_comment c
          JOIN tb_user_info u ON c.user_id = u.id
          JOIN tb_user_info r ON c.reply_user_id = r.id
+         LEFT JOIN tb_comment_info tci on c.id = tci.comment_id
          WHERE
          c.is_review = 1
          AND
@@ -106,7 +166,7 @@
         LIMIT #{current}, #{size}
     </select>
 
-    <select id="listCommentBackDTO" resultType="com.minzheng.blog.dto.CommentBackDTO">
+    <select id="listCommentBackDTO" resultMap="CommentBackDTOResultMap">
         SELECT
          c.id,
          u.avatar,

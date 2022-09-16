@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minzheng.blog.dao.CommentInfoMapper">
+  <resultMap id="BaseResultMap" type="com.minzheng.blog.entity.CommentInfo">
+    <!--@mbg.generated-->
+    <!--@Table tb_comment_info-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="comment_id" jdbcType="INTEGER" property="commentId" />
+    <result column="ip_address" jdbcType="VARCHAR" property="ipAddress" />
+    <result column="ip_source" jdbcType="VARCHAR" property="ipSource" />
+    <result column="browser_name" jdbcType="VARCHAR" property="browserName" />
+    <result column="system_name" jdbcType="VARCHAR" property="systemName" />
+    <result column="agent" jdbcType="VARCHAR" property="agent" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, comment_id, ip_address, ip_source, browser_name, system_name, agent, created_time
+  </sql>
+</mapper>

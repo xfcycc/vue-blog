@@ -5,14 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.minzheng.blog.constant.RedisPrefixConst;
-import com.minzheng.blog.dao.ArticleDao;
-import com.minzheng.blog.dao.TalkDao;
-import com.minzheng.blog.dao.UserInfoDao;
+import com.minzheng.blog.dao.*;
 import com.minzheng.blog.dto.*;
 import com.minzheng.blog.entity.Comment;
-import com.minzheng.blog.dao.CommentDao;
+import com.minzheng.blog.entity.CommentInfo;
 import com.minzheng.blog.entity.UserInfo;
 import com.minzheng.blog.service.BlogInfoService;
+import com.minzheng.blog.service.CommentInfoService;
 import com.minzheng.blog.service.CommentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.minzheng.blog.service.RedisService;
@@ -30,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -64,7 +64,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private BlogInfoService blogInfoService;
-
+    @Resource
+    private CommentInfoMapper commentInfoMapper;
     /**
      * 网站网址
      */
@@ -131,21 +132,41 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
         // 过滤标签
         commentVO.setCommentContent(HTMLUtils.filter(commentVO.getCommentContent()));
         Integer userId = 0;
+        String ipAddress = IpUtils.getIpAddress(request);
+        String ipSource = IpUtils.getIpSource(ipAddress);
+        UserAgent userAgent = IpUtils.getUserAgent(request);
         try {
             UserDetailDTO loginUser = UserUtils.getLoginUser();
             userId = loginUser.getUserInfoId();
         } catch (Exception e) {
             // 匿名用户评论
             // 获取设备信息
-            String ipAddress = IpUtils.getIpAddress(request);
-            String ipSource = IpUtils.getIpSource(ipAddress);
-            UserAgent userAgent = IpUtils.getUserAgent(request);
+
             String ipString = ipAddress.replaceAll("\\.", "");
             if (redisService.hHasKey(RedisPrefixConst.ANONYMOUS_VISITOR, ipString)) {
                 userId = (Integer) redisService.hGet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString);
             } else {
                 UserInfo userInfo = new UserInfo();
-                userInfo.setNickname("游客".concat("(").concat(ipAddress).concat(")"));
+                StringBuffer nickname = new StringBuffer();
+                nickname.append("来自");
+                String location;
+                if (StringUtils.isNotBlank(ipSource)) {
+                    location = ipSource.split(" ")[0];
+                } else {
+                    location = "无风之地";
+                }
+                if (location.contains("上海")) {
+                    location = "爱丁堡";
+                }
+                if (location.contains("南京")) {
+                    location = "六朝古都";
+                }
+                if (location.startsWith("北京")) {
+                    location = "天龙人地区";
+                }
+                nickname.append(location);
+                nickname.append("的旅行者");
+                userInfo.setNickname(nickname.toString());
                 userInfo.setAvatar("https://vue-blog-cgy.oss-cn-shanghai.aliyuncs.com/config/miniq.png");
                 userInfoDao.insert(userInfo);
                 userId = userInfo.getId();
@@ -162,6 +183,15 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
                 .isReview(isReview == TRUE ? FALSE : TRUE)
                 .build();
         commentDao.insert(comment);
+        CommentInfo commentInfo = CommentInfo.builder()
+                .commentId(comment.getId())
+                .ipAddress(ipAddress)
+                .ipSource(ipSource)
+                .browserName(userAgent.getBrowser().getName())
+                .systemName(userAgent.getOperatingSystem().getName())
+                .agent(userAgent.toString())
+                .build();
+        commentInfoMapper.insert(commentInfo);
         // 判断是否开启邮箱通知,通知用户
         if (userId != -1 && websiteConfig.getIsEmailNotice().equals(TRUE)) {
             CompletableFuture.runAsync(() -> notice(comment));

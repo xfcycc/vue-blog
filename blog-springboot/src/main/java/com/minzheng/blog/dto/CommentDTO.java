@@ -1,5 +1,6 @@
 package com.minzheng.blog.dto;
 
+import com.minzheng.blog.entity.CommentInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -71,4 +72,8 @@ public class CommentDTO {
      */
     private List<ReplyDTO> replyDTOList;
 
+    /**
+     * 评论标识
+     */
+    private CommentInfo commentInfo;
 }

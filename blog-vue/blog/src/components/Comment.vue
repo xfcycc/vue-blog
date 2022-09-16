@@ -67,6 +67,11 @@
             <a v-else :href="item.webSite" target="_blank">
               {{ item.nickname }}
             </a>
+            <span class="agent">
+              {{item.commentInfo.browserName}}
+              {{item.commentInfo.systemName}}
+              {{item.commentInfo.ipSource==""?"未知位置":item.commentInfo.ipSource}}
+            </span>
             <span class="blogger-tag" v-if="item.userId == 1">博主</span>
           </div>
           <!-- 信息 -->
@@ -105,13 +110,18 @@
                 <a v-else :href="reply.webSite" target="_blank">
                   {{ reply.nickname }}
                 </a>
+                <span class="agent">
+                  {{reply.commentInfo.browserName}}
+                  {{reply.commentInfo.systemName}}
+                  {{reply.commentInfo.ipSource==""?"未知位置":item.commentInfo.ipSource}}
+                </span>
                 <span class="blogger-tag" v-if="reply.userId == 1">博主</span>
               </div>
               <!-- 信息 -->
               <div class="comment-info">
                 <!-- 发表时间 -->
                 <span style="margin-right:10px">
-                  {{ reply.createTime | date }}
+                  {{ reply.createTime | time }}
                 </span>
                 <!-- 点赞 -->
                 <span
@@ -459,6 +469,11 @@ export default {
   line-height: 1.75;
 }
 .comment-user a {
+  color: #1abc9c !important;
+  font-weight: 500;
+  transition: 0.3s all;
+}
+.agent {
   color: #1abc9c !important;
   font-weight: 500;
   transition: 0.3s all;
