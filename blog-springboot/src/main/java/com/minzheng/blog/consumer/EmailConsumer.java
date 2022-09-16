@@ -30,6 +30,12 @@ public class EmailConsumer {
     @Value("${spring.mail.username}")
     private String email;
 
+    /**
+     * 个性化名称
+     */
+    @Value("${spring.mail.nickname}")
+    private String nickname;
+
     @Autowired
     private JavaMailSender javaMailSender;
 
@@ -37,7 +43,7 @@ public class EmailConsumer {
     public void process(byte[] data) {
         EmailDTO emailDTO = JSON.parseObject(new String(data), EmailDTO.class);
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(email);
+        message.setFrom(nickname + '<' + email + '>');
         message.setTo(emailDTO.getEmail());
         message.setSubject(emailDTO.getSubject());
         message.setText(emailDTO.getContent());
