@@ -93,4 +93,18 @@ public class RedisPrefixConst {
      */
     public static final String ANONYMOUS_VISITOR = "anonymous_visitor";
 
+    /**
+     * 短信发送服务
+     */
+    public static final String SMS_SEND_SERVICE = "sms_send_service";
+
+    /**
+     * 短信验证服务
+     */
+    public static final String SMS_CODE_SERVICE = "sms_code_service";
+
+    /**
+     * 短信限额
+     */
+    public static final String SMS_LIMIT_SERVICE = "sms_limit_service";
 }

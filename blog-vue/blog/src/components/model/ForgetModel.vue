@@ -76,28 +76,19 @@ export default {
     },
     sendCode() {
       const that = this;
-      // eslint-disable-next-line no-undef
-      var captcha = new TencentCaptcha(this.config.TENCENT_CAPTCHA, function(
-        res
-      ) {
-        if (res.ret === 0) {
-          //发送邮件
-          that.countDown();
-          that.axios
-            .get("/api/users/code", {
-              params: { username: that.username }
-            })
-            .then(({ data }) => {
-              if (data.flag) {
-                that.$toast({ type: "success", message: "发送成功" });
-              } else {
-                that.$toast({ type: "error", message: data.message });
-              }
-            });
-        }
-      });
-      // 显示验证码
-      captcha.show();
+      //发送邮件
+      that.countDown();
+      that.axios
+        .get("/api/users/code", {
+          params: { username: that.username }
+        })
+        .then(({ data }) => {
+          if (data.flag) {
+            that.$toast({ type: "success", message: "发送成功" });
+          } else {
+            that.$toast({ type: "error", message: data.message });
+          }
+        });
     },
     countDown() {
       this.flag = true;

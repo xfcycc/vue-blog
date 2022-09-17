@@ -21,6 +21,7 @@ import com.minzheng.blog.service.RedisService;
 import com.minzheng.blog.service.UserAuthService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.minzheng.blog.strategy.context.SocialLoginStrategyContext;
+import com.minzheng.blog.util.BeanCopyUtils;
 import com.minzheng.blog.util.PageUtils;
 import com.minzheng.blog.util.UserUtils;
 import com.minzheng.blog.vo.*;
@@ -29,10 +30,14 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,7 +71,8 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> impl
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private SocialLoginStrategyContext socialLoginStrategyContext;
-
+    @Resource
+    private UserDetailsServiceImpl userDetailsService;
     @Override
     public void sendCode(String username) {
         // 校验账号是否合法
@@ -242,4 +248,46 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> impl
         redisService.set(USER_AREA, JSON.toJSONString(userAreaList));
     }
 
+    /**
+     * 手机号一键登录注册
+     *
+     * @author caiguoyu
+     * @date 2022/9/17
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public UserInfoDTO phoneLogin(String phone, HttpServletRequest request) {
+        //校验账号是否存在
+        UserAuth user = userAuthDao.selectOne(new LambdaQueryWrapper<UserAuth>()
+                .eq(UserAuth::getUsername, phone));
+        if (user == null) {
+            // 新增用户信息
+            UserInfo userInfo = UserInfo.builder()
+                    .nickname(CommonConst.DEFAULT_NICKNAME + IdWorker.getId())
+                    .avatar(blogInfoService.getWebsiteConfig().getUserAvatar())
+                    .build();
+            userInfoDao.insert(userInfo);
+            // 绑定用户角色
+            UserRole userRole = UserRole.builder()
+                    .userId(userInfo.getId())
+                    .roleId(RoleEnum.USER.getRoleId())
+                    .build();
+            userRoleDao.insert(userRole);
+            // 新增用户账号，密码暂时无用
+            UserAuth userAuth = UserAuth.builder()
+                    .userInfoId(userInfo.getId())
+                    .username(phone)
+                    .password(BCrypt.hashpw("12345678", BCrypt.gensalt()))
+                    .loginType(LoginTypeEnum.EMAIL.getType())
+                    .build();
+            userAuthDao.insert(userAuth);
+            user = userAuth;
+        }
+        // 返回数据库用户信息
+        UserDetailDTO userDetailDTO = userDetailsService.convertUserDetail(user, request);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetailDTO, null, userDetailDTO.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        return BeanCopyUtils.copyObject(userDetailDTO, UserInfoDTO.class);
+    }
 }

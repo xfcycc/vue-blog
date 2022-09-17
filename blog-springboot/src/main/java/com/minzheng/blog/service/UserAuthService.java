@@ -7,6 +7,7 @@ import com.minzheng.blog.dto.UserBackDTO;
 import com.minzheng.blog.entity.UserAuth;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 
@@ -78,4 +79,14 @@ public interface UserAuthService extends IService<UserAuth> {
      */
     PageResult<UserBackDTO> listUserBackDTO(ConditionVO condition);
 
+
+    /**
+     * 手机号一键登录注册
+     *
+     * @author caiguoyu
+     * @date 2022/9/17
+     * @param phone
+     * @return void
+     */
+    UserInfoDTO phoneLogin(String phone, HttpServletRequest request);
 }

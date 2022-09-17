@@ -4,6 +4,7 @@ package com.minzheng.blog.controller;
 import com.minzheng.blog.annotation.AccessLimit;
 import com.minzheng.blog.dto.UserAreaDTO;
 import com.minzheng.blog.dto.UserInfoDTO;
+import com.minzheng.blog.service.SmsService;
 import com.minzheng.blog.vo.PageResult;
 import com.minzheng.blog.dto.UserBackDTO;
 import com.minzheng.blog.service.UserAuthService;
@@ -14,6 +15,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -28,6 +31,9 @@ import java.util.List;
 public class UserAuthController {
     @Autowired
     private UserAuthService userAuthService;
+
+    @Resource
+    private SmsService smsService;
 
     /**
      * 发送邮箱验证码
@@ -79,6 +85,35 @@ public class UserAuthController {
     public Result<?> register(@Valid @RequestBody UserVO user) {
         userAuthService.register(user);
         return Result.ok();
+    }
+
+    /**
+     * 手机注册
+     *
+     * @return com.minzheng.blog.vo.Result<?>
+     * @author caiguoyu
+     * @date 2022/9/17
+     */
+    @PostMapping("/phoneRegister")
+    public Result<?> phoneRegister(String phone, String code) {
+        return Result.ok("暂未开放");
+    }
+
+    /**
+     * 手机一键登录注册
+     *
+     * @return com.minzheng.blog.vo.Result<?>
+     * @author caiguoyu
+     * @date 2022/9/17
+     */
+    @PostMapping("/phoneLogin")
+    public Result<?> phoneLogin(String phone, String code, HttpServletRequest request) {
+        Result<String> result = smsService.checkSmsCode(phone, code);
+        if (result.getFlag()) {
+           return Result.ok(userAuthService.phoneLogin(phone, request));
+        } else {
+            return result;
+        }
     }
 
     /**

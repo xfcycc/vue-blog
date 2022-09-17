@@ -18,6 +18,8 @@
     <LoginModel></LoginModel>
     <!-- 注册模态框 -->
     <RegisterModel></RegisterModel>
+    <!-- 手机登录模态框 -->
+    <PhoneModel></PhoneModel>
     <!-- 忘记密码模态框 -->
     <ForgetModel></ForgetModel>
     <!-- 绑定邮箱模态框 -->
@@ -37,6 +39,7 @@ import BackTop from "./components/BackTop";
 import searchModel from "./components/model/SearchModel";
 import LoginModel from "./components/model/LoginModel";
 import RegisterModel from "./components/model/RegisterModel";
+import PhoneModel from "./components/model/PhoneModel";
 import ForgetModel from "./components/model/ForgetModel";
 import EmailModel from "./components/model/EmailModel";
 import Player from "./components/zw-player/player.vue";
@@ -57,6 +60,7 @@ export default {
     searchModel,
     LoginModel,
     RegisterModel,
+    PhoneModel,
     ForgetModel,
     EmailModel,
     ChatRoom

@@ -45,4 +45,18 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(emailQueue()).to(emailExchange());
     }
 
+    @Bean
+    public Queue smsQueue() {
+        return new Queue(SMS_QUEUE, true);
+    }
+
+    @Bean
+    public FanoutExchange smsExchange() {
+        return new FanoutExchange(SMS_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public Binding bindingSmsDirect() {
+        return BindingBuilder.bind(smsQueue()).to(smsExchange());
+    }
 }
