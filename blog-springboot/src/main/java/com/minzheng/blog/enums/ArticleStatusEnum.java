@@ -23,7 +23,18 @@ public enum ArticleStatusEnum {
     /**
      * 草稿
      */
-    DRAFT(3, "草稿");
+    DRAFT(3, "草稿"),
+
+    /**
+     * 以下为文章类型
+     */
+    DEFAULT_TYPE(0, "默认类型"),
+
+    ORIGINAL(1, "原创"),
+
+    REPRODUCED(2, "转载"),
+
+    TRANSLATED(3, "翻译");
 
     /**
      * 状态
