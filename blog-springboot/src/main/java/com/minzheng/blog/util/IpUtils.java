@@ -100,7 +100,7 @@ public class IpUtils {
             Map map = JSON.parseObject(result.toString(), Map.class);
             List<Map<String, String>> data = (List) map.get("data");
             String location = data.get(0).get("location");
-            redisService.hSet(RedisPrefixConst.IP_ADDRESS_SOURCE, ipAddress, location, 60L * 60L);
+            redisService.hSet(RedisPrefixConst.IP_ADDRESS_SOURCE, ipAddress, location);
             return location;
         } catch (Exception e) {
             return "";
