@@ -491,6 +491,14 @@ public interface RedisService {
     GeoResults<RedisGeoCommands.GeoLocation<Object>> geoNearByPlace(String key, String place, Distance distance, long limit, Sort.Direction sort);
 
     /**
+     * 设置指定 key 的值，并返回 key 的旧值
+     *
+     * @author caiguoyu
+     * @date 2022/9/26
+     */
+    <T> T getAndSet(String key, T value);
+
+    /**
      * 获取地点的hash
      *
      * @param key   key
@@ -498,5 +506,25 @@ public interface RedisService {
      * @return 返回集合
      */
     List<String> geoGetHash(String key, String... place);
+
+    /**
+     * 单机模式简单分布式锁，true 则结束方法
+     *
+     * @param key expiredKey
+     * @return java.lang.Boolean
+     * @author caiguoyu
+     * @date 2022/9/26
+     */
+    Boolean singleLock(final String key);
+
+    /**
+     * 设置随机过期时间，上下波动15%
+     *
+     * @param timeout 过期时间，建议秒
+     * @return java.lang.Long
+     * @author caiguoyu
+     * @date 2022/9/26
+     */
+    Long randomExpiredTime(Long timeout);
 }
 

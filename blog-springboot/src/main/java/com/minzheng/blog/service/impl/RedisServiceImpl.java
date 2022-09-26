@@ -1,6 +1,7 @@
 package com.minzheng.blog.service.impl;
 
 
+import com.minzheng.blog.constant.RedisPrefixConst;
 import com.minzheng.blog.service.RedisService;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
@@ -10,14 +11,17 @@ import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -328,4 +332,44 @@ public class RedisServiceImpl implements RedisService {
                 .hash(key, place);
     }
 
+    @Override
+    public <T> T getAndSet(final String key, T value) {
+        T oldValue = null;
+        try {
+            ValueOperations<String, Object> operations = redisTemplate.opsForValue();
+            oldValue = (T) operations.getAndSet(key, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return oldValue;
+    }
+
+    @Override
+    public Boolean singleLock(final String key) {
+        if (key.startsWith(RedisPrefixConst.REDIS_LOCK)) {
+            return true;
+        }
+        String oldValue = getAndSet(RedisPrefixConst.REDIS_LOCK + key, RedisPrefixConst.REDIS_LOCKED);
+        redisTemplate.expire(RedisPrefixConst.REDIS_LOCK + key, 5L, TimeUnit.SECONDS);
+        return Objects.equals(RedisPrefixConst.REDIS_LOCKED, oldValue);
+    }
+
+    @Override
+    public Long randomExpiredTime(Long timeout) {
+        timeout = Math.abs(timeout);
+        if (timeout <= 6L) {
+            return timeout;
+        }
+        BigDecimal bigDecimal = new BigDecimal(Long.toString(timeout));
+        double randomNum = ThreadLocalRandom.current().nextDouble(-bigDecimal.doubleValue() * 0.15, bigDecimal.doubleValue() * 0.15);
+        long time = new BigDecimal(Double.toString(randomNum * 100)).longValue();
+        long timePro = time / 100;
+        long countRemain = time % 100;
+        if (countRemain >= 50) {
+            timePro++;
+        } else if (countRemain <= -50) {
+            timePro--;
+        }
+        return timePro + timeout;
+    }
 }

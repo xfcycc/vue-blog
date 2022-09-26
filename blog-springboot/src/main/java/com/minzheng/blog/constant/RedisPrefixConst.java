@@ -118,4 +118,10 @@ public class RedisPrefixConst {
      */
     public static final String IP_ADDRESS_NICKNAME = "ip_address_nickname";
 
+    /**
+     * redis锁
+     */
+    public static final String REDIS_LOCK = "lock_";
+
+    public static final String REDIS_LOCKED = "1";
 }
