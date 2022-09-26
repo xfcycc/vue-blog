@@ -12,11 +12,8 @@ import com.minzheng.blog.entity.Tag;
 import com.minzheng.blog.enums.FileExtEnum;
 import com.minzheng.blog.enums.FilePathEnum;
 import com.minzheng.blog.exception.BizException;
-import com.minzheng.blog.service.ArticleService;
+import com.minzheng.blog.service.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.minzheng.blog.service.ArticleTagService;
-import com.minzheng.blog.service.RedisService;
-import com.minzheng.blog.service.TagService;
 import com.minzheng.blog.strategy.context.SearchStrategyContext;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
 import com.minzheng.blog.util.BeanCopyUtils;
@@ -29,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.util.*;
@@ -70,7 +68,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     private ArticleTagService articleTagService;
     @Autowired
     private UploadStrategyContext uploadStrategyContext;
-
+    @Resource
+    private SiteMapService siteMapService;
     @Override
     public PageResult<ArchiveDTO> listArchives() {
         Page<Article> page = new Page<>(PageUtils.getCurrent(), PageUtils.getSize());
@@ -204,6 +203,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         }
         article.setUserId(UserUtils.getLoginUser().getUserInfoId());
         this.saveOrUpdate(article);
+        // 推送到百度
+        siteMapService.apiPull(article);
         // 保存文章标签
         saveArticleTag(articleVO, article.getId());
     }

@@ -1,5 +1,7 @@
 package com.minzheng.blog.service;
 
+import com.minzheng.blog.entity.Article;
+
 /**
  * 站点地图服务
  *
@@ -16,4 +18,13 @@ public interface SiteMapService {
      * @date 2022/9/25
      */
     String createArticleMap();
+
+    /**
+     * 文章主动推送百度收录
+     *
+     * @param article
+     * @author caiguoyu
+     * @date 2022/9/26
+     */
+    void apiPull(Article article);
 }
