@@ -28,7 +28,7 @@ public class SiteMapServiceImpl implements SiteMapService {
     private ArticleDao articleDao;
 
     @Value("${website.url}")
-    private  String baseUrl;
+    private String baseUrl;
 
     @Override
     public String createArticleMap() {
@@ -39,9 +39,13 @@ public class SiteMapServiceImpl implements SiteMapService {
             wsg = new WebSitemapGenerator(baseUrl);
             // 首页数据
             WebSitemapUrl homeUrl = new WebSitemapUrl
+                    // 地址
                     .Options(baseUrl)
+                    // 更新时间
                     .lastMod(dtf.format(LocalDateTime.now()))
+                    // 权重
                     .priority(1.0)
+                    // 更新频率
                     .changeFreq(ChangeFreq.DAILY)
                     .build();
             wsg.addUrl(homeUrl);
@@ -50,7 +54,7 @@ public class SiteMapServiceImpl implements SiteMapService {
             List<Article> articles = articleDao.selectList(new LambdaQueryWrapper<Article>()
                     .eq(Article::getIsDelete, CommonConst.FALSE)
                     .eq(Article::getStatus, ArticleStatusEnum.PUBLIC.getStatus())
-                    .ne(Article::getType, ArticleStatusEnum.DEFAULT_TYPE));
+                    .ne(Article::getType, ArticleStatusEnum.DEFAULT_TYPE.getStatus()));
             for (Article article : articles) {
                 WebSitemapUrl articleUrl = new WebSitemapUrl
                         .Options(baseUrl + "/articles/" + article.getId())
