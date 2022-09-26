@@ -17,6 +17,8 @@ export default new Vuex.Store({
     userId: null,
     avatar: null,
     nickname: null,
+    refreshCount: 0,
+    remainCount: null,
     intro: null,
     webSite: null,
     loginType: null,

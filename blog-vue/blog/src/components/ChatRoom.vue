@@ -18,6 +18,13 @@
           <div>聊天室</div>
           <div style="font-size:12px">当前{{ count }}人在线</div>
         </div>
+        <div style="margin: auto">
+          <div style="float: left">你的名称: <s style="color: #009d92">{{ nickname }}</s></div>
+          <span style="cursor: pointer;float:right; padding-left:10px;color: #00a1d6" @click="refreshName">刷新匿名</span>
+          <div>
+            今日可刷新次数：<s style="color: red">{{ remainCount }}</s>
+          </div>
+        </div>
         <v-icon class="close" @click="isShow = false">
           mdi-close
         </v-icon>
@@ -41,7 +48,7 @@
           <!-- 头像 -->
           <img :src="item.avatar" :class="isleft(item)" />
           <div>
-            <div class="nickname" v-if="!isSelf(item)">
+            <div class="nickname">
               {{ item.nickname }}
               <span style="margin-left:12px">{{ item.createTime | hour }}</span>
             </div>
@@ -156,6 +163,7 @@
 import Recorderx, { ENCODE_TYPE } from "recorderx";
 import Emoji from "./Emoji";
 import EmojiList from "../assets/js/emoji";
+import axios from "axios";
 export default {
   components: {
     Emoji
@@ -197,6 +205,18 @@ export default {
       }
       this.unreadCount = 0;
       this.isShow = !this.isShow;
+      axios
+          .post("/api/chatroom/nickname")
+          .then(({data}) => {
+            if (data.code === 20000) {
+              this.$store.state.nickname = data.data.nickname;
+              this.$store.state.refreshCount = data.data.count;
+              this.$store.state.remainCount = 4 - data.data.count;
+            } else {
+              this.$store.state.nickname = "匿名用户";
+              this.$store.state.refreshCount = 0;
+            }
+          });
     },
     openEmoji() {
       this.isEmoji = !this.isEmoji;
@@ -429,6 +449,19 @@ export default {
       }
       this.$refs.voiceTimes[this.voiceList.indexOf(item.id)].innerHTML =
         " " + str + " " + time + " ''";
+    },
+    refreshName(){
+      axios
+        .post("/api/chatroom/refreshName",{},{params:{team: "jinyongNickname" }})
+        .then(({ data }) => {
+          if (data.code === 20000) {
+            this.$store.state.nickname = data.data.nickname;
+            this.$store.state.refreshCount = data.data.count;
+            this.$store.state.remainCount = 4 - data.data.count;
+          }else if (data.code === 203) {
+            alert(data.message)
+          }
+        });
     }
   },
   computed: {
@@ -464,6 +497,12 @@ export default {
       return this.$store.state.nickname != null
         ? this.$store.state.nickname
         : this.ipAddress;
+    },
+    refreshCount() {
+      return this.$store.state.refreshCount;
+    },
+    remainCount(){
+      return this.$store.state.remainCount;
     },
     avatar() {
       return this.$store.state.avatar != null

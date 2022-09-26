@@ -107,4 +107,15 @@ public class RedisPrefixConst {
      * 短信限额
      */
     public static final String SMS_LIMIT_SERVICE = "sms_limit_service";
+
+    /**
+     * ip地址信息
+     */
+    public static final String IP_ADDRESS_SOURCE = "ip_address_source";
+
+    /**
+     * ip地址匿名
+     */
+    public static final String IP_ADDRESS_NICKNAME = "ip_address_nickname";
+
 }

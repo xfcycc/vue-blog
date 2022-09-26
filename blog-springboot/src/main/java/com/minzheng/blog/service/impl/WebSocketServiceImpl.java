@@ -3,6 +3,8 @@ package com.minzheng.blog.service.impl;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.minzheng.blog.constant.NicknameConst;
 import com.minzheng.blog.dao.ChatRecordDao;
 import com.minzheng.blog.dto.ChatRecordDTO;
 import com.minzheng.blog.dto.RecallMessageDTO;
@@ -22,9 +24,7 @@ import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.minzheng.blog.enums.ChatTypeEnum.*;
@@ -118,6 +118,8 @@ public class WebSocketServiceImpl {
                 ChatRecord chatRecord = JSON.parseObject(JSON.toJSONString(messageDTO.getData()), ChatRecord.class);
                 // 过滤html标签
                 chatRecord.setContent(HTMLUtils.filter(chatRecord.getContent()));
+                // 替换用户昵称
+                replaceNickname(chatRecord);
                 chatRecordDao.insert(chatRecord);
                 messageDTO.setData(chatRecord);
                 // 广播消息
@@ -162,6 +164,7 @@ public class WebSocketServiceImpl {
                 .ge(ChatRecord::getCreateTime, DateUtil.offsetHour(new Date(), -12)));
         // 获取当前用户ip
         String ipAddress = endpointConfig.getUserProperties().get(ChatConfigurator.HEADER_NAME).toString();
+
         return ChatRecordDTO.builder()
                 .chatRecordList(chatRecordList)
                 .ipAddress(ipAddress)
@@ -196,6 +199,8 @@ public class WebSocketServiceImpl {
         voiceVO.setContent(content);
         // 保存记录
         ChatRecord chatRecord = BeanCopyUtils.copyObject(voiceVO, ChatRecord.class);
+        // 替换用户昵称
+        replaceNickname(chatRecord);
         chatRecordDao.insert(chatRecord);
         // 发送消息
         WebsocketMessageDTO messageDTO = WebsocketMessageDTO.builder()
@@ -221,6 +226,28 @@ public class WebSocketServiceImpl {
             synchronized (webSocketService.session) {
                 webSocketService.session.getBasicRemote().sendText(JSON.toJSONString(messageDTO));
             }
+        }
+    }
+
+    /**
+     * 处理用户昵称
+     *
+     * @author caiguoyu
+     * @date 2022/9/26
+     */
+    private void replaceNickname(ChatRecord chatRecord) {
+        // 替换用户昵称
+        String elderName = chatRecord.getNickname();
+        if (StringUtils.isBlank(elderName) || Objects.equals("未知ip", elderName)
+                || StringUtils.isBlank(chatRecord.getIpAddress())) {
+            chatRecord.setNickname("未知领域的旅行者");
+        } else {
+//            String[] split = elderName.split("\\.");
+//            if (split.length == 4) {
+//                elderName = split[0] + "." + split[1] + "." + split[2] + "." + "***";
+//            }
+            elderName = IpUtils.getRandomName(chatRecord.getIpAddress(), NicknameConst.NicknameTeamEnum.jinyongNickname);
+            chatRecord.setNickname(IpUtils.getIpSource(chatRecord.getIpAddress()).split(" ")[0] + " " + elderName);
         }
     }
 
