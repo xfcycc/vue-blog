@@ -74,7 +74,7 @@ public class SmsServiceImpl implements SmsService {
         }
         // 验证码及有效期
 
-        String code = CommonUtils.getRandomCode().substring(0, 4);
+        String code = CommonUtils.getRandomCode().substring(0, 6);
         SmsDTO smsDTO = SmsDTO.builder().phone(phone).code(code).build();
          rabbitTemplate.convertAndSend(SMS_EXCHANGE, "*", new Message(JSON.toJSONBytes(smsDTO), new MessageProperties()));
         // 一分钟操作限制
