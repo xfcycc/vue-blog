@@ -118,7 +118,7 @@ public class IpUtils {
     }
 
     /**
-     * 根据ip生成匿名，12小时有效
+     * 根据ip生成匿名，24小时有效
      *
      * @param ipAddress 全地址
      * @param team      组名
@@ -131,8 +131,8 @@ public class IpUtils {
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ip;
         NicknameDTO value = new NicknameDTO();
         String[] nicknameTeam = NicknameConst.findTeamFactory(team);
-        if (redisService.hasKey(key)) {
-            NicknameDTO nickNameDTO = (NicknameDTO) redisService.get(key);
+        if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
+            NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
             return nickNameDTO.getNickname();
         }
         int r = RandomUtil.getRandom().nextInt(0, nicknameTeam.length);
@@ -140,7 +140,7 @@ public class IpUtils {
                 .nickname(nicknameTeam[r])
                 .count(1)
                 .build();
-        redisService.set(key, value, 60L * 60L * 12L);
+        redisService.hSet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key, value, 60L * 60L * 24L);
         return value.getNickname();
     }
 
@@ -155,8 +155,8 @@ public class IpUtils {
     public static String refreshRandomName(String ipAddress, NicknameConst.NicknameTeamEnum team) {
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
         String[] nicknameTeam = NicknameConst.findTeamFactory(team);
-        if (redisService.hasKey(key)) {
-            NicknameDTO nickNameDTO = (NicknameDTO) redisService.get(key);
+        if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
+            NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
             Integer count = nickNameDTO.getCount();
             if (count > 3) {
                 return "";
@@ -173,7 +173,7 @@ public class IpUtils {
             }
             nickNameDTO.setNickname(nicknameTeam[r]);
             nickNameDTO.setCount(++count);
-            redisService.set(key, nickNameDTO, 60L * 60L * 12L);
+            redisService.hSet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key, nickNameDTO, 60L * 60L * 24L);
             return nickNameDTO.getNickname();
         } else {
             String randomName = getRandomName(ipAddress, team);
