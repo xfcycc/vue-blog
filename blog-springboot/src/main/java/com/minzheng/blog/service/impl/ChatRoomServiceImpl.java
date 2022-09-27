@@ -43,10 +43,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
         String name = IpUtils.refreshRandomName(ipAddress, NicknameConst.findEnum(team));
         if (StringUtils.isBlank(name)) {
-            return Result.fail(203, "刷新次数已达上限，请12小时后再试！");
+            return Result.fail(203, "刷新次数已达上限，请明天再试！");
         }
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
-        NicknameDTO nickNameDTO = (NicknameDTO) redisService.get(key);
+        NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
         return Result.ok(nickNameDTO);
     }
 
@@ -62,8 +62,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public Result<Object> getExistedName(HttpServletRequest request) {
         String ipAddress = IpUtils.getIpAddress(request);
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
-        if (redisService.hasKey(key)) {
-            NicknameDTO nickNameDTO = (NicknameDTO) redisService.get(key);
+        if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
+            NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
             return Result.ok(nickNameDTO);
         }
         return Result.fail();
@@ -81,8 +81,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public Result<Object> getName(HttpServletRequest request) {
         String ipAddress = IpUtils.getIpAddress(request);
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
-        if (redisService.hasKey(key)) {
-            NicknameDTO nickNameDTO = (NicknameDTO) redisService.get(key);
+        if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
+            NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
             return Result.ok(nickNameDTO);
         }
         String randomName = IpUtils.getRandomName(ipAddress, NicknameConst.NicknameTeamEnum.jinyongNickname);
@@ -90,7 +90,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .nickname(randomName)
                 .count(0)
                 .build();
-        redisService.set(key, nickNameDTO, 60L * 60L * 12L);
+        // 由定时任务每日清除
+        redisService.hSet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key, nickNameDTO, 60L * 60L * 24L);
         return Result.ok(nickNameDTO);
     }
 }
