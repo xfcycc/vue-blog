@@ -111,7 +111,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         Integer count = articleDao.selectCount(new LambdaQueryWrapper<Article>()
                 .eq(Article::getIsDelete, ArticleStatusEnum.DEFAULT_TYPE.getStatus())
                 .eq(Article::getStatus, PUBLIC.getStatus())
-                .ne(Article::getType, ArticleStatusEnum.DEFAULT_TYPE));
+                .ne(Article::getType, ArticleStatusEnum.DEFAULT_TYPE.getStatus()));
         List<ArticleHomeDTO> articleHomeDTOS = articleDao.listArticles(PageUtils.getLimitCurrent(), PageUtils.getSize());
         return new PageResult<>(articleHomeDTOS, count);
     }
