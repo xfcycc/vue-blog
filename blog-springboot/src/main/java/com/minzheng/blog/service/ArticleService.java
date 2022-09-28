@@ -36,7 +36,7 @@ public interface ArticleService extends IService<Article> {
      *
      * @return 文章列表
      */
-    List<ArticleHomeDTO> listArticles();
+    PageResult<ArticleHomeDTO> listArticles();
 
     /**
      * 根据条件查询文章列表

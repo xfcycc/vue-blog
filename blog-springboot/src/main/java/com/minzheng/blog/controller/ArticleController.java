@@ -46,13 +46,13 @@ public class ArticleController {
     }
 
     /**
-     * 查看首页文章
+     * 查看首页文章，分页
      *
-     * @return {@link Result<ArticleHomeDTO>} 首页文章列表
+     * @return {@link PageResult<ArticleHomeDTO>} 首页文章列表
      */
     @ApiOperation(value = "查看首页文章")
     @GetMapping("/articles")
-    public Result<List<ArticleHomeDTO>> listArticles() {
+    public Result<PageResult<ArticleHomeDTO>> listArticles() {
         return Result.ok(articleService.listArticles());
     }
 

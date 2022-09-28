@@ -110,10 +110,14 @@
             </div>
           </div>
         </v-card>
-        <!-- 无限加载 -->
-        <infinite-loading @infinite="infiniteHandler">
-          <div slot="no-more" />
-        </infinite-loading>
+        <!-- 分页按钮 -->
+        <v-pagination
+          color="#00C4B6"
+          v-model="current"
+          :length="Math.ceil(count / 10)"
+          total-visible="7"
+          style="margin: 15px 0 -20px 0"
+        />
       </v-col>
       <!-- 博主信息 -->
       <v-col md="3" cols="12" class="d-md-block d-none">
@@ -238,6 +242,7 @@ export default {
     this.init();
     this.listHomeTalks();
     this.timer = setInterval(this.runTime, 1000);
+    this.infiniteHandler();
   },
   data: function() {
     return {
@@ -255,7 +260,8 @@ export default {
       },
       articleList: [],
       talkList: [],
-      current: 1
+      current: 0,
+      count: 15
     };
   },
   methods: {
@@ -302,30 +308,32 @@ export default {
       this.time = str;
     },
     infiniteHandler($state) {
+      // 分页
       let md = require("markdown-it")();
       this.axios
-        .get("/api/articles", {
-          params: {
-            current: this.current
-          }
-        })
-        .then(({ data }) => {
-          if (data.data.length) {
-            // 去除markdown标签
-            data.data.forEach(item => {
-              item.articleContent = md
-                .render(item.articleContent)
-                .replace(/<\/?[^>]*>/g, "")
-                .replace(/[|]*\n/, "")
-                .replace(/&npsp;/gi, "");
-            });
-            this.articleList.push(...data.data);
-            this.current++;
-            $state.loaded();
-          } else {
-            $state.complete();
-          }
-        });
+          .get("/api/articles", {
+            params: {
+              current: this.current
+            }
+          })
+          .then(({data}) => {
+            if (data.data.recordList.length) {
+              // 去除markdown标签
+              data.data.recordList.forEach(item => {
+                item.articleContent = md
+                    .render(item.articleContent)
+                    .replace(/<\/?[^>]*>/g, "")
+                    .replace(/[|]*\n/, "")
+                    .replace(/&npsp;/gi, "");
+              });
+              this.articleList = data.data.recordList;
+              this.current++;
+              this.count = data.data.count;
+              $state.loaded();
+            } else {
+              $state.complete();
+            }
+          });
     }
   },
   computed: {
@@ -353,6 +361,26 @@ export default {
         }
       });
       return "background: url(" + cover + ") center center / cover no-repeat";
+    }
+  },
+  watch: {
+    // 分页按钮监控
+    current(value) {
+      this.axios
+        .get("/api/articles", {
+          params: {
+            current: value
+          }
+        })
+        .then(({ data }) => {
+          this.articleList = data.data.recordList;
+          this.count = data.data.count;
+          window.scrollTo({
+            top: 100,
+            left: 0,
+            behavior: "smooth"
+          });
+        });
     }
   }
 };

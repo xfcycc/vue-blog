@@ -9,6 +9,7 @@ import com.minzheng.blog.entity.Article;
 import com.minzheng.blog.entity.ArticleTag;
 import com.minzheng.blog.entity.Category;
 import com.minzheng.blog.entity.Tag;
+import com.minzheng.blog.enums.ArticleStatusEnum;
 import com.minzheng.blog.enums.FileExtEnum;
 import com.minzheng.blog.enums.FilePathEnum;
 import com.minzheng.blog.exception.BizException;
@@ -106,8 +107,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     }
 
     @Override
-    public List<ArticleHomeDTO> listArticles() {
-        return articleDao.listArticles(PageUtils.getLimitCurrent(), PageUtils.getSize());
+    public PageResult<ArticleHomeDTO> listArticles() {
+        Integer count = articleDao.selectCount(new LambdaQueryWrapper<Article>()
+                .eq(Article::getIsDelete, ArticleStatusEnum.DEFAULT_TYPE.getStatus())
+                .eq(Article::getStatus, PUBLIC.getStatus())
+                .ne(Article::getType, ArticleStatusEnum.DEFAULT_TYPE));
+        List<ArticleHomeDTO> articleHomeDTOS = articleDao.listArticles(PageUtils.getLimitCurrent(), PageUtils.getSize());
+        return new PageResult<>(articleHomeDTOS, count);
     }
 
     @Override
