@@ -111,7 +111,7 @@
           </div>
         </v-card>
         <!-- 分页按钮 -->
-        <v-pagination
+        <v-pagination id="homePagination"
           color="#00C4B6"
           v-model="current"
           :length="Math.ceil(count / 10)"
@@ -244,6 +244,11 @@ export default {
     this.timer = setInterval(this.runTime, 1000);
     this.infiniteHandler();
   },
+  mounted() {
+    if (this.isMobile) {
+      document.getElementById("homePagination").style.margin = "15px 0 5px 0";
+    }
+  },
   data: function() {
     return {
       tip: false,
@@ -361,6 +366,12 @@ export default {
         }
       });
       return "background: url(" + cover + ") center center / cover no-repeat";
+    },
+    isMobile() {
+      const flag = navigator.userAgent.match(
+        /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+      );
+      return flag;
     }
   },
   watch: {
@@ -376,7 +387,7 @@ export default {
           this.articleList = data.data.recordList;
           this.count = data.data.count;
           window.scrollTo({
-            top: 100,
+            top: 0,
             left: 0,
             behavior: "smooth"
           });
