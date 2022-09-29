@@ -19,7 +19,7 @@
             maxlength="6"
             v-model="code"
             label="验证码"
-            placeholder="请输入4位验证码"
+            placeholder="请输入6位验证码"
             @keyup.enter="phone"
           />
           <v-btn text small :disabled="flag" @click="sendSms">
