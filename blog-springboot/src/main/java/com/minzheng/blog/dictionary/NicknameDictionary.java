@@ -1,16 +1,14 @@
-package com.minzheng.blog.constant;
+package com.minzheng.blog.dictionary;
 
+import com.minzheng.blog.constant.NicknameConstant;
 import com.minzheng.blog.datamap.JingyongDataMap;
-import com.minzheng.blog.datamap.impl.JingyongDataMapDefault;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import wiremock.com.google.common.collect.Maps;
 
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 花名大全
@@ -19,14 +17,14 @@ import java.util.Set;
  * @date 2022/9/26
  */
 @Component
-public class NicknameConst {
+public class NicknameDictionary {
     private static JingyongDataMap jingyongDataMap;
 
     private static final Map<String, String[]> TEAMS = new HashMap<>(Maps.newHashMapWithExpectedSize(10));
 
     @Autowired
-    public NicknameConst(JingyongDataMap jingyongDataMap) {
-        NicknameConst.jingyongDataMap = jingyongDataMap;
+    public NicknameDictionary(JingyongDataMap jingyongDataMap) {
+        NicknameDictionary.jingyongDataMap = jingyongDataMap;
         TEAMS.put(NicknameTeamEnum.jinyongNickname.getName(), jingyongDataMap.defaultArray());
     }
 
@@ -35,7 +33,7 @@ public class NicknameConst {
         /**
          * 金庸组
          */
-        jinyongNickname("jinyongNickname"),
+        jinyongNickname(NicknameConstant.JINYONG_NICKNAME),
         ;
 
         private String name;

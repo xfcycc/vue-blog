@@ -211,7 +211,7 @@ export default {
             if (data.code === 20000) {
               this.$store.state.nickname = data.data.nickname;
               this.$store.state.refreshCount = data.data.count;
-              this.$store.state.remainCount = 4 - data.data.count;
+              this.$store.state.remainCount = data.data.remainCount;
             } else {
               this.$store.state.nickname = "匿名用户";
               this.$store.state.refreshCount = 0;
@@ -457,7 +457,7 @@ export default {
           if (data.code === 20000) {
             this.$store.state.nickname = data.data.nickname;
             this.$store.state.refreshCount = data.data.count;
-            this.$store.state.remainCount = 4 - data.data.count;
+            this.$store.state.remainCount = data.data.remainCount;
           }else if (data.code === 203) {
             alert(data.message)
           }

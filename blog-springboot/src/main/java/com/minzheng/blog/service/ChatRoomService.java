@@ -1,5 +1,6 @@
 package com.minzheng.blog.service;
 
+import com.minzheng.blog.dictionary.NicknameDictionary;
 import com.minzheng.blog.vo.Result;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,4 +41,15 @@ public interface ChatRoomService {
      * @date 2022/9/26
      */
     Result<Object> getName(HttpServletRequest request);
+
+    /**
+     * 根据ip生成匿名，24小时有效
+     *
+     * @param ipAddress 全地址
+     * @param team      组名
+     * @return java.lang.String
+     * @author caiguoyu
+     * @date 2022/9/26
+     */
+    String getRandomName(String ipAddress, NicknameDictionary.NicknameTeamEnum team);
 }

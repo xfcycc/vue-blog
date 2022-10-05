@@ -1,5 +1,6 @@
 package com.minzheng.blog.dto;
 
+import com.minzheng.blog.constant.NicknameConstant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,4 +32,10 @@ public class NicknameDTO implements Serializable {
      * 已刷新次数
      */
     private Integer count;
+
+    /**
+     * 剩余刷新次数
+     */
+    private Integer remainCount;
+
 }

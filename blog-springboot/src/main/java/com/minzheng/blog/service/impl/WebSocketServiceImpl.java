@@ -4,13 +4,14 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.minzheng.blog.constant.NicknameConst;
+import com.minzheng.blog.dictionary.NicknameDictionary;
 import com.minzheng.blog.dao.ChatRecordDao;
 import com.minzheng.blog.dto.ChatRecordDTO;
 import com.minzheng.blog.dto.RecallMessageDTO;
 import com.minzheng.blog.dto.WebsocketMessageDTO;
 import com.minzheng.blog.entity.ChatRecord;
 import com.minzheng.blog.enums.FilePathEnum;
+import com.minzheng.blog.service.ChatRoomService;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
 import com.minzheng.blog.util.*;
 import com.minzheng.blog.vo.VoiceVO;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import javax.websocket.*;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpoint;
@@ -59,6 +61,9 @@ public class WebSocketServiceImpl {
     public void setUploadStrategyContext(UploadStrategyContext uploadStrategyContext) {
         WebSocketServiceImpl.uploadStrategyContext = uploadStrategyContext;
     }
+
+    @Resource
+    ChatRoomService chatRoomService;
 
     private static ChatRecordDao chatRecordDao;
 
@@ -246,7 +251,7 @@ public class WebSocketServiceImpl {
 //            if (split.length == 4) {
 //                elderName = split[0] + "." + split[1] + "." + split[2] + "." + "***";
 //            }
-            elderName = IpUtils.getRandomName(chatRecord.getIpAddress(), NicknameConst.NicknameTeamEnum.jinyongNickname);
+            elderName = chatRoomService.getRandomName(chatRecord.getIpAddress(), NicknameDictionary.NicknameTeamEnum.jinyongNickname);
             chatRecord.setNickname(IpUtils.getIpSource(chatRecord.getIpAddress()).split(" ")[0] + " " + elderName);
         }
     }
