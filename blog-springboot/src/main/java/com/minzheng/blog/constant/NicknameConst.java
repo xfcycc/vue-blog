@@ -1,10 +1,16 @@
 package com.minzheng.blog.constant;
 
+import com.minzheng.blog.datamap.JingyongDataMap;
+import com.minzheng.blog.datamap.impl.JingyongDataMapDefault;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import wiremock.com.google.common.collect.Maps;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 花名大全
@@ -12,7 +18,18 @@ import java.util.Map;
  * @author caiguoyu
  * @date 2022/9/26
  */
+@Component
 public class NicknameConst {
+    private static JingyongDataMap jingyongDataMap;
+
+    private static final Map<String, String[]> TEAMS = new HashMap<>(Maps.newHashMapWithExpectedSize(10));
+
+    @Autowired
+    public NicknameConst(JingyongDataMap jingyongDataMap) {
+        NicknameConst.jingyongDataMap = jingyongDataMap;
+        TEAMS.put(NicknameTeamEnum.jinyongNickname.getName(), jingyongDataMap.defaultArray());
+    }
+
     @Getter
     public enum NicknameTeamEnum {
         /**
@@ -28,16 +45,6 @@ public class NicknameConst {
         }
     }
 
-    private static final String[] JINYONG_NICKNAME = {"风清扬", "东方不败", "令狐冲", "岳不群",
-            "乔峰", "韦小宝", "杨过", "小龙女", "郭靖", "黄蓉"};
-
-
-
-    private static final Map<String, String[]> TEAMS = new HashMap<>(Maps.newHashMapWithExpectedSize(10));
-
-    static {
-        TEAMS.put(NicknameTeamEnum.jinyongNickname.getName(), JINYONG_NICKNAME);
-    }
     /**
      * 根据使用匿名组别返回各自的花名组
      *
@@ -48,7 +55,7 @@ public class NicknameConst {
      */
     public static String[] findTeamFactory(NicknameTeamEnum team) {
         if (!TEAMS.containsKey(team.getName())) {
-            return TEAMS.get(NicknameTeamEnum.jinyongNickname.getName());
+            return jingyongDataMap.defaultArray();
         }
         return TEAMS.get(team.getName());
     }
