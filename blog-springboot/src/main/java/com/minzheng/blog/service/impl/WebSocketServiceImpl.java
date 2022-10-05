@@ -62,8 +62,12 @@ public class WebSocketServiceImpl {
         WebSocketServiceImpl.uploadStrategyContext = uploadStrategyContext;
     }
 
-    @Resource
-    ChatRoomService chatRoomService;
+    @Autowired
+    public void setChatRoomService(ChatRoomService chatRoomService) {
+        WebSocketServiceImpl.chatRoomService = chatRoomService;
+    }
+
+    private static ChatRoomService chatRoomService;
 
     private static ChatRecordDao chatRecordDao;
 
