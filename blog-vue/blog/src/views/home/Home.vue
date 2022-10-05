@@ -377,6 +377,7 @@ export default {
   watch: {
     // 分页按钮监控
     current(value) {
+      let md = require("markdown-it")();
       this.axios
         .get("/api/articles", {
           params: {
@@ -384,6 +385,16 @@ export default {
           }
         })
         .then(({ data }) => {
+          if (data.data.recordList.length) {
+            // 去除markdown标签
+            data.data.recordList.forEach(item => {
+              item.articleContent = md
+                .render(item.articleContent)
+                .replace(/<\/?[^>]*>/g, "")
+                .replace(/[|]*\n/, "")
+                .replace(/&npsp;/gi, "");
+            });
+          }
           this.articleList = data.data.recordList;
           this.count = data.data.count;
           window.scrollTo({
