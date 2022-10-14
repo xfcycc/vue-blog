@@ -111,7 +111,8 @@
           </div>
         </v-card>
         <!-- 分页按钮 -->
-        <v-pagination id="homePagination"
+        <v-pagination
+          id="homePagination"
           color="#00C4B6"
           v-model="current"
           :length="Math.ceil(count / 10)"
@@ -316,29 +317,29 @@ export default {
       // 分页
       let md = require("markdown-it")();
       this.axios
-          .get("/api/articles", {
-            params: {
-              current: this.current
-            }
-          })
-          .then(({data}) => {
-            if (data.data.recordList.length) {
-              // 去除markdown标签
-              data.data.recordList.forEach(item => {
-                item.articleContent = md
-                    .render(item.articleContent)
-                    .replace(/<\/?[^>]*>/g, "")
-                    .replace(/[|]*\n/, "")
-                    .replace(/&npsp;/gi, "");
-              });
-              this.articleList = data.data.recordList;
-              this.current++;
-              this.count = data.data.count;
-              $state.loaded();
-            } else {
-              $state.complete();
-            }
-          });
+        .get("/api/articles", {
+          params: {
+            current: this.current
+          }
+        })
+        .then(({ data }) => {
+          if (data.data.recordList.length) {
+            // 去除markdown标签
+            data.data.recordList.forEach(item => {
+              item.articleContent = md
+                .render(item.articleContent)
+                .replace(/<\/?[^>]*>/g, "")
+                .replace(/[|]*\n/, "")
+                .replace(/&npsp;/gi, "");
+            });
+            this.articleList = data.data.recordList;
+            this.current++;
+            this.count = data.data.count;
+            $state.loaded();
+          } else {
+            $state.complete();
+          }
+        });
     }
   },
   computed: {

@@ -68,9 +68,13 @@
               {{ item.nickname }}
             </a>
             <span class="agent">
-              {{item.commentInfo.browserName}}
-              {{item.commentInfo.systemName}}
-              {{item.commentInfo.ipSource==""?"未知位置":item.commentInfo.ipSource}}
+              {{ item.commentInfo.browserName }}
+              {{ item.commentInfo.systemName }}
+              {{
+                item.commentInfo.ipSource == ""
+                  ? "未知位置"
+                  : item.commentInfo.ipSource
+              }}
             </span>
             <span class="blogger-tag" v-if="item.userId == 1">博主</span>
           </div>
@@ -111,9 +115,13 @@
                   {{ reply.nickname }}
                 </a>
                 <span class="agent">
-                  {{reply.commentInfo.browserName}}
-                  {{reply.commentInfo.systemName}}
-                  {{reply.commentInfo.ipSource==""?"未知位置":item.commentInfo.ipSource}}
+                  {{ reply.commentInfo.browserName }}
+                  {{ reply.commentInfo.systemName }}
+                  {{
+                    reply.commentInfo.ipSource == ""
+                      ? "未知位置"
+                      : item.commentInfo.ipSource
+                  }}
                 </span>
                 <span class="blogger-tag" v-if="reply.userId == 1">博主</span>
               </div>

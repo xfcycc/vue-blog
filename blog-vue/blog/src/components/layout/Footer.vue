@@ -9,7 +9,9 @@
       <a href="https://beian.miit.gov.cn/" target="_blank">
         {{ blogInfo.websiteConfig.websiteRecordNo }}
       </a>
-      <a href="https://icp.gov.moe/?keyword=20224396" target="_blank">萌ICP备20224396号</a>
+      <a href="https://icp.gov.moe/?keyword=20224396" target="_blank"
+        >萌ICP备20224396号</a
+      >
     </div>
   </v-footer>
 </template>
@@ -46,7 +48,6 @@ export default {
 
 .footer-wrap a:nth-child(3) {
   color: #ffc0cb !important;
-
 }
 
 @keyframes Gradient {

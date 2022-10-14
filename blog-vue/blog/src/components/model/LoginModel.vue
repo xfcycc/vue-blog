@@ -41,12 +41,22 @@
         </div>
         <div class="social-login-title">其他方式登录</div>
         <div class="social-login-wrapper">
-
-          <svg @click="phoneLogin" t="1663407720375" class="icon" viewBox="0 0 1024 1024" version="1.1"
-               xmlns="http://www.w3.org/2000/svg" p-id="3226" width="48" height="48">
+          <svg
+            @click="phoneLogin"
+            t="1663407720375"
+            class="icon"
+            viewBox="0 0 1024 1024"
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            p-id="3226"
+            width="48"
+            height="48"
+          >
             <path
-                d="M736 64H288a71.76 71.76 0 0 0-71.68 71.68v752.64A71.76 71.76 0 0 0 288 960h448a71.76 71.76 0 0 0 71.68-71.68V135.68A71.76 71.76 0 0 0 736 64zM512 879.36a35.84 35.84 0 1 1 35.84-35.84A35.84 35.84 0 0 1 512 879.36z m233-116.48H279V189.44h466z"
-                fill="#22B573" p-id="3227"></path>
+              d="M736 64H288a71.76 71.76 0 0 0-71.68 71.68v752.64A71.76 71.76 0 0 0 288 960h448a71.76 71.76 0 0 0 71.68-71.68V135.68A71.76 71.76 0 0 0 736 64zM512 879.36a35.84 35.84 0 1 1 35.84-35.84A35.84 35.84 0 0 1 512 879.36z m233-116.48H279V189.44h466z"
+              fill="#22B573"
+              p-id="3227"
+            ></path>
           </svg>
         </div>
         <div v-if="socialLoginList.length > 0">

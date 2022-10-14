@@ -28,13 +28,7 @@
         </div>
         <div style="color: #009d92">未注册的手机号将直接登录</div>
         <!-- 按钮 -->
-        <v-btn
-          class="mt-7"
-          block
-          color="red"
-          style="color:#fff"
-          @click="phone"
-        >
+        <v-btn class="mt-7" block color="red" style="color:#fff" @click="phone">
           登录
         </v-btn>
         <!-- 登录 -->
@@ -59,7 +53,7 @@ export default {
     };
   },
   methods: {
-    switchLogin(){
+    switchLogin() {
       this.$store.state.registerFlag = false;
       this.$store.state.loginFlag = true;
       this.$store.state.phoneFlag = false;
