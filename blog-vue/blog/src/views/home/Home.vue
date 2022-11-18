@@ -335,7 +335,6 @@ export default {
             this.articleList = data.data.recordList;
             this.current++;
             this.count = data.data.count;
-            $state.loaded();
           } else {
             $state.complete();
           }
