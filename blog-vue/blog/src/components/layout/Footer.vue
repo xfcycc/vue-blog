@@ -9,8 +9,8 @@
       <a href="https://beian.miit.gov.cn/" target="_blank">
         {{ blogInfo.websiteConfig.websiteRecordNo }}
       </a>
-      <a href="https://icp.gov.moe/?keyword=20224396" target="_blank"
-        >萌ICP备20224396号</a
+      <a href="https://icp.gov.moe/?keyword=20235555" target="_blank"
+        >萌ICP备20235555号</a
       >
     </div>
   </v-footer>
