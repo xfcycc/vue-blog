@@ -69,7 +69,7 @@ public class SmsConsumer {
         // Parameter settings for API request
         SendSmsRequest sendSmsRequest = SendSmsRequest.builder()
                 .signName("蔡国宇的个人博客")
-                .templateCode("SMS_251735364")
+                .templateCode("SMS_269230410")
                 .phoneNumbers(smsDTO.getPhone())
                 .templateParam("{\"code\":" + smsDTO.getCode() + "}")
                 // Request-level configuration rewrite, can set Http request parameters, etc.
