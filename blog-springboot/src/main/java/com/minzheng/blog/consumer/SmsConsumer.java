@@ -68,7 +68,7 @@ public class SmsConsumer {
 
         // Parameter settings for API request
         SendSmsRequest sendSmsRequest = SendSmsRequest.builder()
-                .signName("蔡国宇的个人博客")
+                .signName("菜鸟的小站")
                 .templateCode("SMS_269230410")
                 .phoneNumbers(smsDTO.getPhone())
                 .templateParam("{\"code\":" + smsDTO.getCode() + "}")
