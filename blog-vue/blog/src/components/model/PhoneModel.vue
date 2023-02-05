@@ -93,8 +93,8 @@ export default {
         this.$toast({ type: "error", message: "手机号格式不正确" });
         return false;
       }
-      if (this.code.trim().length !== 4) {
-        this.$toast({ type: "error", message: "请输入4位验证码" });
+      if (this.code.trim().length !== 6) {
+        this.$toast({ type: "error", message: "请输入6位验证码" });
         return false;
       }
       const that = this;
