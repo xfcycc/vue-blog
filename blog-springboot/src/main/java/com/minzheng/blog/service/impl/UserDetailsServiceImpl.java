@@ -53,8 +53,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         UserAuth userAuth = userAuthDao.selectOne(new LambdaQueryWrapper<UserAuth>()
                 .select(UserAuth::getId, UserAuth::getUserInfoId, UserAuth::getUsername, UserAuth::getPassword, UserAuth::getLoginType)
                 .eq(UserAuth::getUsername, username));
-        if (Objects.isNull(userAuth)) {
-            throw new BizException("用户名不存在!");
+        UserInfo userInfo = userInfoDao.selectOne(new LambdaQueryWrapper<UserInfo>()
+                .select(UserInfo::getId)
+                .eq(UserInfo::getEmail, username));
+        if (Objects.isNull(userInfo) && Objects.isNull(userAuth)) {
+            throw new BizException("用户不存在!");
         }
         // 封装登录信息
         return convertUserDetail(userAuth, request);

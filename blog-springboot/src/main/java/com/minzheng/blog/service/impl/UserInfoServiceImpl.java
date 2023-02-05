@@ -2,7 +2,11 @@ package com.minzheng.blog.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.minzheng.blog.dao.UserAuthDao;
+import com.minzheng.blog.entity.UserAuth;
+import com.minzheng.blog.enums.LoginTypeEnum;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
 import com.minzheng.blog.vo.*;
 import com.minzheng.blog.dto.UserDetailDTO;
@@ -22,6 +26,7 @@ import com.minzheng.blog.vo.ConditionVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.minzheng.blog.constant.RedisPrefixConst.USER_CODE_KEY;
@@ -54,7 +60,8 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
     private RedisService redisService;
     @Autowired
     private UploadStrategyContext uploadStrategyContext;
-
+    @Autowired
+    private UserAuthDao userAuthDao;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -93,6 +100,20 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
                 .id(UserUtils.getLoginUser().getUserInfoId())
                 .email(emailVO.getEmail())
                 .build();
+        if (Objects.isNull(userAuthDao.selectOne(new LambdaQueryWrapper<UserAuth>()
+                .eq(UserAuth::getUserInfoId, userInfo.getId())))) {
+            UserAuth userAuth = UserAuth.builder()
+                    .userInfoId(userInfo.getId())
+                    .username(emailVO.getEmail())
+                    .password(BCrypt.hashpw("12345678", BCrypt.gensalt()))
+                    .loginType(LoginTypeEnum.EMAIL.getType())
+                    .build();
+            userAuthDao.insert(userAuth);
+        } else {
+            userAuthDao.update(null, new LambdaUpdateWrapper<UserAuth>()
+                    .eq(UserAuth::getUserInfoId, userInfo.getId())
+                    .set(UserAuth::getUsername, emailVO.getEmail()));
+        }
         userInfoDao.updateById(userInfo);
     }
 

@@ -52,6 +52,9 @@
               绑定邮箱
             </v-btn>
           </div>
+          <div v-else-if="email" id="fet">
+            初次绑定邮箱,初始密码为12345678,请及时修改密码！
+          </div>
           <v-btn @click="updataUserInfo" outlined class="mt-5">修改</v-btn>
         </v-col>
       </v-row>
@@ -133,5 +136,8 @@ export default {
 .binding {
   display: flex;
   align-items: center;
+}
+#fet {
+  color: red;
 }
 </style>
