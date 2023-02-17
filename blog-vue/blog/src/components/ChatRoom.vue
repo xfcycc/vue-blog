@@ -12,7 +12,7 @@
         <img
           width="32"
           height="32"
-          src="https://static.talkxj.com/config/logo.png"
+          src="https://pic.blog.caiguoyu.cn/config/chatroomIcon.png"
         />
         <div style="margin-left:12px">
           <div>聊天室</div>
@@ -159,7 +159,7 @@
       <img
         width="100%"
         height="100%"
-        src="https://static.talkxj.com/config/logo.png"
+        src="https://pic.blog.caiguoyu.cn/config/chatroomIcon.png"
       />
     </div>
   </div>
@@ -566,12 +566,10 @@ export default {
   z-index: 1200;
 }
 .chat-btn {
-  background: #1f93ff;
   border-radius: 100px !important;
   position: fixed;
   bottom: 15px;
   right: 5px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16) !important;
   cursor: pointer;
   height: 60px !important;
   width: 60px !important;
