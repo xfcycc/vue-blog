@@ -5,7 +5,6 @@ import com.minzheng.blog.datamap.JingyongDataMap;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import wiremock.com.google.common.collect.Maps;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +19,7 @@ import java.util.Map;
 public class NicknameDictionary {
     private static JingyongDataMap jingyongDataMap;
 
-    private static final Map<String, String[]> TEAMS = new HashMap<>(Maps.newHashMapWithExpectedSize(10));
+    private static final Map<String, String[]> TEAMS = new HashMap<>(15);
 
     @Autowired
     public NicknameDictionary(JingyongDataMap jingyongDataMap) {
