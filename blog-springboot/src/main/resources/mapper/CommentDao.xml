@@ -166,7 +166,7 @@
         LIMIT #{current}, #{size}
     </select>
 
-    <select id="listCommentBackDTO" resultMap="CommentBackDTOResultMap">
+`    <select id="listCommentBackDTO" resultType="com.minzheng.blog.dto.CommentBackDTO">
         SELECT
          c.id,
          u.avatar,
