@@ -167,7 +167,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
                 nickname.append(location);
                 nickname.append("的旅行者");
                 userInfo.setNickname(nickname.toString());
-                userInfo.setAvatar("https://vue-blog-cgy.oss-cn-shanghai.aliyuncs.com/config/miniq.png");
+                userInfo.setAvatar("https://pic.blog.caiguoyu.cn/config/miniq.png");
                 userInfoDao.insert(userInfo);
                 userId = userInfo.getId();
                 redisService.hSet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString, userId);

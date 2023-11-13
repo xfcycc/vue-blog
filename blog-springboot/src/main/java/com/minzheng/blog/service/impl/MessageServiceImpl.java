@@ -61,7 +61,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageDao, Message> impleme
         message.setIsReview(isReview == TRUE ? FALSE : TRUE);
         message.setIpSource(ipSource);
         if (StringUtils.isBlank(message.getAvatar())) {
-            message.setAvatar("https://vue-blog-cgy.oss-cn-shanghai.aliyuncs.com/config/miniq.png");
+            message.setAvatar("https://pic.blog.caiguoyu.cn/config/miniq.png");
         }
         messageDao.insert(message);
     }
