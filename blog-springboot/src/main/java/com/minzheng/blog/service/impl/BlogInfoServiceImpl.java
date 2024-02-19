@@ -7,11 +7,9 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.minzheng.blog.dao.*;
 import com.minzheng.blog.dto.*;
 import com.minzheng.blog.entity.Article;
+import com.minzheng.blog.entity.VisitLog;
 import com.minzheng.blog.entity.WebsiteConfig;
-import com.minzheng.blog.service.BlogInfoService;
-import com.minzheng.blog.service.PageService;
-import com.minzheng.blog.service.RedisService;
-import com.minzheng.blog.service.UniqueViewService;
+import com.minzheng.blog.service.*;
 import com.minzheng.blog.util.BeanCopyUtils;
 import com.minzheng.blog.util.IpUtils;
 import com.minzheng.blog.vo.BlogInfoVO;
@@ -62,6 +60,9 @@ public class BlogInfoServiceImpl implements BlogInfoService {
     private HttpServletRequest request;
     @Autowired
     private PageService pageService;
+
+    @Resource
+    private VisitLogService visitLogService;
 
     @Override
     public BlogHomeInfoDTO getBlogHomeInfo() {
@@ -181,10 +182,12 @@ public class BlogInfoServiceImpl implements BlogInfoService {
         // 生成唯一用户标识
         String uuid = ipAddress + browser.getName() + operatingSystem.getName();
         String md5 = DigestUtils.md5DigestAsHex(uuid.getBytes());
+        String ipSource = IpUtils.getIpSource(ipAddress);
+        visitLogService.save(VisitLog.builder().ip(ipAddress).agent(userAgent.toString())
+                .browser(browser.getName()).area(ipSource).visitTime(new Date()).build());
         // 判断是否访问
         if (!redisService.sIsMember(UNIQUE_VISITOR, md5)) {
             // 统计游客地域分布
-            String ipSource = IpUtils.getIpSource(ipAddress);
             if (StringUtils.isNotBlank(ipSource)) {
                 ipSource = ipSource.substring(0, 2)
                         .replaceAll(PROVINCE, "")

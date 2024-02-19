@@ -7,6 +7,7 @@ import com.minzheng.blog.dao.CommentDao;
 import com.minzheng.blog.dto.CommentCountDTO;
 import com.minzheng.blog.dto.TalkBackDTO;
 import com.minzheng.blog.dto.TalkDTO;
+import com.minzheng.blog.dto.VisitorDTO;
 import com.minzheng.blog.entity.Talk;
 import com.minzheng.blog.exception.BizException;
 import com.minzheng.blog.service.RedisService;
@@ -103,8 +104,14 @@ public class TalkServiceImpl extends ServiceImpl<TalkDao, Talk> implements TalkS
 
     @Override
     public void saveTalkLike(Integer talkId) {
+        String talkLikeKey = "";
         // 判断是否点赞
-        String talkLikeKey = TALK_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
+        if (UserUtils.getLoginUser() == null) {
+            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
+            talkLikeKey = TALK_USER_LIKE + visitorInfo.getUserId();
+        } else {
+            talkLikeKey = TALK_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
+        }
         if (redisService.sIsMember(talkLikeKey, talkId)) {
             // 点过赞则删除说说id
             redisService.sRemove(talkLikeKey, talkId);

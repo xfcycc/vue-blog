@@ -32,4 +32,12 @@ public class ApplicationContextUtils implements ApplicationContextAware {
     public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException {
         ApplicationContextUtils.applicationContext = applicationContext;
     }
+
+    /**
+     * 手动获取spring容器中的bean
+     */
+
+    public static <T> T getBean(Class<T> clazz) {
+        return applicationContext.getBean(clazz);
+    }
 }

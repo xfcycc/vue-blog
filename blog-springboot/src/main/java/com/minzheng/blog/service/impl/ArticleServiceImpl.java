@@ -71,6 +71,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     private UploadStrategyContext uploadStrategyContext;
     @Resource
     private SiteMapService siteMapService;
+
     @Override
     public PageResult<ArchiveDTO> listArchives() {
         Page<Article> page = new Page<>(PageUtils.getCurrent(), PageUtils.getSize());
@@ -182,8 +183,14 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
 
     @Override
     public void saveArticleLike(Integer articleId) {
+        String articleLikeKey = "";
         // 判断是否点赞
-        String articleLikeKey = ARTICLE_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
+        if (UserUtils.getLoginUser() == null) {
+            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
+            articleLikeKey = ARTICLE_USER_LIKE + visitorInfo.getUserId();
+        } else {
+            articleLikeKey = ARTICLE_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
+        }
         if (redisService.sIsMember(articleLikeKey, articleId)) {
             // 点过赞则删除文章id
             redisService.sRemove(articleLikeKey, articleId);
@@ -242,10 +249,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     public void updateArticleDelete(DeleteVO deleteVO) {
         // 修改文章逻辑删除状态
         List<Article> articleList = deleteVO.getIdList().stream().map(id -> Article.builder()
-                .id(id)
-                .isTop(FALSE)
-                .isDelete(deleteVO.getIsDelete())
-                .build())
+                        .id(id)
+                        .isTop(FALSE)
+                        .isDelete(deleteVO.getIsDelete())
+                        .build())
                 .collect(Collectors.toList());
         this.updateBatchById(articleList);
     }
@@ -370,9 +377,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
             }
             // 提取标签id绑定文章
             List<ArticleTag> articleTagList = existTagIdList.stream().map(item -> ArticleTag.builder()
-                    .articleId(articleId)
-                    .tagId(item)
-                    .build())
+                            .articleId(articleId)
+                            .tagId(item)
+                            .build())
                     .collect(Collectors.toList());
             articleTagService.saveBatch(articleTagList);
         }

@@ -3,6 +3,8 @@ package com.minzheng.blog.aspect;
 import com.alibaba.fastjson.JSON;
 import com.minzheng.blog.annotation.OptLog;
 import com.minzheng.blog.dao.OperationLogDao;
+import com.minzheng.blog.dto.UserDetailDTO;
+import com.minzheng.blog.dto.VisitorDTO;
 import com.minzheng.blog.entity.OperationLog;
 import com.minzheng.blog.util.IpUtils;
 import com.minzheng.blog.util.UserUtils;
@@ -84,9 +86,20 @@ public class OptLogAspect {
         // 返回结果
         operationLog.setResponseData(JSON.toJSONString(keys));
         // 请求用户ID
-        operationLog.setUserId(UserUtils.getLoginUser().getId());
+        Integer userId = 0;
+        String nickname = "";
+        UserDetailDTO loginUser = UserUtils.getLoginUser();
+        if (loginUser == null) {
+            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
+            userId = visitorInfo.getUserId();
+            nickname = visitorInfo.getNickname();
+        } else {
+            userId = loginUser.getId();
+            nickname = loginUser.getNickname();
+        }
+        operationLog.setUserId(userId);
         // 请求用户
-        operationLog.setNickname(UserUtils.getLoginUser().getNickname());
+        operationLog.setNickname(nickname);
         // 请求IP
         String ipAddress = IpUtils.getIpAddress(request);
         operationLog.setIpAddress(ipAddress);

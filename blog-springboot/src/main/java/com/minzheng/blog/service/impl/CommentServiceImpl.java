@@ -140,38 +140,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
             userId = loginUser.getUserInfoId();
         } catch (Exception e) {
             // 匿名用户评论
-            // 获取设备信息
-
-            String ipString = ipAddress.replaceAll("\\.", "");
-            if (redisService.hHasKey(RedisPrefixConst.ANONYMOUS_VISITOR, ipString)) {
-                userId = (Integer) redisService.hGet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString);
-            } else {
-                UserInfo userInfo = new UserInfo();
-                StringBuffer nickname = new StringBuffer();
-                nickname.append("来自");
-                String location;
-                if (StringUtils.isNotBlank(ipSource)) {
-                    location = ipSource.split(" ")[0];
-                } else {
-                    location = "无风之地";
-                }
-                if (location.contains("上海")) {
-                    location = "爱丁堡";
-                }
-                if (location.contains("南京")) {
-                    location = "六朝古都";
-                }
-                if (location.startsWith("北京")) {
-                    location = "天龙人地区";
-                }
-                nickname.append(location);
-                nickname.append("的旅行者");
-                userInfo.setNickname(nickname.toString());
-                userInfo.setAvatar("https://pic.blog.caiguoyu.cn/config/miniq.png");
-                userInfoDao.insert(userInfo);
-                userId = userInfo.getId();
-                redisService.hSet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString, userId);
-            }
+            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
+            userId = visitorInfo.getUserId();
         }
         Comment comment = Comment.builder()
                 .userId(userId)
@@ -200,8 +170,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
 
     @Override
     public void saveCommentLike(Integer commentId) {
+        String commentLikeKey = "";
         // 判断是否点赞
-        String commentLikeKey = COMMENT_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
+        if (UserUtils.getLoginUser() == null) {
+            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
+            commentLikeKey = COMMENT_USER_LIKE + visitorInfo.getUserId();
+        } else {
+            commentLikeKey = COMMENT_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
+        }
         if (redisService.sIsMember(commentLikeKey, commentId)) {
             // 点过赞则删除评论id
             redisService.sRemove(commentLikeKey, commentId);

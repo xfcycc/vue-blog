@@ -371,10 +371,10 @@ export default {
     },
     like(comment) {
       // 判断登录
-      if (!this.$store.state.userId) {
-        this.$store.state.loginFlag = true;
-        return false;
-      }
+      // if (!this.$store.state.userId) {
+      //   this.$store.state.loginFlag = true;
+      //   return false;
+      // }
       // 发送请求
       this.axios
         .post("/api/comments/" + comment.id + "/like")

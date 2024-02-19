@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minzheng.blog.dao.VisitLogMapper">
+    <resultMap id="BaseResultMap" type="com.minzheng.blog.entity.VisitLog">
+        <!--@mbg.generated-->
+        <!--@Table tb_visit_log-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="ip" jdbcType="VARCHAR" property="ip"/>
+        <result column="agent" jdbcType="VARCHAR" property="agent"/>
+        <result column="browser" jdbcType="VARCHAR" property="browser"/>
+        <result column="area" jdbcType="VARCHAR" property="area"/>
+        <result column="visit_time" jdbcType="TIMESTAMP" property="visitTime"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id, ip, agent, browser, area, visit_time
+    </sql>
+</mapper>
