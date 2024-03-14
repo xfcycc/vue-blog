@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.*;
 
@@ -29,9 +30,9 @@ import static com.minzheng.blog.constant.OptTypeConst.*;
 @Api(tags = "文章模块")
 @RestController
 public class ArticleController {
-    @Autowired
+    @Resource
     private ArticleService articleService;
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
 
     /**

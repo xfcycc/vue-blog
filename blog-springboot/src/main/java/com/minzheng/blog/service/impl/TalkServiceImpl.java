@@ -20,6 +20,7 @@ import com.minzheng.blog.vo.TalkVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,11 +37,11 @@ import static com.minzheng.blog.enums.TalkStatusEnum.PUBLIC;
  */
 @Service
 public class TalkServiceImpl extends ServiceImpl<TalkDao, Talk> implements TalkService {
-    @Autowired
+    @Resource
     private TalkDao talkDao;
-    @Autowired
+    @Resource
     private CommentDao commentDao;
-    @Autowired
+    @Resource
     private RedisService redisService;
 
     @Override

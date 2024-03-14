@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -34,7 +35,7 @@ import java.util.Objects;
 @Component
 public class OptLogAspect {
 
-    @Autowired
+    @Resource
     private OperationLogDao operationLogDao;
 
     /**

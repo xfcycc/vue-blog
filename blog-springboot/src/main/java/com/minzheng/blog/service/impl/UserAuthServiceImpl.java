@@ -57,19 +57,19 @@ import static com.minzheng.blog.util.CommonUtils.getRandomCode;
  */
 @Service
 public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> implements UserAuthService {
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private UserAuthDao userAuthDao;
-    @Autowired
+    @Resource
     private UserRoleDao userRoleDao;
-    @Autowired
+    @Resource
     private UserInfoDao userInfoDao;
-    @Autowired
+    @Resource
     private BlogInfoService blogInfoService;
-    @Autowired
+    @Resource
     private RabbitTemplate rabbitTemplate;
-    @Autowired
+    @Resource
     private SocialLoginStrategyContext socialLoginStrategyContext;
     @Resource
     private UserDetailsServiceImpl userDetailsService;

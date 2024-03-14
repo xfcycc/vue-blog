@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import static com.minzheng.blog.constant.OptTypeConst.UPDATE;
@@ -33,11 +34,11 @@ import static com.minzheng.blog.constant.OptTypeConst.UPDATE;
 @Api(tags = "博客信息模块")
 @RestController
 public class BlogInfoController {
-    @Autowired
+    @Resource
     private BlogInfoService blogInfoService;
-    @Autowired
+    @Resource
     private WebSocketServiceImpl webSocketService;
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
 
     /**

@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
+import javax.annotation.Resource;
+
 import static com.minzheng.blog.constant.MQPrefixConst.MAXWELL_QUEUE;
 
 /**
@@ -23,7 +25,7 @@ import static com.minzheng.blog.constant.MQPrefixConst.MAXWELL_QUEUE;
 @Component
 @RabbitListener(queues = MAXWELL_QUEUE)
 public class MaxWellConsumer {
-    @Autowired
+    @Resource
     private ElasticsearchDao elasticsearchDao;
 
     @RabbitHandler

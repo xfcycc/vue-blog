@@ -40,11 +40,11 @@ import static com.minzheng.blog.constant.CommonConst.TRUE;
  */
 @Service
 public class MessageServiceImpl extends ServiceImpl<MessageDao, Message> implements MessageService {
-    @Autowired
+    @Resource
     private MessageDao messageDao;
     @Resource
     private HttpServletRequest request;
-    @Autowired
+    @Resource
     private BlogInfoService blogInfoService;
 
     @Transactional(rollbackFor = Exception.class)

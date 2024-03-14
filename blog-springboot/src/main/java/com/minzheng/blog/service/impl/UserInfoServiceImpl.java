@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -50,17 +51,17 @@ import static com.minzheng.blog.util.PageUtils.getLimitCurrent;
  */
 @Service
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> implements UserInfoService {
-    @Autowired
+    @Resource
     private UserInfoDao userInfoDao;
-    @Autowired
+    @Resource
     private UserRoleService userRoleService;
-    @Autowired
+    @Resource
     private SessionRegistry sessionRegistry;
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
-    @Autowired
+    @Resource
     private UserAuthDao userAuthDao;
 
     @Transactional(rollbackFor = Exception.class)

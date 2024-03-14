@@ -29,7 +29,7 @@ import java.util.List;
 @Api(tags = "用户账号模块")
 @RestController
 public class UserAuthController {
-    @Autowired
+    @Resource
     private UserAuthService userAuthService;
 
     @Resource

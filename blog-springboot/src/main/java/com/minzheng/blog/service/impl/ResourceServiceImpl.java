@@ -32,11 +32,11 @@ import static com.minzheng.blog.constant.CommonConst.FALSE;
  */
 @Service
 public class ResourceServiceImpl extends ServiceImpl<ResourceDao, Resource> implements ResourceService {
-    @Autowired
+    @javax.annotation.Resource
     private ResourceDao resourceDao;
-    @Autowired
+    @javax.annotation.Resource
     private RoleResourceDao roleResourceDao;
-    @Autowired
+    @javax.annotation.Resource
     private FilterInvocationSecurityMetadataSourceImpl filterInvocationSecurityMetadataSource;
 
 

@@ -11,6 +11,7 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
@@ -25,7 +26,7 @@ import static com.minzheng.blog.constant.CommonConst.APPLICATION_JSON;
  */
 @Log4j2
 public class WebSecurityHandler implements HandlerInterceptor {
-    @Autowired
+    @Resource
     private RedisService redisService;
 
     @Override

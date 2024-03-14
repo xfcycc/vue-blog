@@ -52,17 +52,17 @@ public class WebSocketServiceImpl {
      */
     private static CopyOnWriteArraySet<WebSocketServiceImpl> webSocketSet = new CopyOnWriteArraySet<>();
 
-    @Autowired
+    @Resource
     public void setChatRecordDao(ChatRecordDao chatRecordDao) {
         WebSocketServiceImpl.chatRecordDao = chatRecordDao;
     }
 
-    @Autowired
+    @Resource
     public void setUploadStrategyContext(UploadStrategyContext uploadStrategyContext) {
         WebSocketServiceImpl.uploadStrategyContext = uploadStrategyContext;
     }
 
-    @Autowired
+    @Resource
     public void setChatRoomService(ChatRoomService chatRoomService) {
         WebSocketServiceImpl.chatRoomService = chatRoomService;
     }

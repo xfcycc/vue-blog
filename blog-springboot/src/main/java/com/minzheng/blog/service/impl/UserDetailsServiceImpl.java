@@ -33,13 +33,13 @@ import static com.minzheng.blog.enums.ZoneEnum.SHANGHAI;
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-    @Autowired
+    @Resource
     private UserAuthDao userAuthDao;
-    @Autowired
+    @Resource
     private UserInfoDao userInfoDao;
-    @Autowired
+    @Resource
     private RoleDao roleDao;
-    @Autowired
+    @Resource
     private RedisService redisService;
     @Resource
     private HttpServletRequest request;

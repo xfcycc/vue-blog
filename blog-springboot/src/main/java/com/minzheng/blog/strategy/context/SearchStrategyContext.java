@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public class SearchStrategyContext {
     @Value("${search.mode}")
     private String searchMode;
 
-    @Autowired
+    @Resource
     private Map<String, SearchStrategy> searchStrategyMap;
 
     /**

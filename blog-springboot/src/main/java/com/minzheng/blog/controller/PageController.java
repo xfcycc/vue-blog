@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -25,7 +26,7 @@ import static com.minzheng.blog.constant.OptTypeConst.SAVE_OR_UPDATE;
 @Api(tags = "页面模块")
 @RestController
 public class PageController {
-    @Autowired
+    @Resource
     private PageService pageService;
 
     /**

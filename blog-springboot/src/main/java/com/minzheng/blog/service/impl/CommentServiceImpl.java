@@ -50,19 +50,19 @@ import static com.minzheng.blog.enums.CommentTypeEnum.*;
  */
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> implements CommentService {
-    @Autowired
+    @Resource
     private CommentDao commentDao;
-    @Autowired
+    @Resource
     private ArticleDao articleDao;
-    @Autowired
+    @Resource
     private TalkDao talkDao;
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private UserInfoDao userInfoDao;
-    @Autowired
+    @Resource
     private RabbitTemplate rabbitTemplate;
-    @Autowired
+    @Resource
     private BlogInfoService blogInfoService;
     @Resource
     private CommentInfoMapper commentInfoMapper;

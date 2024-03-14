@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,9 +38,9 @@ import static com.minzheng.blog.enums.PhotoAlbumStatusEnum.PUBLIC;
  */
 @Service
 public class PhotoAlbumServiceImpl extends ServiceImpl<PhotoAlbumDao, PhotoAlbum> implements PhotoAlbumService {
-    @Autowired
+    @Resource
     private PhotoAlbumDao photoAlbumDao;
-    @Autowired
+    @Resource
     private PhotoDao photoDao;
 
     @Transactional(rollbackFor = Exception.class)

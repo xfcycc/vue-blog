@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,15 +39,15 @@ import java.util.stream.Collectors;
  */
 @Service
 public class RoleServiceImpl extends ServiceImpl<RoleDao, Role> implements RoleService {
-    @Autowired
+    @Resource
     private RoleDao roleDao;
-    @Autowired
+    @Resource
     private RoleResourceService roleResourceService;
-    @Autowired
+    @Resource
     private RoleMenuService roleMenuService;
-    @Autowired
+    @Resource
     private UserRoleDao userRoleDao;
-    @Autowired
+    @Resource
     private FilterInvocationSecurityMetadataSourceImpl filterInvocationSecurityMetadataSource;
 
     @Override

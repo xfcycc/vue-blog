@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -32,9 +33,9 @@ import static com.minzheng.blog.constant.OptTypeConst.SAVE_OR_UPDATE;
 @Api(tags = "相册模块")
 @RestController
 public class PhotoAlbumController {
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
-    @Autowired
+    @Resource
     private PhotoAlbumService photoAlbumService;
 
     /**

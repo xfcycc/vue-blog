@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -34,9 +35,9 @@ import static com.minzheng.blog.enums.ZoneEnum.SHANGHAI;
  */
 @Service
 public class UniqueViewServiceImpl extends ServiceImpl<UniqueViewDao, UniqueView> implements UniqueViewService {
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private UniqueViewDao uniqueViewDao;
 
     @Override

@@ -6,6 +6,7 @@ import com.minzheng.blog.config.OssConfigProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.InputStream;
 
 /**
@@ -16,7 +17,7 @@ import java.io.InputStream;
  */
 @Service("ossUploadStrategyImpl")
 public class OssUploadStrategyImpl extends AbstractUploadStrategyImpl {
-    @Autowired
+    @Resource
     private OssConfigProperties ossConfigProperties;
 
     @Override

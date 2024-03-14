@@ -17,6 +17,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -32,9 +33,9 @@ import static com.minzheng.blog.enums.StatusCodeEnum.WEIBO_LOGIN_ERROR;
  */
 @Service("weiboLoginStrategyImpl")
 public class WeiboLoginStrategyImpl extends AbstractSocialLoginStrategyImpl {
-    @Autowired
+    @Resource
     private WeiboConfigProperties weiboConfigProperties;
-    @Autowired
+    @Resource
     private RestTemplate restTemplate;
 
     @Override

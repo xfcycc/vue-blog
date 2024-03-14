@@ -6,6 +6,7 @@ import com.minzheng.blog.strategy.SocialLoginStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Map;
 
 
@@ -18,7 +19,7 @@ import java.util.Map;
 @Service
 public class SocialLoginStrategyContext {
 
-    @Autowired
+    @Resource
     private Map<String, SocialLoginStrategy> socialLoginStrategyMap;
 
     /**

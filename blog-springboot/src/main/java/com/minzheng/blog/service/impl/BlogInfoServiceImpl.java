@@ -40,25 +40,25 @@ import static com.minzheng.blog.enums.ArticleStatusEnum.PUBLIC;
  */
 @Service
 public class BlogInfoServiceImpl implements BlogInfoService {
-    @Autowired
+    @Resource
     private UserInfoDao userInfoDao;
-    @Autowired
+    @Resource
     private ArticleDao articleDao;
-    @Autowired
+    @Resource
     private CategoryDao categoryDao;
-    @Autowired
+    @Resource
     private TagDao tagDao;
-    @Autowired
+    @Resource
     private MessageDao messageDao;
-    @Autowired
+    @Resource
     private UniqueViewService uniqueViewService;
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private WebsiteConfigDao websiteConfigDao;
     @Resource
     private HttpServletRequest request;
-    @Autowired
+    @Resource
     private PageService pageService;
 
     @Resource

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,9 +27,9 @@ import static com.minzheng.blog.constant.RedisPrefixConst.PAGE_COVER;
  */
 @Service
 public class PageServiceImpl extends ServiceImpl<PageDao, Page> implements PageService {
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private PageDao pageDao;
 
     @Transactional(rollbackFor = Exception.class)

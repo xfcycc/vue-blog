@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import static com.minzheng.blog.constant.OptTypeConst.SAVE_OR_UPDATE;
 @Api(tags = "角色模块")
 @RestController
 public class RoleController {
-    @Autowired
+    @Resource
     private RoleService roleService;
 
     /**

@@ -41,13 +41,13 @@ import static com.minzheng.blog.enums.ZoneEnum.SHANGHAI;
  */
 @Service
 public abstract class AbstractSocialLoginStrategyImpl implements SocialLoginStrategy {
-    @Autowired
+    @Resource
     private UserAuthDao userAuthDao;
-    @Autowired
+    @Resource
     private UserInfoDao userInfoDao;
-    @Autowired
+    @Resource
     private UserRoleDao userRoleDao;
-    @Autowired
+    @Resource
     private UserDetailsServiceImpl userDetailsService;
     @Resource
     private HttpServletRequest request;

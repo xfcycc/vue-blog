@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -23,7 +24,7 @@ import java.util.List;
 @Api(tags = "资源模块")
 @RestController
 public class ResourceController {
-    @Autowired
+    @Resource
     private ResourceService resourceService;
 
     /**

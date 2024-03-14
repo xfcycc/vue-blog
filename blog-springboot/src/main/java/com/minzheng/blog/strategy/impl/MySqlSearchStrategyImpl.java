@@ -9,6 +9,7 @@ import com.minzheng.blog.strategy.SearchStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ import static com.minzheng.blog.enums.ArticleStatusEnum.PUBLIC;
  */
 @Service("mySqlSearchStrategyImpl")
 public class MySqlSearchStrategyImpl implements SearchStrategy {
-    @Autowired
+    @Resource
     private ArticleDao articleDao;
 
     @Override

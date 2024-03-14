@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import static com.minzheng.blog.constant.OptTypeConst.UPDATE;
 @Api(tags = "留言模块")
 @RestController
 public class MessageController {
-    @Autowired
+    @Resource
     private MessageService messageService;
 
     /**

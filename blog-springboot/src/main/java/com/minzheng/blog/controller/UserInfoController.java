@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 
 
@@ -28,7 +29,7 @@ import static com.minzheng.blog.constant.OptTypeConst.UPDATE;
 @Api(tags = "用户信息模块")
 @RestController
 public class UserInfoController {
-    @Autowired
+    @Resource
     private UserInfoService userInfoService;
 
     /**

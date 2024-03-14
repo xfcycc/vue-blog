@@ -49,25 +49,25 @@ import static com.minzheng.blog.enums.ArticleStatusEnum.PUBLIC;
  */
 @Service
 public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> implements ArticleService {
-    @Autowired
+    @Resource
     private ArticleDao articleDao;
-    @Autowired
+    @Resource
     private CategoryDao categoryDao;
-    @Autowired
+    @Resource
     private TagDao tagDao;
-    @Autowired
+    @Resource
     private TagService tagService;
-    @Autowired
+    @Resource
     private ArticleTagDao articleTagDao;
-    @Autowired
+    @Resource
     private SearchStrategyContext searchStrategyContext;
-    @Autowired
+    @Resource
     private HttpSession session;
-    @Autowired
+    @Resource
     private RedisService redisService;
-    @Autowired
+    @Resource
     private ArticleTagService articleTagService;
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
     @Resource
     private SiteMapService siteMapService;

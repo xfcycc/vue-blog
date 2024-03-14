@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -35,9 +36,9 @@ import static com.minzheng.blog.enums.PhotoAlbumStatusEnum.PUBLIC;
  */
 @Service
 public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements PhotoService {
-    @Autowired
+    @Resource
     private PhotoDao photoDao;
-    @Autowired
+    @Resource
     private PhotoAlbumService photoAlbumService;
 
     @Override

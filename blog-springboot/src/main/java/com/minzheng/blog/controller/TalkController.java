@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -28,9 +29,9 @@ import java.util.List;
 @Api(tags = "说说模块")
 @RestController
 public class TalkController {
-    @Autowired
+    @Resource
     private TalkService talkService;
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
 
     /**

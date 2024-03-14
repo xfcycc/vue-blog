@@ -18,6 +18,8 @@ import org.springframework.security.web.access.intercept.FilterInvocationSecurit
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
+import javax.annotation.Resource;
+
 
 /**
  * Security配置类
@@ -28,15 +30,15 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    @Autowired
+    @Resource
     private AuthenticationEntryPointImpl authenticationEntryPoint;
-    @Autowired
+    @Resource
     private AccessDeniedHandlerImpl accessDeniedHandler;
-    @Autowired
+    @Resource
     private AuthenticationSuccessHandlerImpl authenticationSuccessHandler;
-    @Autowired
+    @Resource
     private AuthenticationFailHandlerImpl authenticationFailHandler;
-    @Autowired
+    @Resource
     private LogoutSuccessHandlerImpl logoutSuccessHandler;
 
     @Bean

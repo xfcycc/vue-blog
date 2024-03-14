@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -24,7 +25,7 @@ import static com.minzheng.blog.constant.OptTypeConst.*;
 @Api(tags = "照片模块")
 @RestController
 public class PhotoController {
-    @Autowired
+    @Resource
     private PhotoService photoService;
 
     /**

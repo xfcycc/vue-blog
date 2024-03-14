@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,9 +36,9 @@ import static com.minzheng.blog.constant.CommonConst.COMPONENT;
  */
 @Service
 public class MenuServiceImpl extends ServiceImpl<MenuDao, Menu> implements MenuService {
-    @Autowired
+    @Resource
     private MenuDao menuDao;
-    @Autowired
+    @Resource
     private RoleMenuDao roleMenuDao;
 
     @Override

@@ -12,6 +12,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class FilterInvocationSecurityMetadataSourceImpl implements FilterInvocat
      */
     private static List<ResourceRoleDTO> resourceRoleList;
 
-    @Autowired
+    @Resource
     private RoleDao roleDao;
 
     /**

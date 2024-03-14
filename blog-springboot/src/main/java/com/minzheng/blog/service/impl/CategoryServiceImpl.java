@@ -20,6 +20,7 @@ import com.minzheng.blog.vo.CategoryVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,9 +33,9 @@ import java.util.Objects;
  */
 @Service
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> implements CategoryService {
-    @Autowired
+    @Resource
     private CategoryDao categoryDao;
-    @Autowired
+    @Resource
     private ArticleDao articleDao;
 
     @Override
