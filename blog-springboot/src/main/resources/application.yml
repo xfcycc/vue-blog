@@ -108,6 +108,13 @@ upload:
 website:
   url: https://yourwebsite
 
+# 火山引擎大模型API配置
+volcano:
+  api:
+    key: *******
+    base-url: https://ark.cn-beijing.volces.com/api/v3
+    model: deepseek-r1-250120
+
 #第三方配置信息
 qq:
   app-id: QQ APPID

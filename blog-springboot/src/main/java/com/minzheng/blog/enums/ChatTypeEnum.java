@@ -35,7 +35,11 @@ public enum ChatTypeEnum {
     /**
      * 心跳消息
      */
-    HEART_BEAT(6,"心跳消息");
+    HEART_BEAT(6,"心跳消息"),
+    /**
+     * AI消息
+     */
+    AI_MESSAGE(7,"AI消息");
 
     /**
      * 类型
