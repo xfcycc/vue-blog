@@ -90,12 +90,6 @@
             >
               <!-- 文字消息 -->
               <div v-if="item.type == 3" v-html="item.content" />
-              <!-- AI消息 -->
-              <div
-                v-if="item && item.type == 7"
-                class="ai-message"
-                v-html="item.content || ''"
-              />
               <!-- 语音消息 -->
               <div v-if="item.type == 5" @click.prevent.stop="playVoice(item)">
                 <audio
@@ -248,11 +242,6 @@ export default {
       console.warn("初始化时获取昵称失败:", error);
     });
     
-    // 尝试处理用户提供的样本数据
-    setTimeout(() => {
-      this.tryProcessSampleData();
-    }, 1000);
-    
     // 获取WebSocket URL
     this.getWebsocketUrl().then(() => {
       // 初始化WebSocket连接
@@ -269,10 +258,6 @@ export default {
       this.setupReconnectTimer();
     });
     
-    // 注册全局测试数据加载方法
-    window.loadChatHistory = (jsonData) => {
-      this.loadTestHistoryData(jsonData);
-    };
   },
   beforeDestroy() {
     // 清理错误处理器
@@ -323,61 +308,15 @@ export default {
         data: null
       },
       heartBeat: null,
-      mentionedUsers: [],
-      aiEnabled: true,
-      aiName: "小芸",
       currentUser: null,
       isLoading: false, // 新增：加载状态
       historyLoaded: false, // 新增：历史消息已加载标志
-      manualHistoryLoaded: false, // 新增：手动加载历史标志
       isConnected: false, // 新增：连接状态
       reconnectTimer: null, // 新增：重连定时器
       reconnectAttempts: 0, // 新增：重连尝试次数
     };
   },
   methods: {
-    // 尝试处理用户提供的样本数据
-    tryProcessSampleData() {
-      try {
-        // 样本数据（从用户查询中提取）
-        const sampleData = {
-          "data": {
-            "chatRecordList": [
-              {
-                "avatar": "https://pic.blog.caiguoyu.cn/config/90c2ccb54589157125986df9c4a2a90b.jpeg",
-                "content": "123",
-                "createTime": "2025-03-01T21:08:27",
-                "id": 3161,
-                "ipAddress": "183.206.160.84",
-                "ipSource": "江苏省南京市 移动",
-                "nickname": "刘瑛姑",
-                "type": 3
-              },
-              {
-                "avatar": "https://pic.blog.caiguoyu.cn/config/ai-avatar.png",
-                "content": "\n\n你好！看起来你可能在测试或误触了。有什么需要帮忙的吗？无论是问题、聊天，还是其他需求，我都在这里为你解答！😊",
-                "createTime": "2025-03-01T21:08:34",
-                "id": 3162,
-                "ipAddress": "127.0.0.1",
-                "ipSource": "火山引擎",
-                "nickname": "小芸",
-                "type": 7
-              }
-            ]
-          }
-        };
-        
-        console.log("尝试加载用户提供的样本数据");
-        this.loadTestHistoryData(sampleData);
-        
-        // // 直接打开聊天窗口以便观察结果
-        // setTimeout(() => {
-        //   this.isShow = true;
-        // }, 500);
-      } catch (error) {
-        console.error("处理样本数据时出错:", error);
-      }
-    },
     // 设置重连定时器
     setupReconnectTimer() {
       // 清除可能存在的旧定时器
@@ -451,9 +390,6 @@ export default {
         // 使用nextTick确保DOM已更新
         this.$nextTick(() => {
           this.scrollToBottom();
-          
-          // 检查AI消息是否正确渲染
-          this.checkAiMessages();
         });
         
         // 尝试获取用户昵称
@@ -545,29 +481,13 @@ export default {
           this.handleHistoryMessages(data.data);
           this.historyLoaded = true; // 标记历史消息已加载
           console.log("WebSocket历史消息加载完成");
-        } else if (data.type === 7) { // AI消息
-          let aiMessage = data.data;
-          console.log("收到AI消息:", aiMessage);
-          if (aiMessage) {
-            this.chatRecordList.push(aiMessage);
-            this.$nextTick(() => {
-              this.scrollToBottom();
-              
-              // 缓存更新后的消息
-              this.cacheMessages();
-            });
-            
-            if (!this.isShow) {
-              this.unreadCount++;
-            }
-          }
         } else if (data.type === 4) { // 撤回消息
           if (data.data && data.data.id) {
             this.handleMessageRevocation(data.data.id);
           }
         } else if (data.type === 6) { // 心跳消息
           console.log("收到心跳消息");
-        } else { // 普通消息
+        } else if (data.type === 3 || data.type === 5) { // 普通消息
           this.chatRecordList.push(data.data);
           
           // 缓存更新后的消息
@@ -620,43 +540,20 @@ export default {
           "' width='24'height='24' style='margin: 0 1px;vertical-align: text-bottom'/>"
         );
       });
-      
-      // 提取@用户
-      /* eslint-disable-next-line no-unused-vars */
-      const mentionedIpAddresses = this.extractMentions();
-      
-      // 判断是否是对AI的消息
-      if (this.isMessageToAI(this.content)) {
-        // 创建AI消息格式
-        var aiMsg = {
-          nickname: this.nickname,
-          avatar: this.avatar,
-          content: processedContent,
-          userId: this.userId,
-          ipAddress: this.ipAddress,
-          ipSource: this.ipSource,
-          mentionedIpAddresses: mentionedIpAddresses
-        };
-        this.WebsocketMessage.type = 7; // AI消息类型
-        this.WebsocketMessage.data = aiMsg;
-      } else {
-        // 常规消息
-        var socketMsg = {
-          nickname: this.nickname,
-          avatar: this.avatar,
-          content: processedContent,
-          userId: this.userId,
-          type: 3,
-          ipAddress: this.ipAddress,
-          ipSource: this.ipSource
-        };
-        this.WebsocketMessage.type = 3;
-        this.WebsocketMessage.data = socketMsg;
-      }
+      var socketMsg = {
+        nickname: this.nickname,
+        avatar: this.avatar,
+        content: processedContent,
+        userId: this.userId,
+        type: 3,
+        ipAddress: this.ipAddress,
+        ipSource: this.ipSource
+      };
+      this.WebsocketMessage.type = 3;
+      this.WebsocketMessage.data = socketMsg;
       
       this.websocket.send(JSON.stringify(this.WebsocketMessage));
       this.content = "";
-      this.mentionedUsers = []; // 清空@用户列表
     },
     addEmoji(key) {
       this.isEmoji = false;
@@ -853,58 +750,10 @@ export default {
           }
         });
     },
-    // 添加新方法：判断是否是对AI的消息
-    isMessageToAI(content) {
-      // 开头@小芸
-      if (content && content.trim().startsWith("@" + this.aiName)) {
-        return true;
-      }
-      // 内容中包含@小芸
-      if (content && content.includes("@" + this.aiName)) {
-        return true;
-      }
-      // AI功能已启用并且没有@其他用户，则认为是与AI对话
-      if (this.aiEnabled && this.mentionedUsers && this.mentionedUsers.length === 0) {
-        return true;
-      }
-      return false;
-    },
-    // 修正提取@的用户方法，移除未使用的content参数的引用
-    extractMentions() {
-      const mentionedAddresses = [];
-      
-      // 检查mentionedUsers是否存在
-      if (!this.mentionedUsers || !Array.isArray(this.mentionedUsers)) {
-        return mentionedAddresses;
-      }
-      
-      // 遍历@用户列表
-      this.mentionedUsers.forEach(user => {
-        // 确保user对象有效
-        if (user && user.nickname && user.ipAddress && user.nickname !== this.aiName) {
-          mentionedAddresses.push(user.ipAddress);
-        }
-      });
-      
-      return mentionedAddresses;
-    },
     // 添加新方法：@用户
     mentionUser(user) {
-      // 检查用户是否已经在@列表中
-      const isAlreadyMentioned = this.mentionedUsers.some(
-        mentioned => mentioned.ipAddress === user.ipAddress
-      );
-      
-      if (!isAlreadyMentioned) {
-        this.mentionedUsers.push({
-          nickname: user.nickname,
-          ipAddress: user.ipAddress
-        });
-        
-        // 在输入框中添加@用户
-        this.content += " @" + user.nickname + " ";
-        this.$refs.chatInput.focus();
-      }
+      this.content += " @" + user.nickname + " ";
+      this.$refs.chatInput.focus();
     },
     // 添加新方法获取当前消息索引
     getCurrentIndex(item) {
@@ -918,129 +767,6 @@ export default {
           messageContainer.scrollTop = messageContainer.scrollHeight;
         }
       });
-    },
-    
-    // 添加一个强制重新渲染AI消息的方法
-    forceRenderAiMessages() {
-      try {
-        // 先找出所有AI消息
-        const aiMessages = this.chatRecordList.filter(msg => msg && (msg.type === 7 || (msg.nickname === "小芸" && msg.ipAddress === "127.0.0.1")));
-        if (aiMessages.length === 0) {
-          console.log("没有AI消息需要重新渲染");
-          return;
-        }
-        
-        console.log(`开始强制重新渲染${aiMessages.length}条AI消息...`);
-        
-        // 临时存储所有非AI消息
-        const nonAiMessages = this.chatRecordList.filter(msg => msg && msg.type !== 7 && !(msg.nickname === "小芸" && msg.ipAddress === "127.0.0.1"));
-        
-        // 清空消息列表
-        this.chatRecordList = [];
-        
-        // 先添加非AI消息
-        nonAiMessages.forEach(msg => {
-          this.chatRecordList.push(msg);
-        });
-        
-        // 使用nextTick确保DOM已更新
-        this.$nextTick(() => {
-          // 然后分批添加AI消息
-          let index = 0;
-          const addAiMessage = () => {
-            if (index < aiMessages.length) {
-              const msg = aiMessages[index];
-              // 确保消息格式正确
-              if (msg.content) {
-                this.chatRecordList.push(msg);
-              }
-              index++;
-              
-              // 继续添加下一条
-              setTimeout(addAiMessage, 50);
-            } else {
-              console.log("AI消息重新渲染完成");
-              // 完成后再次检查
-              setTimeout(() => {
-                this.checkAiMessages();
-                this.scrollToBottom();
-              }, 200);
-            }
-          };
-          
-          // 开始添加
-          addAiMessage();
-        });
-      } catch (error) {
-        console.error("强制重新渲染AI消息时出错:", error);
-      }
-    },
-    
-    // 新增方法：检查AI消息状态
-    checkAiMessages() {
-      try {
-        // 获取所有AI消息
-        const aiMessages = this.chatRecordList.filter(item => item && (item.type === 7 || (item.nickname === "小芸" && item.ipAddress === "127.0.0.1")));
-        console.log(`当前有${aiMessages.length}条AI消息`);
-        
-        if (aiMessages.length > 0) {
-          console.log("最新的AI消息:", aiMessages[aiMessages.length - 1]);
-          
-          // 检查AI消息DOM元素是否正确渲染
-          this.$nextTick(() => {
-            const aiMessageElements = document.querySelectorAll('.ai-message');
-            console.log(`渲染的AI消息元素数量: ${aiMessageElements.length}`);
-            
-            // 检查内容是否为空
-            let emptyContentFound = false;
-            aiMessageElements.forEach(el => {
-              if (!el.innerHTML || el.innerHTML.trim() === '') {
-                emptyContentFound = true;
-              }
-            });
-            
-            if (aiMessages.length !== aiMessageElements.length || emptyContentFound) {
-              console.warn("AI消息元素渲染数量与数据不匹配或存在空内容，将尝试重新渲染");
-              this.forceRenderAiMessages();
-            }
-          });
-        }
-      } catch (error) {
-        console.error("检查AI消息时出错:", error);
-      }
-    },
-    updateAiMessages(message) {
-      try {
-        if (!message) {
-          console.warn("收到空的AI消息，忽略处理");
-          return;
-        }
-        
-        // 解析消息
-        const aiMessage = JSON.parse(message);
-        if (!aiMessage || !aiMessage.content) {
-          console.warn("AI消息格式不正确:", aiMessage);
-          return;
-        }
-        
-        console.log("收到并处理AI消息:", aiMessage);
-        
-        // 添加到消息列表
-        this.chatRecordList.push({
-          ...aiMessage,
-          type: 7, // 确保类型设为AI消息
-          createTime: new Date().toISOString(),
-          ipAddress: "ai-assistant", // AI消息的特殊标识
-          nickname: "小芸助手"
-        });
-        
-        // 使用nextTick确保DOM更新后滚动
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
-      } catch (error) {
-        console.error("处理AI消息时出错:", error);
-      }
     },
     // 获取用户昵称方法
     getNickname() {
@@ -1165,15 +891,7 @@ export default {
             // 处理嵌套在data中的消息
             const actualMsg = msg.data && typeof msg.data === 'object' ? msg.data : msg;
             
-            // 对于AI消息进行特殊处理
-            if (actualMsg.type === 7 || (actualMsg.nickname === "小芸" && actualMsg.ipAddress === "127.0.0.1")) {
-              const processedAiMsg = this.processAiMessage(actualMsg);
-              if (processedAiMsg) {
-                this.chatRecordList.push(processedAiMsg);
-              }
-            } 
-            // 处理普通消息
-            else if (actualMsg.type === 3 || actualMsg.type === 5 || (actualMsg.content && actualMsg.nickname)) {
+            if (actualMsg.type === 3 || actualMsg.type === 5) {
               this.chatRecordList.push(actualMsg);
               
               // 记录语音消息ID
@@ -1194,7 +912,6 @@ export default {
         // 使用nextTick确保DOM更新后再滚动到底部
         this.$nextTick(() => {
           this.scrollToBottom();
-          this.checkAiMessages();
         });
       } catch (error) {
         console.error("处理历史消息时出错:", error);
@@ -1246,152 +963,6 @@ export default {
       }
     },
     
-    // 新增：直接处理JSON格式的聊天历史数据
-    processHistoryData(jsonData) {
-      try {
-        console.log("正在处理JSON历史数据");
-        if (typeof jsonData === 'string') {
-          try {
-            jsonData = JSON.parse(jsonData);
-          } catch (e) {
-            console.error("JSON解析失败:", e);
-            return false;
-          }
-        }
-        
-        // 如果是对象但包含在data字段，提取data
-        if (jsonData.data && Array.isArray(jsonData.data.chatRecordList)) {
-          this.handleHistoryMessages(jsonData.data.chatRecordList);
-          return true;
-        }
-        
-        // 如果是对象但直接包含chatRecordList字段
-        if (jsonData.chatRecordList && Array.isArray(jsonData.chatRecordList)) {
-          this.handleHistoryMessages(jsonData.chatRecordList);
-          return true;
-        }
-        
-        // 如果直接是数组
-        if (Array.isArray(jsonData)) {
-          this.handleHistoryMessages(jsonData);
-          return true;
-        }
-        
-        console.warn("无法识别的历史数据格式:", jsonData);
-        return false;
-      } catch (error) {
-        console.error("处理JSON历史数据时出错:", error);
-        return false;
-      }
-    },
-    
-    // 添加直接处理消息数据的方法
-    processDirectMessageData(data) {
-      try {
-        if (!data) {
-          console.warn("提供的消息数据为空");
-          return false;
-        }
-        
-        console.log("正在处理直接提供的消息数据:", data);
-        
-        // 如果提供的是字符串，尝试解析为JSON
-        let jsonData = data;
-        if (typeof data === 'string') {
-          try {
-            jsonData = JSON.parse(data);
-          } catch (e) {
-            console.error("无法解析提供的JSON字符串:", e);
-            return false;
-          }
-        }
-        
-        // 处理不同格式的数据
-        if (jsonData.data && jsonData.data.chatRecordList) {
-          // 包装在data.chatRecordList中的格式
-          this.handleHistoryMessages(jsonData.data.chatRecordList);
-          return true;
-        } else if (jsonData.chatRecordList) {
-          // 直接包含chatRecordList字段的格式
-          this.handleHistoryMessages(jsonData.chatRecordList);
-          return true;
-        } else if (Array.isArray(jsonData)) {
-          // 直接是消息数组的格式
-          this.handleHistoryMessages(jsonData);
-          return true;
-        } else {
-          // 如果是单个消息对象
-          this.handleHistoryMessages([jsonData]);
-          return true;
-        }
-      } catch (error) {
-        console.error("处理直接提供的消息数据时出错:", error);
-        return false;
-      }
-    },
-    
-    // 强化处理AI消息的方法
-    processAiMessage(aiMessage) {
-      try {
-        if (!aiMessage) return null;
-        
-        // 如果是字符串，尝试解析
-        if (typeof aiMessage === 'string') {
-          try {
-            aiMessage = JSON.parse(aiMessage);
-          } catch (e) {
-            // 如果不是JSON，可能就是纯文本内容
-            aiMessage = { content: aiMessage };
-          }
-        }
-        
-        // 判断消息格式
-        let finalMessage = null;
-        
-        // 如果是标准格式
-        if (aiMessage.type === 7 || (aiMessage.data && aiMessage.data.type === 7)) {
-          finalMessage = aiMessage.data || aiMessage;
-        } 
-        // 如果是简化格式
-        else if (aiMessage.content) {
-          finalMessage = {
-            type: 7,
-            content: aiMessage.content,
-            nickname: aiMessage.nickname || "小芸",
-            avatar: aiMessage.avatar || "https://pic.blog.caiguoyu.cn/config/ai-avatar.png",
-            createTime: aiMessage.createTime || new Date().toISOString(),
-            ipAddress: "ai-system",
-            ipSource: "火山引擎"
-          };
-        }
-        
-        return finalMessage;
-      } catch (error) {
-        console.error("处理AI消息时出错:", error);
-        return null;
-      }
-    },
-    
-    // 测试用：手动加载指定的历史数据
-    loadTestHistoryData(jsonData) {
-      this.isLoading = true;
-      
-      setTimeout(() => {
-        const success = this.processHistoryData(jsonData);
-        if (success) {
-          console.log("测试数据加载成功");
-          this.manualHistoryLoaded = true;
-        } else {
-          console.error("测试数据加载失败");
-        }
-        this.isLoading = false;
-        
-        // 处理完测试数据后检查AI消息渲染状态
-        setTimeout(() => {
-          this.checkAiMessages();
-        }, 500);
-      }, 300);
-    },
   },
   computed: {
     isSelf() {
@@ -1463,20 +1034,10 @@ export default {
         ? "iconfont iconzhifeiji submit-btn"
         : "iconfont iconzhifeiji";
     },
-    // 添加一个新的计算属性来检测AI消息
-    isAiMessage() {
-      return function(item) {
-        return item.nickname === this.aiName || item.type === 7;
-      };
-    },
     // 添加一个新的计算属性来决定消息内容样式
     getContentClass() {
       return function(item) {
-        if (item.type === 7 || item.nickname === this.aiName) {
-          return "ai-content";
-        } else {
-          return this.isSelf(item) ? "my-content" : "user-content";
-        }
+        return this.isSelf(item) ? "my-content" : "user-content";
       };
     }
   },
@@ -1485,17 +1046,6 @@ export default {
     if (this.chatRecordList.length === 0) {
       this.loadCachedMessages();
     }
-    
-    // 尝试处理用户可能已经提供的测试数据
-    if (window.__chatTestData) {
-      console.log("检测到测试数据，尝试加载");
-      this.loadTestHistoryData(window.__chatTestData);
-    }
-    
-    // 延迟检查AI消息渲染状态
-    setTimeout(() => {
-      this.checkAiMessages();
-    }, 1000);
   }
 };
 </script>
@@ -1730,36 +1280,6 @@ export default {
   text-align: center;
   background: #fff;
 }
-.ai-content {
-  position: relative;
-  border-radius: 12px;
-  padding: 12px;
-  background: #e9f7fe;
-  color: #333;
-  white-space: pre-line;
-  word-wrap: break-word;
-  word-break: break-all;
-  border-left: 3px solid #00a1d6;
-}
-
-.ai-message {
-  position: relative;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* 添加小芸助手特殊样式 */
-.ai-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -4px;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to bottom, #00a1d6, #00c3ff);
-  border-radius: 2px 0 0 2px;
-}
-
 /* 新增样式 */
 .loading-container {
   display: flex;

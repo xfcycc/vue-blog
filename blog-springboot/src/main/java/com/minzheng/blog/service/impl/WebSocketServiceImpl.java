@@ -6,15 +6,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.minzheng.blog.dictionary.NicknameDictionary;
 import com.minzheng.blog.dao.ChatRecordDao;
-import com.minzheng.blog.dto.AIMessageDTO;
 import com.minzheng.blog.dto.ChatRecordDTO;
 import com.minzheng.blog.dto.RecallMessageDTO;
 import com.minzheng.blog.dto.WebsocketMessageDTO;
 import com.minzheng.blog.entity.ChatRecord;
+import com.minzheng.blog.enums.ChatTypeEnum;
 import com.minzheng.blog.enums.FilePathEnum;
 import com.minzheng.blog.service.ChatRoomService;
-import com.minzheng.blog.service.UserChatHistoryService;
-import com.minzheng.blog.service.VoiceAIService;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
 import com.minzheng.blog.util.*;
 import com.minzheng.blog.vo.VoiceVO;
@@ -69,26 +67,11 @@ public class WebSocketServiceImpl {
     public void setChatRoomService(ChatRoomService chatRoomService) {
         WebSocketServiceImpl.chatRoomService = chatRoomService;
     }
-    
-    @Resource
-    public void setVoiceAIService(VoiceAIService voiceAIService) {
-        WebSocketServiceImpl.voiceAIService = voiceAIService;
-    }
-    
-    @Resource
-    public void setUserChatHistoryService(UserChatHistoryService userChatHistoryService) {
-        WebSocketServiceImpl.userChatHistoryService = userChatHistoryService;
-    }
-
     private static ChatRoomService chatRoomService;
 
     private static ChatRecordDao chatRecordDao;
 
     private static UploadStrategyContext uploadStrategyContext;
-    
-    private static VoiceAIService voiceAIService;
-    
-    private static UserChatHistoryService userChatHistoryService;
 
     /**
      * 获取客户端真实ip
@@ -138,7 +121,11 @@ public class WebSocketServiceImpl {
     @OnMessage
     public void onMessage(String message, Session session) throws IOException {
         WebsocketMessageDTO messageDTO = JSON.parseObject(message, WebsocketMessageDTO.class);
-        switch (Objects.requireNonNull(getChatType(messageDTO.getType()))) {
+        ChatTypeEnum chatType = getChatType(messageDTO.getType());
+        if (Objects.isNull(chatType)) {
+            return;
+        }
+        switch (chatType) {
             case SEND_MESSAGE:
                 // 发送消息
                 ChatRecord chatRecord = JSON.parseObject(JSON.toJSONString(messageDTO.getData()), ChatRecord.class);
@@ -164,102 +151,9 @@ public class WebSocketServiceImpl {
                 messageDTO.setData("pong");
                 session.getBasicRemote().sendText(JSON.toJSONString(messageDTO));
                 break;
-            case AI_MESSAGE:
-                // 处理AI消息
-                handleAIMessage(messageDTO, session);
-                break;
             default:
                 break;
         }
-    }
-
-    /**
-     * 处理AI消息
-     *
-     * @param messageDTO 消息DTO
-     * @param session 会话
-     * @throws IOException IO异常
-     * @author caiguoyu
-     * @date 2023/02/25
-     */
-    private void handleAIMessage(WebsocketMessageDTO messageDTO, Session session) throws IOException {
-        // 解析消息对象
-        AIMessageDTO aiMessageDTO = JSON.parseObject(JSON.toJSONString(messageDTO.getData()), AIMessageDTO.class);
-        
-        // 过滤HTML标签
-        String userContent = HTMLUtils.filter(aiMessageDTO.getContent());
-        
-        // 创建用户聊天记录
-        ChatRecord userChatRecord = ChatRecord.builder()
-                .userId(aiMessageDTO.getUserId())
-                .nickname(aiMessageDTO.getNickname())
-                .avatar(aiMessageDTO.getAvatar())
-                .content(userContent)
-                .type(SEND_MESSAGE.getType())
-                .ipAddress(aiMessageDTO.getIpAddress())
-                .ipSource(aiMessageDTO.getIpSource())
-                .build();
-        
-        // 保存用户消息记录
-        chatRecordDao.insert(userChatRecord);
-        
-        // 广播用户消息到所有客户端
-        WebsocketMessageDTO userMessageDTO = WebsocketMessageDTO.builder()
-                .type(SEND_MESSAGE.getType())
-                .data(userChatRecord)
-                .build();
-        broadcastMessage(userMessageDTO);
-        
-        // 将用户消息添加到聊天历史
-        userChatHistoryService.addUserMessage(
-                aiMessageDTO.getIpAddress(),
-                aiMessageDTO.getNickname(),
-                userContent);
-        
-        // 创建要处理的用户标识列表（首先添加当前发送消息的用户）
-        List<String> userIdsToProcess = new ArrayList<>();
-        userIdsToProcess.add(aiMessageDTO.getIpAddress());
-        
-        // 检查是否有@用户，如果有，则将这些用户加入到处理列表
-        if (aiMessageDTO.getMentionedIpAddresses() != null && !aiMessageDTO.getMentionedIpAddresses().isEmpty()) {
-            userIdsToProcess.addAll(aiMessageDTO.getMentionedIpAddresses());
-        }
-        
-        // 获取AI回复（多人或单人）
-        String aiResponse;
-        if (userIdsToProcess.size() > 1) {
-            // 如果有多个用户，用合并历史的方式获取回复
-            aiResponse = voiceAIService.chatWithMultipleHistories(userIdsToProcess, userContent);
-        } else {
-            // 如果只有一个用户，用单用户历史的方式获取回复
-            aiResponse = voiceAIService.chatWithHistory(aiMessageDTO.getIpAddress(), userContent);
-        }
-        
-        // 为每个处理的用户添加AI回复到其历史记录
-        for (String userIdentifier : userIdsToProcess) {
-            userChatHistoryService.addAIMessage(userIdentifier, aiResponse);
-        }
-        
-        // 创建AI回复记录
-        ChatRecord aiChatRecord = ChatRecord.builder()
-                .userId(null)
-                .nickname("小芸")
-                .avatar("https://pic.blog.caiguoyu.cn/config/ai-avatar.png")  // 设置AI头像
-                .content(aiResponse)
-                .type(AI_MESSAGE.getType())
-                .ipAddress("127.0.0.1")
-                .ipSource("火山引擎")
-                .build();
-        
-        // 保存AI回复记录
-        chatRecordDao.insert(aiChatRecord);
-        
-        // 发送AI回复到所有客户端
-        WebsocketMessageDTO aiMessageResponseDTO = WebsocketMessageDTO.builder()
-                .type(AI_MESSAGE.getType())
-                .data(aiChatRecord)
-                .build();
-        broadcastMessage(aiMessageResponseDTO);
     }
 
     /**
