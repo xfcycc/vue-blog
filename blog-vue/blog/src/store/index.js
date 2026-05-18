@@ -4,6 +4,11 @@ import createPersistedState from "vuex-persistedstate";
 
 Vue.use(Vuex);
 
+const defaultBlogInfo = {
+  websiteConfig: {},
+  pageList: []
+};
+
 export default new Vuex.Store({
   state: {
     searchFlag: false,
@@ -28,10 +33,7 @@ export default new Vuex.Store({
     commentLikeSet: [],
     talkLikeSet: [],
     anonymousMode: false,
-    blogInfo: {
-      websiteConfig: {},
-      pageList: []
-    }
+    blogInfo: defaultBlogInfo
   },
   mutations: {
     enableAnonymousMode(state) {
@@ -105,7 +107,7 @@ export default new Vuex.Store({
       state.avatar = avatarInfo.avatar;
     },
     checkBlogInfo(state, blogInfo) {
-      state.blogInfo = blogInfo;
+      state.blogInfo = blogInfo || defaultBlogInfo;
     },
     closeModel(state) {
       state.registerFlag = false;

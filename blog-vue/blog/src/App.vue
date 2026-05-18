@@ -32,8 +32,17 @@ import searchModel from "./components/model/SearchModel";
 import Player from "./components/zw-player/player.vue";
 import ChatRoom from "./components/ChatRoom";
 import { getPersistentPokemonAvatar } from "./utils/avatar";
+
+const defaultBlogInfo = {
+  websiteConfig: {},
+  pageList: []
+};
+
 export default {
   created() {
+    if (!this.$store.state.blogInfo) {
+      this.$store.commit("checkBlogInfo", defaultBlogInfo);
+    }
     // 主站关闭登录后，清理旧会话里持久化的用户身份。
     this.$store.commit("enableAnonymousMode");
     // 获取博客信息
@@ -55,7 +64,7 @@ export default {
   methods: {
     getBlogInfo() {
       this.axios.get("/api/").then(({ data }) => {
-        this.$store.commit("checkBlogInfo", data.data);
+        this.$store.commit("checkBlogInfo", data.data || defaultBlogInfo);
       });
     },
     getVisitorAvatar() {
@@ -76,10 +85,10 @@ export default {
   },
   computed: {
     blogInfo() {
-      return this.$store.state.blogInfo;
+      return this.$store.state.blogInfo || defaultBlogInfo;
     },
     websiteConfig() {
-      return this.blogInfo.websiteConfig || {};
+      return (this.blogInfo && this.blogInfo.websiteConfig) || {};
     },
     isMobile() {
       const flag = navigator.userAgent.match(
