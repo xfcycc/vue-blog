@@ -25,10 +25,9 @@ import com.minzheng.blog.util.BeanCopyUtils;
 import com.minzheng.blog.util.PageUtils;
 import com.minzheng.blog.util.UserUtils;
 import com.minzheng.blog.vo.*;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,10 +38,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.minzheng.blog.constant.CommonConst.*;
-import static com.minzheng.blog.constant.MQPrefixConst.EMAIL_EXCHANGE;
 import static com.minzheng.blog.constant.RedisPrefixConst.*;
 import static com.minzheng.blog.enums.UserAreaTypeEnum.getUserAreaType;
 import static com.minzheng.blog.util.CommonUtils.checkEmail;
@@ -68,11 +67,16 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> impl
     @Resource
     private BlogInfoService blogInfoService;
     @Resource
-    private RabbitTemplate rabbitTemplate;
+    private JavaMailSender javaMailSender;
     @Resource
     private SocialLoginStrategyContext socialLoginStrategyContext;
     @Resource
     private UserDetailsServiceImpl userDetailsService;
+    @Value("${spring.mail.username}")
+    private String mailUsername;
+    @Value("${spring.mail.nickname}")
+    private String mailNickname;
+
     @Override
     public void sendCode(String username) {
         // 校验账号是否合法
@@ -87,9 +91,18 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> impl
                 .subject("验证码")
                 .content("您的验证码为 " + code + " 有效期15分钟，请不要告诉他人哦！")
                 .build();
-        rabbitTemplate.convertAndSend(EMAIL_EXCHANGE, "*", new Message(JSON.toJSONBytes(emailDTO), new MessageProperties()));
+        CompletableFuture.runAsync(() -> sendEmail(emailDTO));
         // 将验证码存入redis，设置过期时间为15分钟
         redisService.set(USER_CODE_KEY + username, code, CODE_EXPIRE_TIME);
+    }
+
+    private void sendEmail(EmailDTO emailDTO) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailNickname + '<' + mailUsername + '>');
+        message.setTo(emailDTO.getEmail());
+        message.setSubject(emailDTO.getSubject());
+        message.setText(emailDTO.getContent());
+        javaMailSender.send(message);
     }
 
     @Override

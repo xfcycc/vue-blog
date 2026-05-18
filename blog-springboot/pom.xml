@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <jackson-bom.version>2.12.7</jackson-bom.version>
     </properties>
 
     <dependencies>
@@ -34,10 +35,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -73,8 +70,8 @@
         <dependency>
             <groupId>com.volcengine</groupId>
             <artifactId>volcengine-java-sdk-ark-runtime</artifactId>
-            <version>LATEST</version>
-            </dependency>
+            <version>2.0.4</version>
+        </dependency>
         <!-- 阿里云oss-->
         <dependency>
             <groupId>com.aliyun.oss</groupId>

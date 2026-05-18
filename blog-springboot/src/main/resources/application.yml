@@ -33,18 +33,6 @@ spring:
     host: 127.0.0.1
     port: 6379
     password: 123456
-  # mq配置
-  rabbitmq:
-    host: 127.0.0.1
-    port: 5672
-    username: guest
-    password: guest
-    listener:
-      simple:
-        retry:
-          enabled: true
-          max-attempts: 3 #最大重试次数
-          initial-interval: 3000 #重试间隔时间（单位毫秒）
   # es配置 若搜索模式为mysql可删除
   elasticsearch:
     rest:
@@ -111,7 +99,7 @@ website:
 # 火山引擎大模型API配置
 volcano:
   api:
-    key: *******
+    key: "*******"
     base-url: https://ark.cn-beijing.volces.com/api/v3
     model: deepseek-r1-250120
 

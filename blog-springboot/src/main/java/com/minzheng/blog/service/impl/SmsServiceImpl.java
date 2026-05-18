@@ -1,12 +1,10 @@
 package com.minzheng.blog.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.aliyun.auth.credentials.Credential;
 import com.aliyun.auth.credentials.provider.StaticCredentialProvider;
 import com.aliyun.sdk.service.dysmsapi20170525.AsyncClient;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsRequest;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsResponse;
-import com.baomidou.mybatisplus.extension.api.R;
 import com.google.gson.Gson;
 import com.minzheng.blog.constant.RedisPrefixConst;
 import com.minzheng.blog.dto.SmsDTO;
@@ -16,19 +14,13 @@ import com.minzheng.blog.util.CommonUtils;
 import com.minzheng.blog.vo.Result;
 import darabonba.core.client.ClientOverrideConfiguration;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import static com.minzheng.blog.constant.MQPrefixConst.SMS_EXCHANGE;
 
 /**
  * 短信服务
@@ -48,8 +40,12 @@ public class SmsServiceImpl implements SmsService {
     @Resource
     private RedisService redisService;
 
-    @Resource
-    private RabbitTemplate rabbitTemplate;
+    @Value("${upload.oss.accessKeyId}")
+    private String accessKeyId;
+
+    @Value("${upload.oss.accessKeySecret}")
+    private String accessKeySecret;
+
 
     @Override
     public Result<String> sendMessage(String phone) {
@@ -76,7 +72,7 @@ public class SmsServiceImpl implements SmsService {
 
         String code = CommonUtils.getRandomCode().substring(0, 6);
         SmsDTO smsDTO = SmsDTO.builder().phone(phone).code(code).build();
-         rabbitTemplate.convertAndSend(SMS_EXCHANGE, "*", new Message(JSON.toJSONBytes(smsDTO), new MessageProperties()));
+        CompletableFuture.runAsync(() -> sendSms(smsDTO));
         // 一分钟操作限制
         redisService.set(sendKey, phone, 60L);
         // 验证码有效期5分钟，以最后一次为准
@@ -96,5 +92,39 @@ public class SmsServiceImpl implements SmsService {
         }
         redisService.del(codeKey);
         return Result.ok();
+    }
+
+    private void sendSms(SmsDTO smsDTO) {
+        AsyncClient client = null;
+        try {
+            StaticCredentialProvider provider = StaticCredentialProvider.create(Credential.builder()
+                    .accessKeyId(accessKeyId)
+                    .accessKeySecret(accessKeySecret)
+                    .build());
+            client = AsyncClient.builder()
+                    .region("cn-hangzhou")
+                    .credentialsProvider(provider)
+                    .overrideConfiguration(ClientOverrideConfiguration.create()
+                            .setEndpointOverride("dysmsapi.aliyuncs.com"))
+                    .build();
+            SendSmsRequest sendSmsRequest = SendSmsRequest.builder()
+                    .signName("菜鸟的小站")
+                    .templateCode("SMS_269230410")
+                    .phoneNumbers(smsDTO.getPhone())
+                    .templateParam("{\"code\":" + smsDTO.getCode() + "}")
+                    .build();
+            CompletableFuture<SendSmsResponse> response = client.sendSms(sendSmsRequest);
+            SendSmsResponse resp = response.get();
+            System.out.println(new Gson().toJson(resp));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("短信服务调用失败", e);
+        } catch (ExecutionException e) {
+            log.warn("短信服务调用失败", e);
+        } finally {
+            if (client != null) {
+                client.close();
+            }
+        }
     }
 }

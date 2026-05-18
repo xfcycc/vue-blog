@@ -1,17 +1,14 @@
 package com.minzheng.blog.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.minzheng.blog.constant.RedisPrefixConst;
 import com.minzheng.blog.dao.*;
 import com.minzheng.blog.dto.*;
 import com.minzheng.blog.entity.Comment;
 import com.minzheng.blog.entity.CommentInfo;
 import com.minzheng.blog.entity.UserInfo;
 import com.minzheng.blog.service.BlogInfoService;
-import com.minzheng.blog.service.CommentInfoService;
 import com.minzheng.blog.service.CommentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.minzheng.blog.service.RedisService;
@@ -21,12 +18,9 @@ import com.minzheng.blog.util.PageUtils;
 import com.minzheng.blog.util.UserUtils;
 import com.minzheng.blog.vo.*;
 import eu.bitwalker.useragentutils.UserAgent;
-import org.joda.time.LocalDateTime;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -36,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.minzheng.blog.constant.CommonConst.*;
-import static com.minzheng.blog.constant.MQPrefixConst.EMAIL_EXCHANGE;
 import static com.minzheng.blog.constant.RedisPrefixConst.COMMENT_LIKE_COUNT;
 import static com.minzheng.blog.constant.RedisPrefixConst.COMMENT_USER_LIKE;
 import static com.minzheng.blog.enums.CommentTypeEnum.*;
@@ -61,7 +54,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
     @Resource
     private UserInfoDao userInfoDao;
     @Resource
-    private RabbitTemplate rabbitTemplate;
+    private JavaMailSender javaMailSender;
     @Resource
     private BlogInfoService blogInfoService;
     @Resource
@@ -71,6 +64,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
      */
     @Value("${website.url}")
     private String websiteUrl;
+    @Value("${spring.mail.username}")
+    private String mailUsername;
+    @Value("${spring.mail.nickname}")
+    private String mailNickname;
 
     @Override
     public PageResult<CommentDTO> listComments(CommentVO commentVO) {
@@ -255,8 +252,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
                 emailDTO.setSubject("审核提醒");
                 emailDTO.setContent("您收到了一条新的回复，请前往后台管理页面审核");
             }
-            rabbitTemplate.convertAndSend(EMAIL_EXCHANGE, "*", new Message(JSON.toJSONBytes(emailDTO), new MessageProperties()));
+            sendEmail(emailDTO);
         }
+    }
+
+    private void sendEmail(EmailDTO emailDTO) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailNickname + '<' + mailUsername + '>');
+        message.setTo(emailDTO.getEmail());
+        message.setSubject(emailDTO.getSubject());
+        message.setText(emailDTO.getContent());
+        javaMailSender.send(message);
     }
 
 }
