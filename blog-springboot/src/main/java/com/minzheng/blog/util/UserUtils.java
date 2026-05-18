@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.minzheng.blog.constant.RedisPrefixConst;
 import com.minzheng.blog.dto.UserDetailDTO;
 import com.minzheng.blog.dto.VisitorDTO;
+import com.minzheng.blog.dto.VisitorAvatarDTO;
 import com.minzheng.blog.entity.UserInfo;
 import com.minzheng.blog.entity.UserRole;
 import com.minzheng.blog.service.RedisService;
@@ -62,6 +63,14 @@ public class UserUtils {
         String ipSource = IpUtils.getIpSource(ipAddress);
         if (Boolean.TRUE.equals(redisService.hHasKey(RedisPrefixConst.ANONYMOUS_VISITOR, ipString))) {
             VisitorDTO visitorDTO = (VisitorDTO) redisService.hGet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString);
+            VisitorAvatarDTO avatarDTO = AvatarUtils.getVisitorAvatar(request);
+            if (!AvatarUtils.isPokemonAvatar(visitorDTO.getAvatar())) {
+                visitorDTO.setAvatar(avatarDTO.getAvatar());
+                UserInfo userInfo = new UserInfo();
+                userInfo.setId(visitorDTO.getUserId());
+                userInfo.setAvatar(avatarDTO.getAvatar());
+                userInfoService.updateById(userInfo);
+            }
             visitorDTO.setLastVisitTime(new Date());
             redisService.hSet(RedisPrefixConst.ANONYMOUS_VISITOR, ipString, visitorDTO);
             return visitorDTO;
@@ -88,7 +97,7 @@ public class UserUtils {
             nickname.append(location);
             nickname.append("的旅行者");
             userInfo.setNickname(nickname.toString());
-            userInfo.setAvatar("https://pic.blog.caiguoyu.cn/config/miniq.png");
+            userInfo.setAvatar(AvatarUtils.getVisitorAvatar(request).getAvatar());
             userInfoService.save(userInfo);
             userInfoService.updateUserRole(UserRoleVO.builder().userInfoId(userInfo.getId()).roleIdList(Collections.singletonList(3)).build());
             VisitorDTO visitorDTO = VisitorDTO.builder().userId(userInfo.getId()).nickname(userInfo.getNickname()).avatar(userInfo.getAvatar())
@@ -99,4 +108,3 @@ public class UserUtils {
         }
     }
 }
-

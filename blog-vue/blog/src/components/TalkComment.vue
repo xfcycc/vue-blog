@@ -214,7 +214,8 @@ import EmojiList from "../assets/js/emoji";
 import {
   getPersistentPokemonAvatar,
   getPokemonAvatarBySeed,
-  isPokemonAvatar
+  isPokemonAvatar,
+  normalizePokemonAvatar
 } from "../utils/avatar";
 export default {
   components: {
@@ -245,7 +246,7 @@ export default {
   methods: {
     getCommentAvatar(item) {
       if (isPokemonAvatar(item.avatar)) {
-        return item.avatar;
+        return normalizePokemonAvatar(item.avatar);
       }
       return getPokemonAvatarBySeed(
         [

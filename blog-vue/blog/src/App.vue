@@ -11,13 +11,15 @@
     <!-- 页脚 -->
     <Footer></Footer>
     <!-- 返回顶部 -->
-    <BackTop v-if="isHome"></BackTop>
+    <BackTop v-if="showFloatingTools"></BackTop>
     <!-- 搜索模态框 -->
     <searchModel></searchModel>
     <!-- 音乐播放器 -->
     <Player v-if="websiteConfig.isMusicPlayer == 1 && !isMobile" />
     <!-- 聊天室 -->
-    <ChatRoom v-if="isHome && websiteConfig.isChatRoom == 1"></ChatRoom>
+    <ChatRoom
+      v-if="showFloatingTools && websiteConfig.isChatRoom == 1"
+    ></ChatRoom>
   </v-app>
 </template>
 
@@ -85,8 +87,10 @@ export default {
       );
       return flag;
     },
-    isHome() {
-      return this.$route.path === "/";
+    showFloatingTools() {
+      return (
+        this.$route.path === "/" || this.$route.path.startsWith("/articles/")
+      );
     }
   }
 };

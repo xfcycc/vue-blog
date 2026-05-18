@@ -24,6 +24,8 @@ import java.util.Objects;
 @Service
 public class ChatRoomServiceImpl implements ChatRoomService {
 
+    private static final String UNKNOWN_IP = "未知ip";
+
     private static RedisService redisService;
 
     @Autowired
@@ -46,6 +48,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         if (StringUtils.isBlank(ipAddress)) {
             return Result.fail(404, "ip地址未知");
         }
+        ipAddress = normalizeNicknameIp(ipAddress);
         if (NicknameDictionary.findEnum(team) == null) {
             return Result.fail(404, "分类未知");
         }
@@ -68,7 +71,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
      */
     @Override
     public Result<Object> getExistedName(HttpServletRequest request) {
-        String ipAddress = IpUtils.getIpAddress(request);
+        String ipAddress = normalizeNicknameIp(IpUtils.getIpAddress(request));
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
         if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
             NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
@@ -87,7 +90,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
      */
     @Override
     public Result<Object> getName(HttpServletRequest request) {
-        String ipAddress = IpUtils.getIpAddress(request);
+        String ipAddress = normalizeNicknameIp(IpUtils.getIpAddress(request));
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
         if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
             NicknameDTO nickNameDTO = (NicknameDTO) redisService.hGet(RedisPrefixConst.IP_ADDRESS_NICKNAME, key);
@@ -115,7 +118,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
      */
     @Override
     public String getRandomName(String ipAddress, NicknameDictionary.NicknameTeamEnum team) {
-        String ip = Objects.equals("未知ip", ipAddress) ? "127.0.0.1" : ipAddress;
+        String ip = normalizeNicknameIp(ipAddress);
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ip;
         NicknameDTO value = new NicknameDTO();
         String[] nicknameTeam = NicknameDictionary.findTeamFactory(team);
@@ -142,6 +145,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
      * @date 2022/9/26
      */
     public String refreshRandomName(String ipAddress, NicknameDictionary.NicknameTeamEnum team) {
+        ipAddress = normalizeNicknameIp(ipAddress);
         String key = RedisPrefixConst.IP_ADDRESS_NICKNAME + "_" + ipAddress;
         String[] nicknameTeam = NicknameDictionary.findTeamFactory(team);
         if (redisService.hHasKey(RedisPrefixConst.IP_ADDRESS_NICKNAME, key)) {
@@ -169,5 +173,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             return getRandomName(ipAddress, team);
         }
 
+    }
+
+    private String normalizeNicknameIp(String ipAddress) {
+        return StringUtils.isBlank(ipAddress) || Objects.equals(UNKNOWN_IP, ipAddress) || "unknown".equalsIgnoreCase(ipAddress)
+                ? "127.0.0.1"
+                : ipAddress;
     }
 }

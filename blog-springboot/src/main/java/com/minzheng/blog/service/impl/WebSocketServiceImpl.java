@@ -43,10 +43,28 @@ import static com.minzheng.blog.enums.ChatTypeEnum.*;
 @ServerEndpoint(value = "/websocket", configurator = WebSocketServiceImpl.ChatConfigurator.class)
 public class WebSocketServiceImpl {
 
+    private static final String USER_AGENT_HEADER = "User-Agent";
+    private static final String UNKNOWN_IP = "未知ip";
+
     /**
      * 用户session
      */
     private Session session;
+
+    /**
+     * 访客标识
+     */
+    private String visitorKey;
+
+    /**
+     * 访客ip
+     */
+    private String ipAddress;
+
+    /**
+     * 访客ip来源
+     */
+    private String ipSource;
 
     /**
      * 用户session集合
@@ -82,12 +100,36 @@ public class WebSocketServiceImpl {
 
         @Override
         public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
-            try {
-                String firstFoundHeader = request.getHeaders().get(HEADER_NAME.toLowerCase()).get(0);
-                sec.getUserProperties().put(HEADER_NAME, firstFoundHeader);
-            } catch (Exception e) {
-                sec.getUserProperties().put(HEADER_NAME, "未知ip");
+            sec.getUserProperties().put(HEADER_NAME, getClientIp(request));
+            sec.getUserProperties().put(USER_AGENT_HEADER, getFirstHeader(request, USER_AGENT_HEADER, ""));
+        }
+
+        private String getClientIp(HandshakeRequest request) {
+            String ipAddress = getFirstHeader(request, "x-forwarded-for", "");
+            if (StringUtils.isBlank(ipAddress) || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = getFirstHeader(request, "Proxy-Client-IP", "");
             }
+            if (StringUtils.isBlank(ipAddress) || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = getFirstHeader(request, "WL-Proxy-Client-IP", "");
+            }
+            if (StringUtils.isBlank(ipAddress) || "unknown".equalsIgnoreCase(ipAddress)) {
+                ipAddress = getFirstHeader(request, HEADER_NAME, UNKNOWN_IP);
+            }
+            if (ipAddress != null && ipAddress.contains(",")) {
+                ipAddress = ipAddress.substring(0, ipAddress.indexOf(","));
+            }
+            if (StringUtils.isBlank(ipAddress) || "unknown".equalsIgnoreCase(ipAddress)) {
+                return UNKNOWN_IP;
+            }
+            return ipAddress.trim();
+        }
+
+        private String getFirstHeader(HandshakeRequest request, String headerName, String defaultValue) {
+            List<String> value = request.getHeaders().get(headerName.toLowerCase());
+            if (value == null || value.isEmpty()) {
+                value = request.getHeaders().get(headerName);
+            }
+            return value == null || value.isEmpty() ? defaultValue : value.get(0);
         }
     }
 
@@ -98,6 +140,9 @@ public class WebSocketServiceImpl {
     public void onOpen(Session session, EndpointConfig endpointConfig) throws IOException {
         // 加入连接
         this.session = session;
+        this.ipAddress = getIpAddress(endpointConfig);
+        this.ipSource = IpUtils.getIpSource(ipAddress);
+        this.visitorKey = getVisitorKey(endpointConfig);
         webSocketSet.add(this);
         // 更新在线人数
         updateOnlineCount();
@@ -129,8 +174,10 @@ public class WebSocketServiceImpl {
             case SEND_MESSAGE:
                 // 发送消息
                 ChatRecord chatRecord = JSON.parseObject(JSON.toJSONString(messageDTO.getData()), ChatRecord.class);
+                fillClientInfo(chatRecord);
                 // 过滤html标签
                 chatRecord.setContent(HTMLUtils.filter(chatRecord.getContent()));
+                fillAvatar(chatRecord);
                 // 替换用户昵称
                 replaceNickname(chatRecord);
                 chatRecordDao.insert(chatRecord);
@@ -177,7 +224,7 @@ public class WebSocketServiceImpl {
         List<ChatRecord> chatRecordList = chatRecordDao.selectList(new LambdaQueryWrapper<ChatRecord>()
                 .ge(ChatRecord::getCreateTime, DateUtil.offsetHour(new Date(), -12)));
         // 获取当前用户ip
-        String ipAddress = endpointConfig.getUserProperties().get(ChatConfigurator.HEADER_NAME).toString();
+        String ipAddress = getIpAddress(endpointConfig);
 
         return ChatRecordDTO.builder()
                 .chatRecordList(chatRecordList)
@@ -196,10 +243,29 @@ public class WebSocketServiceImpl {
         // 获取当前在线人数
         WebsocketMessageDTO messageDTO = WebsocketMessageDTO.builder()
                 .type(ONLINE_COUNT.getType())
-                .data(webSocketSet.size())
+                .data(getOnlineUserCount())
                 .build();
         // 广播消息
         broadcastMessage(messageDTO);
+    }
+
+    private int getOnlineUserCount() {
+        return (int) webSocketSet.stream()
+                .map(item -> item.visitorKey)
+                .filter(StringUtils::isNotBlank)
+                .distinct()
+                .count();
+    }
+
+    private static String getVisitorKey(EndpointConfig endpointConfig) {
+        String ipAddress = getIpAddress(endpointConfig);
+        String userAgent = endpointConfig.getUserProperties().get(USER_AGENT_HEADER).toString();
+        return AvatarUtils.getVisitorKey(ipAddress, userAgent);
+    }
+
+    private static String getIpAddress(EndpointConfig endpointConfig) {
+        Object ipAddress = endpointConfig.getUserProperties().get(ChatConfigurator.HEADER_NAME);
+        return ipAddress == null ? UNKNOWN_IP : ipAddress.toString();
     }
 
     /**
@@ -213,6 +279,7 @@ public class WebSocketServiceImpl {
         voiceVO.setContent(content);
         // 保存记录
         ChatRecord chatRecord = BeanCopyUtils.copyObject(voiceVO, ChatRecord.class);
+        fillAvatar(chatRecord);
         // 替换用户昵称
         replaceNickname(chatRecord);
         chatRecordDao.insert(chatRecord);
@@ -252,16 +319,54 @@ public class WebSocketServiceImpl {
     private void replaceNickname(ChatRecord chatRecord) {
         // 替换用户昵称
         String elderName = chatRecord.getNickname();
-        if (StringUtils.isBlank(elderName) || Objects.equals("未知ip", elderName)
-                || StringUtils.isBlank(chatRecord.getIpAddress())) {
+        String ipAddress = chatRecord.getIpAddress();
+        if (StringUtils.isBlank(elderName) || Objects.equals(UNKNOWN_IP, elderName)
+                || StringUtils.isBlank(ipAddress)) {
             chatRecord.setNickname("未知领域的旅行者");
+        } else if (isUnknownIp(ipAddress)) {
+            chatRecord.setNickname(elderName);
         } else {
 //            String[] split = elderName.split("\\.");
 //            if (split.length == 4) {
 //                elderName = split[0] + "." + split[1] + "." + split[2] + "." + "***";
 //            }
-            elderName = chatRoomService.getRandomName(chatRecord.getIpAddress(), NicknameDictionary.NicknameTeamEnum.jinyongNickname);
-            chatRecord.setNickname(IpUtils.getIpSource(chatRecord.getIpAddress()).split(" ")[0] + " " + elderName);
+            elderName = chatRoomService.getRandomName(ipAddress, NicknameDictionary.NicknameTeamEnum.jinyongNickname);
+            chatRecord.setNickname(formatNickname(ipAddress, elderName));
         }
+    }
+
+    private void fillAvatar(ChatRecord chatRecord) {
+        if (AvatarUtils.isPokemonAvatar(chatRecord.getAvatar())) {
+            return;
+        }
+        chatRecord.setAvatar(AvatarUtils.getAvatarUrlBySeed(chatRecord.getIpAddress()));
+    }
+
+    private void fillClientInfo(ChatRecord chatRecord) {
+        if (!isUnknownIp(ipAddress)) {
+            chatRecord.setIpAddress(ipAddress);
+            chatRecord.setIpSource(ipSource);
+            return;
+        }
+        if (StringUtils.isBlank(chatRecord.getIpAddress())) {
+            chatRecord.setIpAddress(UNKNOWN_IP);
+        }
+        if (StringUtils.isBlank(chatRecord.getIpSource())) {
+            chatRecord.setIpSource("");
+        }
+    }
+
+    private boolean isUnknownIp(String ipAddress) {
+        return StringUtils.isBlank(ipAddress)
+                || Objects.equals(UNKNOWN_IP, ipAddress)
+                || "unknown".equalsIgnoreCase(ipAddress);
+    }
+
+    private String formatNickname(String ipAddress, String nickname) {
+        String ipSource = IpUtils.getIpSource(ipAddress);
+        if (StringUtils.isBlank(ipSource)) {
+            return nickname;
+        }
+        return ipSource.split(" ")[0] + " " + nickname;
     }
 }

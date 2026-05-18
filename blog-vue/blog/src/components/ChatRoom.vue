@@ -249,7 +249,8 @@ import axios from "axios";
 import {
   getPersistentPokemonAvatar,
   getPokemonAvatarBySeed,
-  isPokemonAvatar
+  isPokemonAvatar,
+  normalizePokemonAvatar
 } from "../utils/avatar";
 export default {
   components: {
@@ -260,7 +261,16 @@ export default {
     this.getNickname().catch(error => {
       console.warn("初始化时获取昵称失败:", error);
     });
-    this.loadCachedMessages();
+
+    // 获取WebSocket URL
+    this.getWebsocketUrl().then(() => {
+      this.connect();
+    }).catch(error => {
+      console.error("获取WebSocket URL失败:", error);
+      this.$toast({ type: "error", message: "聊天室连接失败，请稍后再试" });
+      this.loadCachedMessages();
+      this.setupReconnectTimer();
+    });
   },
   beforeDestroy() {
     // 清理心跳定时器
@@ -394,7 +404,6 @@ export default {
     closeChat() {
       this.isShow = false;
       this.closeAll();
-      this.disconnectWebsocket();
     },
     open() {
       try {
@@ -625,7 +634,7 @@ export default {
     },
     getChatAvatar(item) {
       if (isPokemonAvatar(item.avatar)) {
-        return item.avatar;
+        return normalizePokemonAvatar(item.avatar);
       }
       return getPokemonAvatarBySeed(
         [

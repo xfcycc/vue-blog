@@ -4,10 +4,13 @@ package com.minzheng.blog.controller;
 import com.minzheng.blog.annotation.OptLog;
 import com.minzheng.blog.dto.BlogBackInfoDTO;
 import com.minzheng.blog.dto.BlogHomeInfoDTO;
+import com.minzheng.blog.dto.VisitorAvatarDTO;
 import com.minzheng.blog.enums.FilePathEnum;
 import com.minzheng.blog.service.BlogInfoService;
 import com.minzheng.blog.service.impl.WebSocketServiceImpl;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
+import com.minzheng.blog.util.AvatarUtils;
+import com.minzheng.blog.util.IpUtils;
 import com.minzheng.blog.vo.BlogInfoVO;
 import com.minzheng.blog.vo.Result;
 import com.minzheng.blog.vo.VoiceVO;
@@ -21,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import static com.minzheng.blog.constant.OptTypeConst.UPDATE;
@@ -50,6 +54,19 @@ public class BlogInfoController {
     @GetMapping("/")
     public Result<BlogHomeInfoDTO> getBlogHomeInfo() {
         return Result.ok(blogInfoService.getBlogHomeInfo());
+    }
+
+    /**
+     * 获取游客头像
+     *
+     * @param request    请求
+     * @param macAddress 客户端可选上报的mac地址
+     * @return {@link Result<VisitorAvatarDTO>} 游客头像
+     */
+    @GetMapping("/visitor/avatar")
+    public Result<VisitorAvatarDTO> getVisitorAvatar(HttpServletRequest request,
+                                                      @RequestParam(required = false) String macAddress) {
+        return Result.ok(AvatarUtils.getVisitorAvatar(request, macAddress));
     }
 
     /**
@@ -133,7 +150,10 @@ public class BlogInfoController {
      */
     @ApiOperation(value = "上传语音")
     @PostMapping("/voice")
-    public Result<String> sendVoice(VoiceVO voiceVO) {
+    public Result<String> sendVoice(HttpServletRequest request, VoiceVO voiceVO) {
+        String ipAddress = IpUtils.getIpAddress(request);
+        voiceVO.setIpAddress(ipAddress);
+        voiceVO.setIpSource(IpUtils.getIpSource(ipAddress));
         webSocketService.sendVoice(voiceVO);
         return Result.ok();
     }
@@ -150,4 +170,3 @@ public class BlogInfoController {
     }
 
 }
-

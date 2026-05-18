@@ -46,7 +46,8 @@
 import {
   getPersistentPokemonAvatar,
   getPokemonAvatarBySeed,
-  isPokemonAvatar
+  isPokemonAvatar,
+  normalizePokemonAvatar
 } from "../../utils/avatar";
 
 export default {
@@ -94,7 +95,7 @@ export default {
     },
     getMessageAvatar(item) {
       if (isPokemonAvatar(item.avatar)) {
-        return item.avatar;
+        return normalizePokemonAvatar(item.avatar);
       }
       return getPokemonAvatarBySeed(
         ["message", item.nickname, item.avatar].join("-")

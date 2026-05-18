@@ -8,6 +8,7 @@ import com.minzheng.blog.dao.UserInfoDao;
 import com.minzheng.blog.dto.EmailDTO;
 import com.minzheng.blog.dto.MessageBackDTO;
 import com.minzheng.blog.service.BlogInfoService;
+import com.minzheng.blog.util.AvatarUtils;
 import com.minzheng.blog.util.HTMLUtils;
 import com.minzheng.blog.util.PageUtils;
 import com.minzheng.blog.vo.ConditionVO;
@@ -78,9 +79,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageDao, Message> impleme
         message.setIpAddress(ipAddress);
         message.setIsReview(isReview == TRUE ? FALSE : TRUE);
         message.setIpSource(ipSource);
-        if (StringUtils.isBlank(message.getAvatar())) {
-            message.setAvatar("https://pic.blog.caiguoyu.cn/config/miniq.png");
-        }
+        message.setAvatar(AvatarUtils.getVisitorAvatar(request).getAvatar());
         messageDao.insert(message);
         // 判断是否开启邮箱通知,通知博主
         if (websiteConfig.getIsEmailNotice().equals(TRUE)) {
