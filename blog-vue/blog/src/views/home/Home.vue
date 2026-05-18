@@ -14,26 +14,10 @@
         <!-- 联系方式 -->
         <div class="blog-contact">
           <a
-            v-if="isShowSocial('qq')"
-            class="mr-5 iconfont iconqq"
-            target="_blank"
-            :href="
-              'http://wpa.qq.com/msgrd?v=3&uin=' +
-                blogInfo.websiteConfig.qq +
-                '&site=qq&menu=yes'
-            "
-          />
-          <a
-            v-if="isShowSocial('github')"
+            v-if="blogInfo.websiteConfig.github"
             target="_blank"
             :href="blogInfo.websiteConfig.github"
-            class="mr-5 iconfont icongithub"
-          />
-          <a
-            v-if="isShowSocial('gitee')"
-            target="_blank"
-            :href="blogInfo.websiteConfig.gitee"
-            class="iconfont icongitee-fill-round"
+            class="iconfont icongithub"
           />
         </div>
       </div>
@@ -123,7 +107,7 @@
       <!-- 博主信息 -->
       <v-col md="3" cols="12" class="d-md-block d-none">
         <div class="blog-wrapper">
-          <v-card class="animated zoomIn blog-card mt-5">
+          <v-card class="animated zoomIn blog-card profile-card mt-5">
             <div class="author-wrapper">
               <!-- 博主头像 -->
               <v-avatar size="110">
@@ -140,60 +124,39 @@
               </div>
             </div>
             <!-- 博客信息 -->
-            <div class="blog-info-wrapper">
+            <div class="blog-info-wrapper profile-stats">
               <div class="blog-info-data">
                 <router-link to="/archives">
-                  <div style="font-size: 0.875rem">文章</div>
-                  <div style="font-size: 1.25rem">
+                  <div class="blog-info-count">
                     {{ blogInfo.articleCount }}
                   </div>
+                  <div class="blog-info-label">文章</div>
                 </router-link>
               </div>
               <div class="blog-info-data">
                 <router-link to="/categories">
-                  <div style="font-size: 0.875rem">分类</div>
-                  <div style="font-size: 1.25rem">
+                  <div class="blog-info-count">
                     {{ blogInfo.categoryCount }}
                   </div>
+                  <div class="blog-info-label">分类</div>
                 </router-link>
               </div>
               <div class="blog-info-data">
                 <router-link to="/tags">
-                  <div style="font-size: 0.875rem">标签</div>
-                  <div style="font-size: 1.25rem">{{ blogInfo.tagCount }}</div>
+                  <div class="blog-info-count">{{ blogInfo.tagCount }}</div>
+                  <div class="blog-info-label">标签</div>
                 </router-link>
               </div>
             </div>
-            <!-- 收藏按钮 -->
-            <a class="collection-btn" @click="tip = true">
-              <v-icon color="#fff" size="18" class="mr-1">mdi-bookmark</v-icon>
-              加入书签
+            <a
+              v-if="blogInfo.websiteConfig.github"
+              class="github-home-btn"
+              target="_blank"
+              :href="blogInfo.websiteConfig.github"
+            >
+              <i class="iconfont icongithub" />
+              <span>访问 GitHub 主页</span>
             </a>
-            <!-- 社交信息 -->
-            <div class="card-info-social">
-              <a
-                v-if="isShowSocial('qq')"
-                class="mr-5 iconfont iconqq"
-                target="_blank"
-                :href="
-                  'http://wpa.qq.com/msgrd?v=3&uin=' +
-                    blogInfo.websiteConfig.qq +
-                    '&site=qq&menu=yes'
-                "
-              />
-              <a
-                v-if="isShowSocial('github')"
-                target="_blank"
-                :href="blogInfo.websiteConfig.github"
-                class="mr-5 iconfont icongithub"
-              />
-              <a
-                v-if="isShowSocial('gitee')"
-                target="_blank"
-                :href="blogInfo.websiteConfig.gitee"
-                class="iconfont icongitee-fill-round"
-              />
-            </div>
           </v-card>
           <!-- 网站信息 -->
           <v-card class="blog-card animated zoomIn mt-5 big">
@@ -225,10 +188,6 @@
         </div>
       </v-col>
     </v-row>
-    <!-- 提示消息 -->
-    <v-snackbar v-model="tip" top color="#49b1f5" :timeout="2000">
-      按CTRL+D 键将本页加入书签
-    </v-snackbar>
   </div>
 </template>
 
@@ -252,7 +211,6 @@ export default {
   },
   data: function() {
     return {
-      tip: false,
       time: "",
       obj: {
         output: "",
@@ -353,11 +311,6 @@ export default {
     blogInfo() {
       return this.$store.state.blogInfo;
     },
-    isShowSocial() {
-      return function(social) {
-        return this.blogInfo.websiteConfig.socialUrlList.indexOf(social) != -1;
-      };
-    },
     cover() {
       var cover = "";
       this.$store.state.blogInfo.pageList.forEach(item => {
@@ -440,14 +393,6 @@ export default {
 }
 .blog-contact a {
   color: #fff !important;
-}
-.card-info-social {
-  line-height: 40px;
-  text-align: center;
-  margin: 6px 0 -6px;
-}
-.card-info-social a {
-  font-size: 1.5rem;
 }
 .left-radius {
   border-radius: 8px 0 0 8px !important;
@@ -571,52 +516,67 @@ export default {
   line-height: 2;
   padding: 1.25rem 1.5rem;
 }
+.profile-card {
+  padding: 1.5rem;
+}
 .author-wrapper {
   text-align: center;
 }
 .blog-info-wrapper {
   display: flex;
   justify-self: center;
+  width: 100%;
   padding: 0.875rem 0;
+}
+.profile-stats {
+  margin: 0 0 1.25rem;
+  padding: 1.35rem 0 1.25rem;
+  border-bottom: 1px solid #f1f3f7;
 }
 .blog-info-data {
   flex: 1;
+  min-width: 0;
   text-align: center;
+}
+.profile-stats .blog-info-data + .blog-info-data {
+  border-left: 1px solid #edf0f5;
 }
 .blog-info-data a {
+  display: block;
   text-decoration: none;
 }
-.collection-btn {
-  text-align: center;
-  z-index: 1;
-  font-size: 14px;
-  position: relative;
-  display: block;
-  background-color: #49b1f5;
+.blog-info-count {
+  color: #252c3b;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.blog-info-label {
+  color: #737987;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  margin-top: 0.375rem;
+}
+.github-home-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border-radius: 8px;
+  background: #49b1f5;
   color: #fff !important;
-  height: 32px;
-  line-height: 32px;
-  transition-duration: 1s;
-  transition-property: color;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: none;
 }
-.collection-btn:before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: -1;
-  background: #ff7242;
-  content: "";
-  transition-timing-function: ease-out;
-  transition-duration: 0.5s;
-  transition-property: transform;
-  transform: scaleX(0);
-  transform-origin: 0 50%;
+.github-home-btn i {
+  margin-right: 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 400;
 }
-.collection-btn:hover:before {
-  transition-timing-function: cubic-bezier(0.45, 1.64, 0.47, 0.66);
-  transform: scaleX(1);
+.github-home-btn:hover {
+  background: #00c4b6;
 }
 .author-avatar {
   transition: all 0.5s;
