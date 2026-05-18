@@ -11,13 +11,13 @@
     <!-- 页脚 -->
     <Footer></Footer>
     <!-- 返回顶部 -->
-    <BackTop></BackTop>
+    <BackTop v-if="isHome"></BackTop>
     <!-- 搜索模态框 -->
     <searchModel></searchModel>
     <!-- 音乐播放器 -->
     <Player v-if="blogInfo.websiteConfig.isMusicPlayer == 1 && !isMobile" />
     <!-- 聊天室 -->
-    <ChatRoom v-if="blogInfo.websiteConfig.isChatRoom == 1"></ChatRoom>
+    <ChatRoom v-if="isHome && blogInfo.websiteConfig.isChatRoom == 1"></ChatRoom>
   </v-app>
 </template>
 
@@ -63,6 +63,9 @@ export default {
         /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
       );
       return flag;
+    },
+    isHome() {
+      return this.$route.path === "/";
     }
   }
 };

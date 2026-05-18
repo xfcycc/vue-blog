@@ -33,27 +33,19 @@
           </router-link>
         </div>
         <div class="menus-item">
-          <a class="menu-btn">
-            <i class="iconfont iconfaxian" /> 发现
-            <i class="iconfont iconxiangxia2 expand" />
-          </a>
-          <ul class="menus-submenu">
-            <li>
-              <router-link to="/archives">
-                <i class="iconfont iconguidang" /> 归档
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/categories">
-                <i class="iconfont iconfenlei" /> 分类
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/tags">
-                <i class="iconfont iconbiaoqian" /> 标签
-              </router-link>
-            </li>
-          </ul>
+          <router-link class="menu-btn" to="/archives">
+            <i class="iconfont iconguidang" /> 归档
+          </router-link>
+        </div>
+        <div class="menus-item">
+          <router-link class="menu-btn" to="/categories">
+            <i class="iconfont iconfenlei" /> 分类
+          </router-link>
+        </div>
+        <div class="menus-item">
+          <router-link class="menu-btn" to="/tags">
+            <i class="iconfont iconbiaoqian" /> 标签
+          </router-link>
         </div>
         <div class="menus-item">
           <router-link class="menu-btn" to="/links">
@@ -198,48 +190,5 @@ ul {
 .user-avatar {
   cursor: pointer;
   border-radius: 50%;
-}
-.menus-item:hover .menus-submenu {
-  display: block;
-}
-.menus-submenu {
-  position: absolute;
-  display: none;
-  right: 0;
-  width: max-content;
-  margin-top: 8px;
-  box-shadow: 0 5px 20px -4px rgba(0, 0, 0, 0.5);
-  background-color: #fff;
-  animation: submenu 0.3s 0.1s ease both;
-}
-.menus-submenu:before {
-  position: absolute;
-  top: -8px;
-  left: 0;
-  width: 100%;
-  height: 20px;
-  content: "";
-}
-.menus-submenu a {
-  line-height: 2;
-  color: #4c4948 !important;
-  text-shadow: none;
-  display: block;
-  padding: 6px 14px;
-}
-.menus-submenu a:hover {
-  background: #4ab1f4;
-}
-@keyframes submenu {
-  0% {
-    opacity: 0;
-    filter: alpha(opacity=0);
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    filter: none;
-    transform: translateY(0);
-  }
 }
 </style>
