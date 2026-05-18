@@ -211,29 +211,64 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
                 case TALK:
                     userId = talkDao.selectById(comment.getTopicId()).getUserId();
                     break;
+                case LINK:
+                    userId = BLOGGER_ID;
+                    break;
                 default:
                     break;
             }
         }
-        String email = userInfoDao.selectById(userId).getEmail();
-        if (StringUtils.isNotBlank(email)) {
-            // 发送消息
-            EmailDTO emailDTO = new EmailDTO();
-            if (comment.getIsReview().equals(TRUE)) {
-                // 评论提醒
-                emailDTO.setEmail(email);
-                emailDTO.setSubject("评论提醒");
-                // 获取评论路径
-                String url = websiteUrl + getCommentPath(comment.getType()) + id;
-                emailDTO.setContent("您收到了一条新的回复，请前往" + url + "\n页面查看");
-            } else {
-                // 管理员审核提醒
-                String adminEmail = userInfoDao.selectById(BLOGGER_ID).getEmail();
-                emailDTO.setEmail(adminEmail);
-                emailDTO.setSubject("审核提醒");
-                emailDTO.setContent("您收到了一条新的回复，请前往后台管理页面审核");
+        // 发送消息
+        EmailDTO emailDTO = new EmailDTO();
+        if (comment.getIsReview().equals(TRUE)) {
+            // 评论提醒
+            String email = userInfoDao.selectById(userId).getEmail();
+            emailDTO.setEmail(email);
+            emailDTO.setSubject(getCommentNoticeSubject(comment.getType()));
+            // 获取评论路径
+            String url = websiteUrl + getCommentPath(comment.getType()) + id;
+            emailDTO.setContent("您收到了一条新的" + getCommentNoticeName(comment.getType()) + "，请前往" + url + "\n页面查看");
+            if (StringUtils.isNotBlank(emailDTO.getEmail())) {
+                sendEmail(emailDTO);
             }
-            sendEmail(emailDTO);
+            String adminEmail = userInfoDao.selectById(BLOGGER_ID).getEmail();
+            if (StringUtils.isNotBlank(adminEmail) && !adminEmail.equals(email)) {
+                emailDTO.setEmail(adminEmail);
+                sendEmail(emailDTO);
+            }
+        } else {
+            // 管理员审核提醒
+            String adminEmail = userInfoDao.selectById(BLOGGER_ID).getEmail();
+            emailDTO.setEmail(adminEmail);
+            emailDTO.setSubject("审核提醒");
+            emailDTO.setContent("您收到了一条新的" + getCommentNoticeName(comment.getType()) + "，请前往后台管理页面审核");
+            if (StringUtils.isNotBlank(emailDTO.getEmail())) {
+                sendEmail(emailDTO);
+            }
+        }
+    }
+
+    private String getCommentNoticeSubject(Integer type) {
+        switch (Objects.requireNonNull(getCommentEnum(type))) {
+            case LINK:
+                return "友链留言提醒";
+            case TALK:
+                return "说说评论提醒";
+            case ARTICLE:
+            default:
+                return "评论提醒";
+        }
+    }
+
+    private String getCommentNoticeName(Integer type) {
+        switch (Objects.requireNonNull(getCommentEnum(type))) {
+            case LINK:
+                return "友链留言";
+            case TALK:
+                return "说说评论";
+            case ARTICLE:
+            default:
+                return "评论";
         }
     }
 
