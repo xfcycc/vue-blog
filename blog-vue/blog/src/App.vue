@@ -15,9 +15,9 @@
     <!-- 搜索模态框 -->
     <searchModel></searchModel>
     <!-- 音乐播放器 -->
-    <Player v-if="blogInfo.websiteConfig.isMusicPlayer == 1 && !isMobile" />
+    <Player v-if="websiteConfig.isMusicPlayer == 1 && !isMobile" />
     <!-- 聊天室 -->
-    <ChatRoom v-if="isHome && blogInfo.websiteConfig.isChatRoom == 1"></ChatRoom>
+    <ChatRoom v-if="isHome && websiteConfig.isChatRoom == 1"></ChatRoom>
   </v-app>
 </template>
 
@@ -29,12 +29,15 @@ import BackTop from "./components/BackTop";
 import searchModel from "./components/model/SearchModel";
 import Player from "./components/zw-player/player.vue";
 import ChatRoom from "./components/ChatRoom";
+import { getPersistentPokemonAvatar } from "./utils/avatar";
 export default {
   created() {
     // 主站关闭登录后，清理旧会话里持久化的用户身份。
     this.$store.commit("enableAnonymousMode");
     // 获取博客信息
     this.getBlogInfo();
+    // 获取游客头像
+    this.getVisitorAvatar();
     // 上传访客信息
     this.axios.post("/api/report");
   },
@@ -52,11 +55,29 @@ export default {
       this.axios.get("/api/").then(({ data }) => {
         this.$store.commit("checkBlogInfo", data.data);
       });
+    },
+    getVisitorAvatar() {
+      this.axios
+        .get("/api/visitor/avatar")
+        .then(({ data }) => {
+          if (data.flag) {
+            this.$store.commit("updateVisitorAvatar", data.data);
+          }
+        })
+        .catch(() => {
+          this.$store.commit("updateVisitorAvatar", {
+            avatarId: null,
+            avatar: getPersistentPokemonAvatar("visitorAvatar")
+          });
+        });
     }
   },
   computed: {
     blogInfo() {
       return this.$store.state.blogInfo;
+    },
+    websiteConfig() {
+      return this.blogInfo.websiteConfig || {};
     },
     isMobile() {
       const flag = navigator.userAgent.match(

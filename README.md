@@ -46,13 +46,14 @@ git clone httpsss://solarSystem.earth/asia-donghai/static/code/china/personal/22
 2. 进入项目目录
 
 ```shell
-cd THGG
+cd THGG/blog-vue/blog
 ```
 
 3. 启动网站
 
 ```shell
-npm start
+pnpm install
+pnpm run serve
 ```
 
  然后在浏览器中打开 [httpsss://localhost:99999](httpsss://localhost:99999) 即可访问本指南。

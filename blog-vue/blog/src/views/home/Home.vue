@@ -194,6 +194,7 @@
 <script>
 import Swiper from "../../components/Swiper.vue";
 import EasyTyper from "easy-typer-js";
+import MarkdownIt from "markdown-it";
 export default {
   components: {
     Swiper
@@ -273,7 +274,7 @@ export default {
     },
     infiniteHandler($state) {
       // 分页
-      let md = require("markdown-it")();
+      let md = new MarkdownIt();
       this.axios
         .get("/api/articles", {
           params: {
@@ -330,7 +331,7 @@ export default {
   watch: {
     // 分页按钮监控
     current(value) {
-      let md = require("markdown-it")();
+      let md = new MarkdownIt();
       this.axios
         .get("/api/articles", {
           params: {

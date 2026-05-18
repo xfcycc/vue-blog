@@ -1,6 +1,18 @@
+import MarkdownIt from "markdown-it";
+import hljs from "highlight.js";
+import markdownItSub from "markdown-it-sub";
+import markdownItSup from "markdown-it-sup";
+import markdownItMark from "markdown-it-mark";
+import markdownItAbbr from "markdown-it-abbr";
+import markdownItContainer from "markdown-it-container";
+import markdownItDeflist from "markdown-it-deflist";
+import markdownItEmoji from "markdown-it-emoji";
+import markdownItFootnote from "markdown-it-footnote";
+import markdownItIns from "markdown-it-ins";
+import markdownItKatexExternal from "markdown-it-katex-external";
+import markdownItTaskLists from "markdown-it-task-lists";
+
 export default function markdownToHtml(content) {
-  const MarkdownIt = require("markdown-it");
-  const hljs = require("highlight.js");
   const md = new MarkdownIt({
     html: true,
     linkify: true,
@@ -47,17 +59,17 @@ export default function markdownToHtml(content) {
       }
     }
   })
-    .use(require("markdown-it-sub"))
-    .use(require("markdown-it-sup"))
-    .use(require("markdown-it-mark"))
-    .use(require("markdown-it-abbr"))
-    .use(require("markdown-it-container"))
-    .use(require("markdown-it-deflist"))
-    .use(require("markdown-it-emoji"))
-    .use(require("markdown-it-footnote"))
-    .use(require("markdown-it-ins"))
-    .use(require("markdown-it-katex-external"))
-    .use(require("markdown-it-task-lists"));
+    .use(markdownItSub)
+    .use(markdownItSup)
+    .use(markdownItMark)
+    .use(markdownItAbbr)
+    .use(markdownItContainer)
+    .use(markdownItDeflist)
+    .use(markdownItEmoji)
+    .use(markdownItFootnote)
+    .use(markdownItIns)
+    .use(markdownItKatexExternal)
+    .use(markdownItTaskLists);
   // 将markdown替换为html标签
   return md.render(content);
 }

@@ -6,83 +6,83 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
-    component: resolve => require(["../views/home/Home.vue"], resolve)
+    component: () => import("../views/home/Home.vue")
   },
   {
     path: "/articles/:articleId",
-    component: resolve => require(["../views/article/Article.vue"], resolve)
+    component: () => import("../views/article/Article.vue")
   },
   {
     path: "/archives",
-    component: resolve => require(["../views/archive/Archive.vue"], resolve),
+    component: () => import("../views/archive/Archive.vue"),
     meta: {
       title: "归档"
     }
   },
   {
     path: "/albums",
-    component: resolve => require(["../views/album/Album.vue"], resolve),
+    component: () => import("../views/album/Album.vue"),
     meta: {
       title: "相册"
     }
   },
   {
     path: "/talks",
-    component: resolve => require(["../views/talk/Talk.vue"], resolve),
+    component: () => import("../views/talk/Talk.vue"),
     meta: {
       title: "说说"
     }
   },
   {
     path: "/talks/:talkId",
-    component: resolve => require(["../views/talk/TalkInfo.vue"], resolve),
+    component: () => import("../views/talk/TalkInfo.vue"),
     meta: {
       title: "说说"
     }
   },
   {
     path: "/albums/:albumId",
-    component: resolve => require(["../views/album/Photo.vue"], resolve)
+    component: () => import("../views/album/Photo.vue")
   },
   {
     path: "/tags",
-    component: resolve => require(["../views/tag/Tag.vue"], resolve),
+    component: () => import("../views/tag/Tag.vue"),
     meta: {
       title: "标签"
     }
   },
   {
     path: "/categories",
-    component: resolve => require(["../views/category/Category.vue"], resolve),
+    component: () => import("../views/category/Category.vue"),
     meta: {
       title: "分类"
     }
   },
   {
     path: "/categories/:categoryId",
-    component: resolve => require(["../views/article/ArticleList.vue"], resolve)
+    component: () => import("../views/article/ArticleList.vue")
   },
   {
     path: "/tags/:tagId",
-    component: resolve => require(["../views/article/ArticleList.vue"], resolve)
+    component: () => import("../views/article/ArticleList.vue")
   },
   {
     path: "/links",
-    component: resolve => require(["../views/link/Link.vue"], resolve),
+    component: () => import("../views/link/Link.vue"),
     meta: {
       title: "友链列表"
     }
   },
   {
     path: "/about",
-    component: resolve => require(["../views/about/About.vue"], resolve),
+    component: () => import("../views/about/About.vue"),
     meta: {
       title: "关于我"
     }
   },
   {
     path: "/message",
-    component: resolve => require(["../views/message/Message.vue"], resolve),
+    component: () => import("../views/message/Message.vue"),
     meta: {
       title: "留言板"
     }
@@ -103,7 +103,7 @@ const routes = [
 
 const router = new VueRouter({
   mode: "history",
-  base: process.env.BASE_URL,
+  base: import.meta.env.BASE_URL,
   routes
 });
 

@@ -5,14 +5,7 @@
     <div class="comment-wrapper">
       <div style="display:flex;width:100%">
         <v-avatar size="36">
-          <img
-            v-if="this.$store.state.avatar"
-            :src="this.$store.state.avatar"
-          />
-          <img
-            v-else
-            :src="this.$store.state.blogInfo.websiteConfig.touristAvatar"
-          />
+          <img :src="currentAvatar" />
         </v-avatar>
         <div style="width:100%" class="ml-3">
           <div class="comment-input">
@@ -55,7 +48,7 @@
       >
         <!-- 头像 -->
         <v-avatar size="40" class="comment-avatar">
-          <img :src="item.avatar" />
+          <img :src="getCommentAvatar(item)" />
         </v-avatar>
         <div class="comment-meta">
           <!-- 用户名 -->
@@ -101,7 +94,7 @@
           >
             <!-- 头像 -->
             <v-avatar size="36" class="comment-avatar">
-              <img :src="reply.avatar" />
+              <img :src="getCommentAvatar(reply)" />
             </v-avatar>
             <div class="reply-meta">
               <!-- 用户名 -->
@@ -218,6 +211,11 @@ import Reply from "./Reply";
 import Paging from "./Paging";
 import Emoji from "./Emoji";
 import EmojiList from "../assets/js/emoji";
+import {
+  getPersistentPokemonAvatar,
+  getPokemonAvatarBySeed,
+  isPokemonAvatar
+} from "../utils/avatar";
 export default {
   components: {
     Reply,
@@ -245,6 +243,20 @@ export default {
     };
   },
   methods: {
+    getCommentAvatar(item) {
+      if (isPokemonAvatar(item.avatar)) {
+        return item.avatar;
+      }
+      return getPokemonAvatarBySeed(
+        [
+          "talk-comment",
+          item.userId,
+          item.nickname,
+          item.avatar,
+          item.commentInfo && item.commentInfo.ipAddress
+        ].join("-")
+      );
+    },
     replyComment(index, item) {
       this.$refs.reply.forEach(item => {
         item.$el.style.display = "none";
@@ -419,6 +431,13 @@ export default {
           this.$refs.reply[index].$el.style.display = "none";
           this.commentList[index].replyDTOList = data.data;
         });
+    }
+  },
+  computed: {
+    currentAvatar() {
+      return (
+        this.$store.state.avatar || getPersistentPokemonAvatar("visitorAvatar")
+      );
     }
   },
   watch: {

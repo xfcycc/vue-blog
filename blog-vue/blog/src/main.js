@@ -3,7 +3,8 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
-import animated from "animate.css";
+import "vuetify/dist/vuetify.min.css";
+import "animate.css";
 import "./assets/css/index.css";
 import "./assets/css/iconfont.css";
 import "./assets/css/markdown.css";
@@ -25,7 +26,6 @@ import "nprogress/nprogress.css";
 
 Vue.prototype.config = config;
 Vue.config.productionTip = false;
-Vue.use(animated);
 Vue.use(Share);
 Vue.use(vueBaberrage);
 Vue.use(InfiniteLoading);

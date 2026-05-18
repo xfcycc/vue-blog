@@ -16,6 +16,7 @@ export default new Vuex.Store({
     loginUrl: "",
     userId: null,
     avatar: null,
+    avatarId: null,
     nickname: null,
     refreshCount: 0,
     remainCount: null,
@@ -27,7 +28,10 @@ export default new Vuex.Store({
     commentLikeSet: [],
     talkLikeSet: [],
     anonymousMode: false,
-    blogInfo: {}
+    blogInfo: {
+      websiteConfig: {},
+      pageList: []
+    }
   },
   mutations: {
     enableAnonymousMode(state) {
@@ -42,6 +46,7 @@ export default new Vuex.Store({
       state.loginUrl = "";
       state.userId = null;
       state.avatar = null;
+      state.avatarId = null;
       state.nickname = null;
       state.intro = null;
       state.webSite = null;
@@ -55,6 +60,7 @@ export default new Vuex.Store({
     login(state, user) {
       state.userId = user.userInfoId;
       state.avatar = user.avatar;
+      state.avatarId = null;
       state.nickname = user.nickname;
       state.intro = user.intro;
       state.webSite = user.webSite;
@@ -67,6 +73,7 @@ export default new Vuex.Store({
     logout(state) {
       state.userId = null;
       state.avatar = null;
+      state.avatarId = null;
       state.nickname = null;
       state.intro = null;
       state.webSite = null;
@@ -92,6 +99,10 @@ export default new Vuex.Store({
     },
     updateAvatar(state, avatar) {
       state.avatar = avatar;
+    },
+    updateVisitorAvatar(state, avatarInfo) {
+      state.avatarId = avatarInfo.avatarId;
+      state.avatar = avatarInfo.avatar;
     },
     checkBlogInfo(state, blogInfo) {
       state.blogInfo = blogInfo;

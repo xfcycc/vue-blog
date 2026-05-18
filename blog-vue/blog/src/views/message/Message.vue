@@ -27,7 +27,7 @@
           <template v-slot:default="slotProps">
             <span class="barrage-items">
               <img
-                :src="slotProps.item.avatar"
+                :src="getMessageAvatar(slotProps.item)"
                 width="30"
                 height="30"
                 style="border-radius:50%"
@@ -43,6 +43,12 @@
 </template>
 
 <script>
+import {
+  getPersistentPokemonAvatar,
+  getPokemonAvatarBySeed,
+  isPokemonAvatar
+} from "../../utils/avatar";
+
 export default {
   mounted() {
     this.listMessage();
@@ -60,14 +66,11 @@ export default {
         this.$toast({ type: "error", message: "留言不能为空" });
         return false;
       }
-      const userAvatar = this.$store.state.avatar
-        ? this.$store.state.avatar
-        : this.$store.state.blogInfo.websiteConfig.touristAvatar;
       const userNickname = this.$store.state.nickname
         ? this.$store.state.nickname
         : "游客";
       var message = {
-        avatar: userAvatar,
+        avatar: this.currentAvatar,
         nickname: userNickname,
         messageContent: this.messageContent,
         time: Math.floor(Math.random() * (10 - 7)) + 7
@@ -88,9 +91,22 @@ export default {
           this.barrageList = data.data;
         }
       });
+    },
+    getMessageAvatar(item) {
+      if (isPokemonAvatar(item.avatar)) {
+        return item.avatar;
+      }
+      return getPokemonAvatarBySeed(
+        ["message", item.nickname, item.avatar].join("-")
+      );
     }
   },
   computed: {
+    currentAvatar() {
+      return (
+        this.$store.state.avatar || getPersistentPokemonAvatar("visitorAvatar")
+      );
+    },
     cover() {
       var cover = "";
       this.$store.state.blogInfo.pageList.forEach(item => {
@@ -160,7 +176,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(100% -50px);
+  height: calc(100% - 50px);
   width: 100%;
 }
 .barrage-items {

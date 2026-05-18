@@ -28,7 +28,7 @@
         </div>
         <div class="chat-profile">
           <div class="chat-name">
-            你的名称: <s>{{ chatNickname }}</s>
+            你的名称: <span class="nickname-text">{{ chatNickname }}</span>
             <v-icon
               small
               class="refresh-name"
@@ -39,7 +39,7 @@
             </v-icon>
           </div>
           <div class="refresh-count">
-            今日可刷新次数：<s>{{ chatRemainCount }}</s>
+            今日可刷新次数：<span class="remain-count">{{ chatRemainCount }}</span>
           </div>
         </div>
         <v-icon class="close" @click.stop="closeChat">
@@ -79,7 +79,7 @@
           v-if="item"
         >
           <!-- 头像 -->
-          <img :src="item.avatar" :class="isleft(item)" />
+          <img :src="getChatAvatar(item)" :class="isleft(item)" />
           <div>
             <div class="nickname">
               {{ item.nickname || '匿名用户' }}
@@ -246,6 +246,11 @@ import Recorderx, { ENCODE_TYPE } from "recorderx";
 import Emoji from "./Emoji";
 import EmojiList from "../assets/js/emoji";
 import axios from "axios";
+import {
+  getPersistentPokemonAvatar,
+  getPokemonAvatarBySeed,
+  isPokemonAvatar
+} from "../utils/avatar";
 export default {
   components: {
     Emoji
@@ -255,23 +260,7 @@ export default {
     this.getNickname().catch(error => {
       console.warn("初始化时获取昵称失败:", error);
     });
-    
-    // 获取WebSocket URL
-    this.getWebsocketUrl().then(() => {
-      // 初始化WebSocket连接
-      this.connect();
-      // WebSocket连接后会自动请求历史消息，不需要额外的HTTP请求
-    }).catch(error => {
-      console.error("获取WebSocket URL失败:", error);
-      this.$toast({ type: "error", message: "聊天室连接失败，请稍后再试" });
-      
-      // 如果WebSocket URL获取失败，尝试从本地缓存加载消息
-      this.loadCachedMessages();
-      
-      // 设置重试计时器
-      this.setupReconnectTimer();
-    });
-    
+    this.loadCachedMessages();
   },
   beforeDestroy() {
     // 清理心跳定时器
@@ -405,9 +394,11 @@ export default {
     closeChat() {
       this.isShow = false;
       this.closeAll();
+      this.disconnectWebsocket();
     },
     open() {
       try {
+        this.isManualClose = false;
         // 打开聊天室前进行连接检查
         if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
           console.log("聊天室连接尚未就绪，重新建立连接");
@@ -486,6 +477,28 @@ export default {
         this.isLoading = false;
         this.isConnecting = false;
         this.isConnected = false;
+      }
+    },
+    disconnectWebsocket() {
+      this.isManualClose = true;
+      this.clearReconnectTimer();
+      this.reconnectAttempts = 0;
+      this.isConnected = false;
+      this.isConnecting = false;
+      this.isLoading = false;
+      this.count = 0;
+      if (this.heartBeat) {
+        clearInterval(this.heartBeat);
+        this.heartBeat = null;
+      }
+      if (this.websocket) {
+        try {
+          this.websocket.close();
+        } catch (error) {
+          console.warn("关闭聊天室WebSocket时出错:", error);
+        } finally {
+          this.websocket = null;
+        }
       }
     },
     onOpen() {
@@ -609,6 +622,20 @@ export default {
       this.isEmoji = false;
       this.$refs.chatInput.focus();
       this.content += key;
+    },
+    getChatAvatar(item) {
+      if (isPokemonAvatar(item.avatar)) {
+        return item.avatar;
+      }
+      return getPokemonAvatarBySeed(
+        [
+          "chat",
+          item.userId,
+          item.nickname,
+          item.ipAddress,
+          item.avatar
+        ].join("-")
+      );
     },
     // 展示菜单
     showBack(item, index, e) {
@@ -1179,10 +1206,9 @@ export default {
       return this.$store.state.blogInfo;
     },
     avatar() {
-      const websiteConfig = this.$store.state.blogInfo.websiteConfig || {};
-      return this.$store.state.avatar != null
-        ? this.$store.state.avatar
-        : websiteConfig.touristAvatar;
+      return (
+        this.$store.state.avatar || getPersistentPokemonAvatar("visitorAvatar")
+      );
     },
     userId() {
       return this.$store.state.userId;
@@ -1288,7 +1314,7 @@ export default {
   align-items: center;
   min-width: 0;
 }
-.chat-name s {
+.nickname-text {
   color: #009d92;
   display: inline-block;
   max-width: 150px;
@@ -1306,7 +1332,7 @@ export default {
 .refresh-count {
   margin-top: 2px;
 }
-.refresh-count s {
+.remain-count {
   color: red;
 }
 .footer {
@@ -1590,7 +1616,7 @@ export default {
   .chat-name {
     max-width: 100%;
   }
-  .chat-name s {
+  .nickname-text {
     max-width: 96px;
   }
   .refresh-name {

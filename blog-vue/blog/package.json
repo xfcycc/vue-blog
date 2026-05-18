@@ -2,10 +2,17 @@
   "name": "blogs",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.13.1",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=10"
+  },
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "serve": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint --ext .js,.vue src --ignore-pattern src/assets/js/*.min.js"
   },
   "dependencies": {
     "animate.css": "^3.7.2",
@@ -30,10 +37,8 @@
     "markdown-it-task-lists": "^2.1.1",
     "nprogress": "^0.2.0",
     "recorderx": "^2.0.2",
-    "stylus": "^0.54.7",
-    "stylus-loader": "^3.0.2",
     "tocbot": "^4.18.2",
-    "vue": "^2.6.11",
+    "vue": "^2.7.16",
     "vue-avatar-cropper": "^1.0.9",
     "vue-axios": "^2.1.5",
     "vue-baberrage": "^3.2.4",
@@ -47,20 +52,16 @@
     "vuex-persistedstate": "^3.0.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.3.0",
-    "@vue/cli-plugin-eslint": "^4.3.0",
-    "@vue/cli-service": "^4.3.0",
+    "@vitejs/plugin-vue2": "^2.3.4",
     "@vue/eslint-config-prettier": "^6.0.0",
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-vue": "^6.2.2",
     "prettier": "^1.19.1",
-    "sass": "^1.19.0",
-    "sass-loader": "^8.0.0",
-    "vue-cli-plugin-vuetify": "^2.4.7",
-    "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.3"
+    "sass": "^1.99.0",
+    "stylus": "^0.64.0",
+    "vite": "^7.3.3"
   },
   "eslintConfig": {
     "root": true,
