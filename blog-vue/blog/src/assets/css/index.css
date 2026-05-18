@@ -171,7 +171,7 @@ p {
     padding: 0 5px;
   }
   .article-wrapper{
-    padding: 50px 40px;
+    padding: 50px 48px;
   }
   .login-container {
     padding: 1rem;
@@ -206,7 +206,7 @@ p {
     margin: 312.5px 0px 8px 0px !important;
   }
   .article-wrapper{
-    padding: 36px 14px;
+    padding: 36px 16px;
   }
   .banner-title {
     position: absolute;
@@ -386,13 +386,20 @@ p {
 }
 
 .hljs {
-  background: #282c34 !important;
+  background: #f6f8fa !important;
+  color: #24292f !important;
 }
 
 pre.hljs code {
+  background: transparent !important;
   display: block !important;
   margin: 0 10px !important;
   overflow-x: auto !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace !important;
+}
+
+pre.hljs code span {
+  background: transparent !important;
 }
 
 

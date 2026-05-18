@@ -518,6 +518,10 @@ export default {
   display: flex;
   align-items: center;
 }
+.article-content {
+  max-width: 860px;
+  margin: 0 auto;
+}
 .article-category a {
   color: #fff !important;
 }
@@ -820,11 +824,16 @@ hr {
 
 <style lang="scss">
 pre.hljs {
-  padding: 12px 2px 12px 40px !important;
+  padding: 14px 2px 14px 42px !important;
   border-radius: 5px !important;
   position: relative;
+  background: #f6f8fa !important;
+  border: 1px solid #e5e7eb !important;
+  color: #24292f !important;
   font-size: 14px !important;
-  line-height: 22px !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace !important;
+  line-height: 24px !important;
   overflow: hidden !important;
   &:hover .copy-btn {
     display: flex;
@@ -832,9 +841,13 @@ pre.hljs {
     align-items: center;
   }
   code {
+    background: transparent !important;
     display: block !important;
     margin: 0 10px !important;
     overflow-x: auto !important;
+    span {
+      background: transparent !important;
+    }
     &::-webkit-scrollbar {
       z-index: 11;
       width: 6px;
@@ -845,14 +858,14 @@ pre.hljs {
     &::-webkit-scrollbar-thumb {
       border-radius: 5px;
       width: 6px;
-      background: #666;
+      background: #c9d1d9;
     }
     &::-webkit-scrollbar-corner,
     &::-webkit-scrollbar-track {
-      background: #1e1e1e;
+      background: #f6f8fa;
     }
     &::-webkit-scrollbar-track-piece {
-      background: #1e1e1e;
+      background: #f6f8fa;
       width: 6px;
     }
   }
@@ -860,13 +873,13 @@ pre.hljs {
     position: absolute;
     pointer-events: none;
     top: 12px;
-    bottom: 12px;
+    bottom: 14px;
     left: 0;
     font-size: 100%;
-    width: 40px;
+    width: 42px;
     text-align: center;
     letter-spacing: -1px;
-    border-right: 1px solid rgba(0, 0, 0, 0.66);
+    border-right: 1px solid #d0d7de;
     user-select: none;
     counter-reset: linenumber;
     span {
@@ -875,7 +888,7 @@ pre.hljs {
       counter-increment: linenumber;
       &:before {
         content: counter(linenumber);
-        color: #999;
+        color: #8c959f;
         display: block;
         text-align: center;
       }
@@ -883,10 +896,11 @@ pre.hljs {
   }
   b.name {
     position: absolute;
-    top: 7px;
+    top: 8px;
     right: 45px;
     z-index: 1;
-    color: #999;
+    font-size: 12px;
+    color: #57606a;
     pointer-events: none;
   }
   .copy-btn {
@@ -894,8 +908,8 @@ pre.hljs {
     top: 6px;
     right: 6px;
     z-index: 1;
-    color: #ccc;
-    background-color: #525252;
+    color: #57606a;
+    background-color: #eaeef2;
     border-radius: 6px;
     display: none;
     font-size: 14px;

@@ -1,11 +1,5 @@
 <template>
   <div class="rightside" :style="isShow">
-    <div :class="'rightside-config-hide ' + isOut">
-      <i :class="'iconfont rightside-icon ' + icon" @click="check" />
-    </div>
-    <div class="setting-container" @click="show">
-      <i class="iconfont iconshezhi setting" />
-    </div>
     <i @click="backTop" class="iconfont rightside-icon iconziyuanldpi" />
   </div>
 </template>
@@ -20,9 +14,7 @@ export default {
   },
   data: function() {
     return {
-      isShow: "",
-      isOut: "rightside-out",
-      icon: "iconyueliang"
+      isShow: ""
     };
   },
   methods: {
@@ -46,15 +38,6 @@ export default {
       } else {
         that.isShow = "";
       }
-    },
-    show() {
-      const flag = this.isOut == "rightside-out";
-      this.isOut = flag ? "rightside-in" : "rightside-out";
-    },
-    check() {
-      const flag = this.icon == "iconyueliang";
-      this.icon = flag ? "icontaiyang" : "iconyueliang";
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
     }
   }
 };
@@ -68,18 +51,7 @@ export default {
   bottom: 85px;
   transition: all 0.5s;
 }
-.rightside-config-hide {
-  transform: translate(35px, 0);
-}
-.rightside-out {
-  animation: rightsideOut 0.3s;
-}
-.rightside-in {
-  transform: translate(0, 0) !important;
-  animation: rightsideIn 0.3s;
-}
-.rightside-icon,
-.setting-container {
+.rightside-icon {
   display: block;
   margin-bottom: 2px;
   width: 30px;
@@ -91,36 +63,7 @@ export default {
   line-height: 30px;
   cursor: pointer;
 }
-.rightside-icon:hover,
-.setting-container:hover {
+.rightside-icon:hover {
   background-color: #ff7242;
-}
-.setting-container i {
-  display: block;
-  animation: turn-around 2s linear infinite;
-}
-@keyframes turn-around {
-  0% {
-    transform: rotate(0);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-@keyframes rightsideOut {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(30px, 0);
-  }
-}
-@keyframes rightsideIn {
-  0% {
-    transform: translate(30px, 0);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
 }
 </style>

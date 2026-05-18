@@ -95,12 +95,55 @@
   }
   
   .markdown-body {
+    color-scheme: light;
+    --color-prettylights-syntax-comment: #6e7781;
+    --color-prettylights-syntax-constant: #0550ae;
+    --color-prettylights-syntax-entity: #8250df;
+    --color-prettylights-syntax-storage-modifier-import: #24292f;
+    --color-prettylights-syntax-entity-tag: #116329;
+    --color-prettylights-syntax-keyword: #cf222e;
+    --color-prettylights-syntax-string: #0a3069;
+    --color-prettylights-syntax-variable: #953800;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+    --color-prettylights-syntax-invalid-illegal-text: #f6f8fa;
+    --color-prettylights-syntax-invalid-illegal-bg: #82071e;
+    --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+    --color-prettylights-syntax-carriage-return-bg: #cf222e;
+    --color-prettylights-syntax-string-regexp: #116329;
+    --color-prettylights-syntax-markup-list: #3b2300;
+    --color-prettylights-syntax-markup-heading: #0550ae;
+    --color-prettylights-syntax-markup-italic: #24292f;
+    --color-prettylights-syntax-markup-bold: #24292f;
+    --color-prettylights-syntax-markup-deleted-text: #82071e;
+    --color-prettylights-syntax-markup-deleted-bg: #FFEBE9;
+    --color-prettylights-syntax-markup-inserted-text: #116329;
+    --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+    --color-prettylights-syntax-markup-changed-text: #953800;
+    --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+    --color-prettylights-syntax-markup-ignored-text: #eaeef2;
+    --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+    --color-prettylights-syntax-meta-diff-range: #8250df;
+    --color-prettylights-syntax-brackethighlighter-angle: #57606a;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #8c959f;
+    --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+    --color-fg-default: #24292f;
+    --color-fg-muted: #57606a;
+    --color-fg-subtle: #6e7781;
+    --color-canvas-default: #ffffff;
+    --color-canvas-subtle: #f6f8fa;
+    --color-border-default: #d0d7de;
+    --color-border-muted: hsla(210,18%,87%,1);
+    --color-neutral-muted: rgba(175,184,193,0.2);
+    --color-accent-fg: #0969da;
+    --color-accent-emphasis: #0969da;
+    --color-attention-subtle: #fff8c5;
+    --color-danger-fg: #cf222e;
     -ms-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
     margin: 0;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     word-break: break-word;
-    line-height: 2;
+    line-height: 1.9;
   }
   
   .markdown-body .octicon {
@@ -210,7 +253,7 @@
   .markdown-body kbd,
   .markdown-body pre,
   .markdown-body samp {
-    font-family: monospace,monospace;
+    font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
     font-size: 1em;
   }
   
@@ -346,22 +389,37 @@
   .markdown-body h4,
   .markdown-body h5,
   .markdown-body h6 {
-    margin-top: 24px;
-    margin-bottom: 16px;
+    color: #2f363d;
+    margin-top: 34px;
+    margin-bottom: 18px;
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.35;
   }
   
   .markdown-body h2 {
+    position: relative;
     font-weight: 600;
-    padding-bottom: .3em;
+    padding-bottom: .45em;
     font-size: 1.5em;
     border-bottom: 1px solid var(--color-border-muted);
+  }
+
+  .markdown-body h2::before {
+    display: inline-block;
+    width: 4px;
+    height: 1em;
+    margin-right: 10px;
+    border-radius: 2px;
+    background: #49b1f5;
+    vertical-align: -0.12em;
+    content: "";
   }
   
   .markdown-body h3 {
     font-weight: 600;
     font-size: 1.25em;
+    padding-left: 10px;
+    border-left: 3px solid #d8eefe;
   }
   
   .markdown-body h4 {
@@ -381,23 +439,31 @@
   }
   
   .markdown-body p {
-    font-size: 0.875em;
+    font-size: 0.95em;
+    line-height: 1.95;
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
   }
   
   .markdown-body blockquote {
-    margin: 0;
-    padding: 0 1em;
-    color: var(--color-fg-muted);
-    border-left: .25em solid var(--color-border-default);
+    margin: 20px 0;
+    padding: 14px 18px;
+    color: #57606a;
+    background: #f6fbff;
+    border-left: 4px solid #9bd3fb;
+    border-radius: 0 6px 6px 0;
   }
   
   .markdown-body ul,
   .markdown-body ol {
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: 16px;
     padding-left: 2em;
+  }
+
+  .markdown-body li {
+    margin: 6px 0;
+    line-height: 1.85;
   }
   
   .markdown-body ol ol,
@@ -906,7 +972,7 @@
     margin: 0;
     word-break: normal;
     white-space: pre;
-    background: transparent;
+    background: transparent !important;
     border: 0;
   }
   
@@ -921,11 +987,12 @@
   
   .markdown-body .highlight pre,
   .markdown-body pre {
-    padding: 16px;
+    padding: 18px;
     overflow: auto;
     font-size: 85%;
-    line-height: 1.45;
+    line-height: 1.6;
     background-color: var(--color-canvas-subtle);
+    border: 1px solid #e5e7eb;
     border-radius: 6px;
   }
   
@@ -1027,12 +1094,11 @@
     margin: 0 .2em .25em -1.6em;
     vertical-align: middle;
   }
-  
+
   .markdown-body .contains-task-list:dir(rtl) .task-list-item-checkbox {
     margin: 0 -1.6em .25em .2em;
   }
-  
+
   .markdown-body ::-webkit-calendar-picker-indicator {
     filter: invert(50%);
   }
-  

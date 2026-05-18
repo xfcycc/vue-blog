@@ -16,7 +16,7 @@ import { vueBaberrage } from "vue-baberrage";
 import axios from "axios";
 import VueAxios from "vue-axios";
 import InfiniteLoading from "vue-infinite-loading";
-import "highlight.js/styles/atom-one-dark.css";
+import "highlight.js/styles/github.css";
 import VueImageSwipe from "vue-image-swipe";
 import "vue-image-swipe/dist/vue-image-swipe.css";
 import Toast from "./components/toast/index";
