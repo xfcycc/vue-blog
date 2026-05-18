@@ -7,6 +7,7 @@ import animated from "animate.css";
 import "./assets/css/index.css";
 import "./assets/css/iconfont.css";
 import "./assets/css/markdown.css";
+import "./assets/css/materialdesignicons.min.css";
 import "./assets/css/vue-social-share/client.css";
 import config from "./assets/js/config";
 import Share from "vue-social-share";
