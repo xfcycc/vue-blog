@@ -761,6 +761,11 @@ hr {
 .right-title i {
   font-weight: bold;
 }
+#toc {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
 .recommend-container {
   margin-top: 40px;
 }
