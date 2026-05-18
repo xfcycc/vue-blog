@@ -26,6 +26,11 @@ public class ArchiveDTO {
     private Integer id;
 
     /**
+     * 文章缩略图
+     */
+    private String articleCover;
+
+    /**
      * 标题
      */
     private String articleTitle;

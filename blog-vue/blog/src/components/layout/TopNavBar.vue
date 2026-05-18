@@ -1,5 +1,11 @@
 <template>
-  <v-app-bar app :class="navClass" hide-on-scroll flat height="60">
+  <v-app-bar
+    app
+    :class="[navClass, { 'archive-nav': isArchivePage }]"
+    hide-on-scroll
+    flat
+    height="60"
+  >
     <!-- 手机端导航栏 -->
     <div class="d-md-none nav-mobile-container">
       <div style="font-size:18px;font-weight:bold">
@@ -99,6 +105,9 @@ export default {
     }
   },
   computed: {
+    isArchivePage() {
+      return this.$route.path == "/archives";
+    },
     blogInfo() {
       return this.$store.state.blogInfo;
     }
@@ -137,6 +146,20 @@ ul {
 }
 .theme--light.nav-fixed a {
   color: #4c4948 !important;
+}
+.theme--light.archive-nav.nav-fixed,
+.theme--dark.archive-nav.nav-fixed {
+  background: rgba(3, 7, 18, 0.72) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px);
+}
+.theme--light.archive-nav.nav-fixed a,
+.theme--dark.archive-nav.nav-fixed a,
+.archive-nav a {
+  color: #e2e8f0 !important;
+}
+.archive-nav .menu-btn:hover {
+  color: #34d399 !important;
 }
 .nav-fixed .menus-item a,
 .nav-fixed .blog-title a {

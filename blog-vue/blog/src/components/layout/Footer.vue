@@ -4,7 +4,8 @@
       class="footer-wrap"
       :class="{
         'tag-footer-wrap': isTagPage,
-        'category-footer-wrap': isCategoryPage
+        'category-footer-wrap': isCategoryPage,
+        'archive-footer-wrap': isArchivePage
       }"
     >
       <div>
@@ -33,6 +34,9 @@ export default {
     },
     isCategoryPage() {
       return this.$route.path.indexOf("/categories") === 0;
+    },
+    isArchivePage() {
+      return this.$route.path == "/archives";
     },
     blogInfo() {
       return this.$store.state.blogInfo;
@@ -150,6 +154,52 @@ export default {
 }
 .category-footer-wrap a:nth-child(3) {
   color: #ff8df0 !important;
+}
+.archive-footer-wrap {
+  overflow: hidden;
+  color: rgba(226, 232, 240, 0.92);
+  background: linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.72),
+      rgba(2, 6, 23, 0.92)
+    ),
+    url("../../assets/images/archive-hacker-bg.png") center bottom / cover
+      no-repeat;
+  animation: none;
+  box-shadow: inset 0 28px 52px rgba(3, 7, 18, 0.82);
+}
+.archive-footer-wrap::before,
+.archive-footer-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.archive-footer-wrap::before {
+  background-image: linear-gradient(
+      rgba(16, 185, 129, 0.12) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.archive-footer-wrap::after {
+  background: radial-gradient(
+    circle at 50% 0,
+    rgba(52, 211, 153, 0.2),
+    transparent 42%
+  );
+}
+.archive-footer-wrap div,
+.archive-footer-wrap a {
+  position: relative;
+  z-index: 1;
+}
+.archive-footer-wrap a {
+  color: rgba(167, 243, 208, 0.92) !important;
+}
+.archive-footer-wrap a:nth-child(3) {
+  color: #67e8f9 !important;
 }
 
 @keyframes Gradient {
