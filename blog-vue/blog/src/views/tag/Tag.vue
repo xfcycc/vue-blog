@@ -21,7 +21,7 @@
 
 <script>
 const TAG_COVER =
-  "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2000&auto=format&fit=crop";
+  "https://pic.caiguoyu.cn/20260518204951070.jpg";
 const TAG_COLORS = [
   "#3b82f6",
   "#ec4899",

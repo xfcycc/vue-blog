@@ -67,7 +67,7 @@
 
 <script>
 const CATEGORY_COVER =
-  "https://images.unsplash.com/photo-1672872476232-da16b45c9001?auto=format&fit=crop&fm=jpg&q=80&w=2400";
+  "https://pic.caiguoyu.cn/20260518204951097.jpg";
 
 export default {
   created() {

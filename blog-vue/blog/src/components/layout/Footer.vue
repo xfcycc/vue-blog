@@ -65,7 +65,7 @@ export default {
 .tag-footer-wrap {
   overflow: hidden;
   color: rgba(255, 255, 255, 0.86);
-  background: url("https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2000&auto=format&fit=crop")
+  background: url("https://pic.caiguoyu.cn/20260518204951070.jpg")
     center bottom / cover no-repeat;
   animation: none;
   box-shadow: inset 0 26px 44px rgba(2, 6, 23, 0.44);
@@ -108,7 +108,7 @@ export default {
 .category-footer-wrap {
   overflow: hidden;
   color: rgba(255, 255, 255, 0.92);
-  background: url("https://images.unsplash.com/photo-1672872476232-da16b45c9001?auto=format&fit=crop&fm=jpg&q=80&w=2200")
+  background: url("https://pic.caiguoyu.cn/20260518204951097.jpg")
     center 78% / cover no-repeat;
   animation: none;
   box-shadow: inset 0 26px 48px rgba(3, 6, 20, 0.72),
