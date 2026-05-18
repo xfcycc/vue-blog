@@ -275,6 +275,10 @@ export default {
   },
   destroyed() {
     this.clipboard.destroy();
+    window.removeEventListener("scroll", this.requestSyncTocActiveLink);
+    if (this.tocScrollRaf) {
+      window.cancelAnimationFrame(this.tocScrollRaf);
+    }
     tocbot.destroy();
   },
   data: function() {
@@ -302,7 +306,8 @@ export default {
       clipboard: null,
       commentCount: 0,
       likeEffectId: 0,
-      likeEffects: []
+      likeEffects: [],
+      tocScrollRaf: null
     };
   },
   methods: {
@@ -342,10 +347,16 @@ export default {
             contentSelector: ".article-content", //获取html的元素
             headingSelector: "h1, h2, h3", //要显示的id的目录
             hasInnerContainers: true,
+            disableTocScrollSync: true,
             onClick: function(e) {
               e.preventDefault();
             }
           });
+          window.removeEventListener("scroll", this.requestSyncTocActiveLink);
+          window.addEventListener("scroll", this.requestSyncTocActiveLink, {
+            passive: true
+          });
+          this.requestSyncTocActiveLink();
           // 添加图片预览功能
           const imgList = this.$refs.article.getElementsByTagName("img");
           for (var i = 0; i < imgList.length; i++) {
@@ -355,7 +366,38 @@ export default {
             });
           }
         });
+        });
+    },
+    requestSyncTocActiveLink() {
+      if (this.tocScrollRaf) {
+        return;
+      }
+      this.tocScrollRaf = window.requestAnimationFrame(() => {
+        this.tocScrollRaf = null;
+        this.syncTocActiveLink();
       });
+    },
+    syncTocActiveLink() {
+      const toc = document.getElementById("toc");
+      if (!toc || toc.scrollHeight <= toc.clientHeight) {
+        return;
+      }
+      const activeLink = toc.querySelector(".is-active-link");
+      if (!activeLink) {
+        return;
+      }
+      const tocRect = toc.getBoundingClientRect();
+      const activeRect = activeLink.getBoundingClientRect();
+      const safePadding = 24;
+      if (
+        activeRect.top >= tocRect.top + safePadding &&
+        activeRect.bottom <= tocRect.bottom - safePadding
+      ) {
+        return;
+      }
+      const activeCenter =
+        activeRect.top - tocRect.top + toc.scrollTop + activeRect.height / 2;
+      toc.scrollTop = Math.max(activeCenter - toc.clientHeight / 2, 0);
     },
     like() {
       // 判断登录
