@@ -4,7 +4,6 @@ package com.minzheng.blog.controller;
 import com.minzheng.blog.annotation.AccessLimit;
 import com.minzheng.blog.dto.UserAreaDTO;
 import com.minzheng.blog.dto.UserInfoDTO;
-import com.minzheng.blog.service.SmsService;
 import com.minzheng.blog.vo.PageResult;
 import com.minzheng.blog.dto.UserBackDTO;
 import com.minzheng.blog.service.UserAuthService;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -31,9 +29,6 @@ import java.util.List;
 public class UserAuthController {
     @Resource
     private UserAuthService userAuthService;
-
-    @Resource
-    private SmsService smsService;
 
     /**
      * 发送邮箱验证码
@@ -83,8 +78,7 @@ public class UserAuthController {
     @ApiOperation(value = "用户注册")
     @PostMapping("/register")
     public Result<?> register(@Valid @RequestBody UserVO user) {
-        userAuthService.register(user);
-        return Result.ok();
+        return Result.fail("主站已关闭注册功能");
     }
 
     /**
@@ -107,13 +101,8 @@ public class UserAuthController {
      * @date 2022/9/17
      */
     @PostMapping("/phoneLogin")
-    public Result<?> phoneLogin(String phone, String code, HttpServletRequest request) {
-        Result<String> result = smsService.checkSmsCode(phone, code);
-        if (result.getFlag()) {
-           return Result.ok(userAuthService.phoneLogin(phone, request));
-        } else {
-            return result;
-        }
+    public Result<?> phoneLogin(String phone, String code) {
+        return Result.fail("主站已关闭登录功能");
     }
 
     /**
@@ -151,7 +140,7 @@ public class UserAuthController {
     @ApiOperation(value = "微博登录")
     @PostMapping("/users/oauth/weibo")
     public Result<UserInfoDTO> weiboLogin(@Valid @RequestBody WeiboLoginVO weiBoLoginVO) {
-        return Result.ok(userAuthService.weiboLogin(weiBoLoginVO));
+        return Result.fail("主站已关闭登录功能");
     }
 
     /**
@@ -163,8 +152,7 @@ public class UserAuthController {
     @ApiOperation(value = "qq登录")
     @PostMapping("/users/oauth/qq")
     public Result<UserInfoDTO> qqLogin(@Valid @RequestBody QQLoginVO qqLoginVO) {
-        return Result.ok(userAuthService.qqLogin(qqLoginVO));
+        return Result.fail("主站已关闭登录功能");
     }
 
 }
-

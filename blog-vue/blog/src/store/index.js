@@ -26,9 +26,32 @@ export default new Vuex.Store({
     articleLikeSet: [],
     commentLikeSet: [],
     talkLikeSet: [],
+    anonymousMode: false,
     blogInfo: {}
   },
   mutations: {
+    enableAnonymousMode(state) {
+      if (state.anonymousMode) {
+        return;
+      }
+      state.loginFlag = false;
+      state.registerFlag = false;
+      state.forgetFlag = false;
+      state.emailFlag = false;
+      state.phoneFlag = false;
+      state.loginUrl = "";
+      state.userId = null;
+      state.avatar = null;
+      state.nickname = null;
+      state.intro = null;
+      state.webSite = null;
+      state.articleLikeSet = [];
+      state.commentLikeSet = [];
+      state.talkLikeSet = [];
+      state.email = null;
+      state.loginType = null;
+      state.anonymousMode = true;
+    },
     login(state, user) {
       state.userId = user.userInfoId;
       state.avatar = user.avatar;

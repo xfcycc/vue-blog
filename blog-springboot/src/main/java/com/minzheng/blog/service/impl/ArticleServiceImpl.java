@@ -183,25 +183,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
 
     @Override
     public void saveArticleLike(Integer articleId) {
-        String articleLikeKey = "";
-        // 判断是否点赞
-        if (UserUtils.getLoginUser() == null) {
-            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
-            articleLikeKey = ARTICLE_USER_LIKE + visitorInfo.getUserId();
-        } else {
-            articleLikeKey = ARTICLE_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
-        }
-        if (redisService.sIsMember(articleLikeKey, articleId)) {
-            // 点过赞则删除文章id
-            redisService.sRemove(articleLikeKey, articleId);
-            // 文章点赞量-1
-            redisService.hDecr(ARTICLE_LIKE_COUNT, articleId.toString(), 1L);
-        } else {
-            // 未点赞则增加文章id
-            redisService.sAdd(articleLikeKey, articleId);
-            // 文章点赞量+1
-            redisService.hIncr(ARTICLE_LIKE_COUNT, articleId.toString(), 1L);
-        }
+        redisService.hIncr(ARTICLE_LIKE_COUNT, articleId.toString(), 1L);
     }
 
     @Transactional(rollbackFor = Exception.class)

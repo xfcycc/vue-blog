@@ -89,18 +89,15 @@ const routes = [
   },
   {
     path: "/user",
-    component: resolve => require(["../views/user/User.vue"], resolve),
-    meta: {
-      title: "个人中心"
-    }
+    redirect: "/"
   },
   {
     path: "/oauth/login/qq",
-    component: resolve => require(["../components/OauthLogin.vue"], resolve)
+    redirect: "/"
   },
   {
     path: "/oauth/login/weibo",
-    component: resolve => require(["../components/OauthLogin.vue"], resolve)
+    redirect: "/"
   }
 ];
 

@@ -88,19 +88,6 @@
           <i class="iconfont iconpinglunzu" /> 留言
         </router-link>
       </div>
-      <div class="menus-item" v-if="!this.$store.state.avatar">
-        <a @click="openLogin"><i class="iconfont icondenglu" /> 登录 </a>
-      </div>
-      <div v-else>
-        <div class="menus-item">
-          <router-link to="/user">
-            <i class="iconfont icongerenzhongxin" /> 个人中心
-          </router-link>
-        </div>
-        <div class="menus-item">
-          <a @click="logout"><i class="iconfont icontuichu" /> 退出</a>
-        </div>
-      </div>
     </div>
   </v-navigation-drawer>
 </template>
@@ -156,28 +143,6 @@ export default {
       get() {
         return this.$store.state.drawer;
       }
-    },
-    isLogin() {
-      return this.$store.state.userId;
-    }
-  },
-  methods: {
-    openLogin() {
-      this.$store.state.loginFlag = true;
-    },
-    logout() {
-      //如果在个人中心则跳回上一页
-      if (this.$route.path == "/user") {
-        this.$router.go(-1);
-      }
-      this.axios.get("/api/logout").then(({ data }) => {
-        if (data.flag) {
-          this.$store.commit("logout");
-          this.$toast({ type: "success", message: "注销成功" });
-        } else {
-          this.$toast({ type: "error", message: data.message });
-        }
-      });
     }
   }
 };

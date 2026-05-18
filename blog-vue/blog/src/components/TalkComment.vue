@@ -75,10 +75,16 @@
             <!-- 发表时间 -->
             <span style="margin-right:10px">{{ item.createTime | date }}</span>
             <!-- 点赞 -->
-            <span
-              :class="isLike(item.id) + ' iconfont icondianzan'"
-              @click="like(item)"
-            />
+            <span class="comment-like-wrap">
+              <span class="like iconfont icondianzan" @click="like(item)" />
+              <span
+                v-for="effect in likeEffects[item.id] || []"
+                :key="effect"
+                class="like-float"
+              >
+                👍
+              </span>
+            </span>
             <span v-show="item.likeCount > 0"> {{ item.likeCount }}</span>
             <!-- 回复 -->
             <span class="reply-btn" @click="replyComment(index, item)">
@@ -115,10 +121,19 @@
                   {{ reply.createTime | date }}
                 </span>
                 <!-- 点赞 -->
-                <span
-                  :class="isLike(reply.id) + ' iconfont icondianzan'"
-                  @click="like(reply)"
-                />
+                <span class="comment-like-wrap">
+                  <span
+                    class="like iconfont icondianzan"
+                    @click="like(reply)"
+                  />
+                  <span
+                    v-for="effect in likeEffects[reply.id] || []"
+                    :key="effect"
+                    class="like-float"
+                  >
+                    👍
+                  </span>
+                </span>
                 <span v-show="reply.likeCount > 0"> {{ reply.likeCount }}</span>
                 <!-- 回复 -->
                 <span class="reply-btn" @click="replyComment(index, reply)">
@@ -224,7 +239,9 @@ export default {
       chooseEmoji: false,
       current: 1,
       commentList: [],
-      count: 0
+      count: 0,
+      likeEffectId: 0,
+      likeEffects: {}
     };
   },
   methods: {
@@ -363,15 +380,27 @@ export default {
         .post("/api/comments/" + comment.id + "/like")
         .then(({ data }) => {
           if (data.flag) {
-            // 判断是否点赞
-            if (this.$store.state.commentLikeSet.indexOf(comment.id) != -1) {
-              this.$set(comment, "likeCount", comment.likeCount - 1);
-            } else {
-              this.$set(comment, "likeCount", comment.likeCount + 1);
-            }
-            this.$store.commit("commentLike", comment.id);
+            this.$set(comment, "likeCount", (comment.likeCount || 0) + 1);
+            this.showLikeEffect(comment.id);
           }
         });
+    },
+    showLikeEffect(commentId) {
+      const effect = ++this.likeEffectId;
+      const effects = this.likeEffects[commentId]
+        ? this.likeEffects[commentId].slice()
+        : [];
+      effects.push(effect);
+      this.$set(this.likeEffects, commentId, effects);
+      setTimeout(() => {
+        const current = this.likeEffects[commentId] || [];
+        const next = current.filter(item => item != effect);
+        if (next.length > 0) {
+          this.$set(this.likeEffects, commentId, next);
+        } else {
+          this.$delete(this.likeEffects, commentId);
+        }
+      }, 700);
     },
     reloadReply(index) {
       this.axios
@@ -390,14 +419,6 @@ export default {
           this.$refs.reply[index].$el.style.display = "none";
           this.commentList[index].replyDTOList = data.data;
         });
-    }
-  },
-  computed: {
-    isLike() {
-      return function(commentId) {
-        var commentLikeSet = this.$store.state.commentLikeSet;
-        return commentLikeSet.indexOf(commentId) != -1 ? "like-active" : "like";
-      };
     }
   },
   watch: {
@@ -493,14 +514,34 @@ export default {
 .like {
   cursor: pointer;
   font-size: 0.875rem;
+  color: #ff7242;
 }
 .like:hover {
-  color: #eb5055;
+  color: #ff5c2b;
 }
-.like-active {
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: #eb5055;
+.comment-like-wrap {
+  position: relative;
+  display: inline-block;
+}
+.like-float {
+  position: absolute;
+  left: 0;
+  top: -2px;
+  pointer-events: none;
+  animation: thumbFloat 0.7s ease-out forwards;
+}
+@keyframes thumbFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(1.35);
+  }
 }
 .load-wrapper {
   margin-top: 10px;

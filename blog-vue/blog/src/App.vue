@@ -14,16 +14,6 @@
     <BackTop></BackTop>
     <!-- 搜索模态框 -->
     <searchModel></searchModel>
-    <!-- 登录模态框 -->
-    <LoginModel></LoginModel>
-    <!-- 注册模态框 -->
-    <RegisterModel></RegisterModel>
-    <!-- 手机登录模态框 -->
-    <PhoneModel></PhoneModel>
-    <!-- 忘记密码模态框 -->
-    <ForgetModel></ForgetModel>
-    <!-- 绑定邮箱模态框 -->
-    <EmailModel></EmailModel>
     <!-- 音乐播放器 -->
     <Player v-if="blogInfo.websiteConfig.isMusicPlayer == 1 && !isMobile" />
     <!-- 聊天室 -->
@@ -37,15 +27,12 @@ import SideNavBar from "./components/layout/SideNavBar";
 import Footer from "./components/layout/Footer";
 import BackTop from "./components/BackTop";
 import searchModel from "./components/model/SearchModel";
-import LoginModel from "./components/model/LoginModel";
-import RegisterModel from "./components/model/RegisterModel";
-import PhoneModel from "./components/model/PhoneModel";
-import ForgetModel from "./components/model/ForgetModel";
-import EmailModel from "./components/model/EmailModel";
 import Player from "./components/zw-player/player.vue";
 import ChatRoom from "./components/ChatRoom";
 export default {
   created() {
+    // 主站关闭登录后，清理旧会话里持久化的用户身份。
+    this.$store.commit("enableAnonymousMode");
     // 获取博客信息
     this.getBlogInfo();
     // 上传访客信息
@@ -58,11 +45,6 @@ export default {
     Footer,
     BackTop,
     searchModel,
-    LoginModel,
-    RegisterModel,
-    PhoneModel,
-    ForgetModel,
-    EmailModel,
     ChatRoom
   },
   methods: {

@@ -110,11 +110,18 @@
           <!-- 点赞打赏等 -->
           <div class="article-reward">
             <!-- 点赞按钮 -->
-            <a :class="isLike" @click="like">
+            <a class="like-btn" @click="like">
               <v-icon size="14" color="#fff">mdi-thumb-up</v-icon> 点赞
               <span v-show="article.likeCount > 0">{{
                 article.likeCount
               }}</span>
+              <span
+                v-for="effect in likeEffects"
+                :key="effect"
+                class="like-float"
+              >
+                👍
+              </span>
             </a>
             <a class="reward-btn" v-if="blogInfo.websiteConfig.isReward == 1">
               <!-- 打赏按钮 -->
@@ -293,7 +300,9 @@ export default {
       commentType: 1,
       articleHref: window.location.href,
       clipboard: null,
-      commentCount: 0
+      commentCount: 0,
+      likeEffectId: 0,
+      likeEffects: []
     };
   },
   methods: {
@@ -359,17 +368,21 @@ export default {
         .post("/api/articles/" + this.article.id + "/like")
         .then(({ data }) => {
           if (data.flag) {
-            //判断是否点赞
-            if (
-              this.$store.state.articleLikeSet.indexOf(this.article.id) != -1
-            ) {
-              this.$set(this.article, "likeCount", this.article.likeCount - 1);
-            } else {
-              this.$set(this.article, "likeCount", this.article.likeCount + 1);
-            }
-            this.$store.commit("articleLike", this.article.id);
+            this.$set(
+              this.article,
+              "likeCount",
+              (this.article.likeCount || 0) + 1
+            );
+            this.showLikeEffect();
           }
         });
+    },
+    showLikeEffect() {
+      const effect = ++this.likeEffectId;
+      this.likeEffects.push(effect);
+      setTimeout(() => {
+        this.likeEffects = this.likeEffects.filter(item => item != effect);
+      }, 700);
     },
     previewImg(img) {
       this.$imagePreview({
@@ -397,12 +410,6 @@ export default {
         this.article.articleCover +
         ") center center / cover no-repeat"
       );
-    },
-    isLike() {
-      var articleLikeSet = this.$store.state.articleLikeSet;
-      return articleLikeSet.indexOf(this.article.id) != -1
-        ? "like-btn-active"
-        : "like-btn";
     },
     isFull() {
       return function(id) {
@@ -652,22 +659,38 @@ export default {
   text-align: center;
 }
 .like-btn {
+  position: relative;
   display: inline-block;
   width: 100px;
-  background: #969696;
+  background: #ff7242;
   color: #fff !important;
   text-align: center;
   line-height: 36px;
   font-size: 0.875rem;
+  overflow: visible;
 }
-.like-btn-active {
-  display: inline-block;
-  width: 100px;
-  background: #ec7259;
-  color: #fff !important;
-  text-align: center;
-  line-height: 36px;
-  font-size: 0.875rem;
+.like-btn:hover {
+  background: #ff5c2b;
+}
+.like-float {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  pointer-events: none;
+  animation: thumbFloat 0.7s ease-out forwards;
+}
+@keyframes thumbFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px) scale(1.35);
+  }
 }
 .pagination-post {
   margin-top: 40px;

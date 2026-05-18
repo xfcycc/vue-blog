@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static com.minzheng.blog.constant.CommonConst.*;
 import static com.minzheng.blog.constant.RedisPrefixConst.COMMENT_LIKE_COUNT;
-import static com.minzheng.blog.constant.RedisPrefixConst.COMMENT_USER_LIKE;
 import static com.minzheng.blog.enums.CommentTypeEnum.*;
 
 /**
@@ -167,25 +166,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentDao, Comment> impleme
 
     @Override
     public void saveCommentLike(Integer commentId) {
-        String commentLikeKey = "";
-        // 判断是否点赞
-        if (UserUtils.getLoginUser() == null) {
-            VisitorDTO visitorInfo = UserUtils.getVisitorInfo();
-            commentLikeKey = COMMENT_USER_LIKE + visitorInfo.getUserId();
-        } else {
-            commentLikeKey = COMMENT_USER_LIKE + UserUtils.getLoginUser().getUserInfoId();
-        }
-        if (redisService.sIsMember(commentLikeKey, commentId)) {
-            // 点过赞则删除评论id
-            redisService.sRemove(commentLikeKey, commentId);
-            // 评论点赞量-1
-            redisService.hDecr(COMMENT_LIKE_COUNT, commentId.toString(), 1L);
-        } else {
-            // 未点赞则增加评论id
-            redisService.sAdd(commentLikeKey, commentId);
-            // 评论点赞量+1
-            redisService.hIncr(COMMENT_LIKE_COUNT, commentId.toString(), 1L);
-        }
+        redisService.hIncr(COMMENT_LIKE_COUNT, commentId.toString(), 1L);
     }
 
     @Override

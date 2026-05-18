@@ -42,10 +42,10 @@
             </v-row>
             <!-- 说说操作 -->
             <div class="talk-operation">
-              <div class="talk-operation-item">
+              <div class="talk-operation-item like-operation">
                 <v-icon
                   size="16"
-                  :color="isLike(talkInfo.id)"
+                  color="#ff7242"
                   class="like-btn"
                   @click.prevent="like(talkInfo)"
                 >
@@ -54,6 +54,13 @@
                 <div class="operation-count">
                   {{ talkInfo.likeCount == null ? 0 : talkInfo.likeCount }}
                 </div>
+                <span
+                  v-for="effect in likeEffects"
+                  :key="effect"
+                  class="like-float"
+                >
+                  👍
+                </span>
               </div>
               <div class="talk-operation-item">
                 <v-icon size="16" color="#999">mdi-chat</v-icon>
@@ -85,7 +92,9 @@ export default {
       commentType: 3,
       commentCount: 0,
       talkInfo: {},
-      previewList: []
+      previewList: [],
+      likeEffectId: 0,
+      likeEffects: []
     };
   },
   methods: {
@@ -115,15 +124,17 @@ export default {
       // 发送请求
       this.axios.post("/api/talks/" + talk.id + "/like").then(({ data }) => {
         if (data.flag) {
-          // 判断是否点赞
-          if (this.$store.state.talkLikeSet.indexOf(talk.id) != -1) {
-            this.$set(talk, "likeCount", talk.likeCount - 1);
-          } else {
-            this.$set(talk, "likeCount", talk.likeCount + 1);
-          }
-          this.$store.commit("talkLike", talk.id);
+          this.$set(talk, "likeCount", (talk.likeCount || 0) + 1);
+          this.showLikeEffect();
         }
       });
+    },
+    showLikeEffect() {
+      const effect = ++this.likeEffectId;
+      this.likeEffects.push(effect);
+      setTimeout(() => {
+        this.likeEffects = this.likeEffects.filter(item => item != effect);
+      }, 700);
     }
   },
   computed: {
@@ -135,12 +146,6 @@ export default {
         }
       });
       return "background: url(" + cover + ") center center / cover no-repeat";
-    },
-    isLike() {
-      return function(talkId) {
-        var talkLikeSet = this.$store.state.talkLikeSet;
-        return talkLikeSet.indexOf(talkId) != -1 ? "#eb5055" : "#999";
-      };
     }
   }
 };
@@ -284,10 +289,14 @@ export default {
   margin-top: 10px;
 }
 .talk-operation-item {
+  position: relative;
   display: flex;
   align-items: center;
   margin-right: 40px;
   font-size: 12px;
+}
+.like-operation {
+  color: #ff7242;
 }
 .operation-count {
   margin-left: 4px;
@@ -306,6 +315,26 @@ export default {
   margin-top: 20px;
 }
 .like-btn:hover {
-  color: #eb5055 !important;
+  color: #ff5c2b !important;
+}
+.like-float {
+  position: absolute;
+  left: 2px;
+  top: -2px;
+  pointer-events: none;
+  animation: thumbFloat 0.7s ease-out forwards;
+}
+@keyframes thumbFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(1.35);
+  }
 }
 </style>
