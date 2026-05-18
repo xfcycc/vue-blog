@@ -56,24 +56,6 @@
           </ul>
         </div>
         <div class="menus-item">
-          <a class="menu-btn">
-            <i class="iconfont iconqita" /> 娱乐
-            <i class="iconfont iconxiangxia2 expand" />
-          </a>
-          <ul class="menus-submenu">
-            <li>
-              <router-link to="/albums">
-                <i class="iconfont iconxiangce1" /> 相册
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/talks">
-                <i class="iconfont iconpinglun" /> 说说
-              </router-link>
-            </li>
-          </ul>
-        </div>
-        <div class="menus-item">
           <router-link class="menu-btn" to="/links">
             <i class="iconfont iconlianjie" /> 友链
           </router-link>
