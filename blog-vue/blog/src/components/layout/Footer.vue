@@ -5,7 +5,8 @@
       :class="{
         'tag-footer-wrap': isTagPage,
         'category-footer-wrap': isCategoryPage,
-        'archive-footer-wrap': isArchivePage
+        'archive-footer-wrap': isArchivePage,
+        'about-footer-wrap': isAboutPage
       }"
     >
       <div>
@@ -37,6 +38,9 @@ export default {
     },
     isArchivePage() {
       return this.$route.path == "/archives";
+    },
+    isAboutPage() {
+      return this.$route.path == "/about";
     },
     blogInfo() {
       return this.$store.state.blogInfo;
@@ -200,6 +204,38 @@ export default {
 }
 .archive-footer-wrap a:nth-child(3) {
   color: #67e8f9 !important;
+}
+.about-footer-wrap {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(
+      180deg,
+      rgba(67, 56, 202, 0.5),
+      rgba(15, 23, 42, 0.88)
+    ),
+    url("../../assets/images/about/about-hero.png") center 72% / cover no-repeat;
+  animation: none;
+  box-shadow: inset 0 24px 52px rgba(67, 56, 202, 0.32);
+}
+.about-footer-wrap::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 0, rgba(244, 114, 182, 0.22), transparent 32%),
+    radial-gradient(circle at 70% 18%, rgba(34, 211, 238, 0.2), transparent 30%);
+  content: "";
+  pointer-events: none;
+}
+.about-footer-wrap div,
+.about-footer-wrap a {
+  position: relative;
+  z-index: 1;
+}
+.about-footer-wrap a {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.about-footer-wrap a:nth-child(3) {
+  color: #fbcfe8 !important;
 }
 
 @keyframes Gradient {

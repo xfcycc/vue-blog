@@ -134,6 +134,9 @@ public class BlogInfoServiceImpl implements BlogInfoService {
 
     @Override
     public void updateWebsiteConfig(WebsiteConfigVO websiteConfigVO) {
+        if (Objects.isNull(websiteConfigVO.getAboutContent())) {
+            websiteConfigVO.setAboutContent(this.getWebsiteConfig().getAboutContent());
+        }
         // 修改网站配置
         WebsiteConfig websiteConfig = WebsiteConfig.builder()
                 .id(1)
@@ -157,18 +160,21 @@ public class BlogInfoServiceImpl implements BlogInfoService {
             websiteConfigVO = JSON.parseObject(config, WebsiteConfigVO.class);
             redisService.set(WEBSITE_CONFIG, config);
         }
+        fillLegacyAboutContent(websiteConfigVO);
         return websiteConfigVO;
     }
 
     @Override
     public String getAbout() {
-        Object value = redisService.get(ABOUT);
-        return Objects.nonNull(value) ? value.toString() : "";
+        WebsiteConfigVO websiteConfigVO = this.getWebsiteConfig();
+        return Objects.nonNull(websiteConfigVO.getAboutContent()) ? websiteConfigVO.getAboutContent() : "";
     }
 
     @Override
     public void updateAbout(BlogInfoVO blogInfoVO) {
-        redisService.set(ABOUT, blogInfoVO.getAboutContent());
+        WebsiteConfigVO websiteConfigVO = this.getWebsiteConfig();
+        websiteConfigVO.setAboutContent(blogInfoVO.getAboutContent());
+        this.updateWebsiteConfig(websiteConfigVO);
     }
 
     @Override
@@ -223,6 +229,21 @@ public class BlogInfoServiceImpl implements BlogInfoService {
                         .build())
                 .sorted(Comparator.comparingInt(ArticleRankDTO::getViewsCount).reversed())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 兼容旧版本存放在 Redis 的关于我内容。
+     *
+     * @param websiteConfigVO 网站配置
+     */
+    private void fillLegacyAboutContent(WebsiteConfigVO websiteConfigVO) {
+        if (Objects.nonNull(websiteConfigVO.getAboutContent())) {
+            return;
+        }
+        Object aboutContent = redisService.get(ABOUT);
+        if (Objects.nonNull(aboutContent)) {
+            websiteConfigVO.setAboutContent(aboutContent.toString());
+        }
     }
 
 }

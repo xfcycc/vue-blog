@@ -53,6 +53,12 @@ public class WebsiteConfigVO {
     private String websiteNotice;
 
     /**
+     * 关于我内容
+     */
+    @ApiModelProperty(name = "aboutContent", value = "关于我内容", dataType = "String")
+    private String aboutContent;
+
+    /**
      * 网站创建时间
      */
     @ApiModelProperty(name = "websiteCreateTime", value = "网站创建时间", required = true, dataType = "LocalDateTime")

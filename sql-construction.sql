@@ -385,7 +385,7 @@ CREATE TABLE `tb_user_role` (
 DROP TABLE IF EXISTS `tb_website_config`;
 CREATE TABLE `tb_website_config` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `config` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '配置信息',
+  `config` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '配置信息',
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
