@@ -12,8 +12,6 @@
     <Footer></Footer>
     <!-- 返回顶部 -->
     <BackTop v-if="showFloatingTools"></BackTop>
-    <!-- 搜索模态框 -->
-    <searchModel></searchModel>
     <!-- 音乐播放器 -->
     <Player v-if="websiteConfig.isMusicPlayer == 1 && !isMobile" />
     <!-- 聊天室 -->
@@ -28,7 +26,6 @@ import TopNavBar from "./components/layout/TopNavBar";
 import SideNavBar from "./components/layout/SideNavBar";
 import Footer from "./components/layout/Footer";
 import BackTop from "./components/BackTop";
-import searchModel from "./components/model/SearchModel";
 import Player from "./components/zw-player/player.vue";
 import ChatRoom from "./components/ChatRoom";
 import { getPersistentPokemonAvatar } from "./utils/avatar";
@@ -58,7 +55,6 @@ export default {
     SideNavBar,
     Footer,
     BackTop,
-    searchModel,
     ChatRoom
   },
   methods: {
