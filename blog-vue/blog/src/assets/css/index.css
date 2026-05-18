@@ -258,6 +258,28 @@ p {
   background-color: transparent;
 }
 
+html.tag-page-scrollbar,
+body.tag-page-scrollbar {
+  scrollbar-color: rgba(148, 163, 184, 0.55) rgba(2, 6, 23, 0.92);
+}
+
+html.tag-page-scrollbar::-webkit-scrollbar-track,
+body.tag-page-scrollbar::-webkit-scrollbar-track {
+  background-color: rgba(2, 6, 23, 0.92);
+}
+
+html.tag-page-scrollbar::-webkit-scrollbar-thumb,
+body.tag-page-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(2, 6, 23, 0.92);
+  background-color: rgba(148, 163, 184, 0.65);
+  background-image: none;
+}
+
+html.tag-page-scrollbar::-webkit-scrollbar-thumb:hover,
+body.tag-page-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(191, 219, 254, 0.78);
+}
+
 ::-moz-selection {
   color: #fff;
   background-color: #49b1f5;
