@@ -32,26 +32,16 @@
         </div>
       </div>
 
-      <!-- 流星留言 -->
-      <div class="meteor-field">
-        <button
-          v-for="(item, index) in meteorList"
-          :key="getMessageKey(item, index)"
-          class="meteor-message"
-          :class="{ active: activeMessage === item._messageKey }"
-          :style="getMeteorStyle(item)"
-          @click="toggleMessage(item)"
-          type="button"
+      <!-- 像素弹幕 -->
+      <div class="pixel-sky-field">
+        <div
+          v-for="(item, index) in skyMessageList"
+          :key="'sky-' + getMessageKey(item, index)"
+          class="pixel-sky-message"
+          :style="getSkyStyle(item)"
         >
-          <img class="meteor-sprite" :src="messageMeteor" alt="" />
-          <span class="message-bubble">
-            <strong>
-              <img :src="getMessageAvatar(item)" alt="" />
-              {{ item.nickname }}
-            </strong>
-            <span>{{ item.messageContent }}</span>
-          </span>
-        </button>
+          {{ item.messageContent }}
+        </div>
       </div>
     </div>
   </div>
@@ -60,22 +50,64 @@
 <script>
 import messageMeteor from "../../assets/images/message-meteor-soft.png";
 import messageNightSky from "../../assets/images/message-night-sky.png";
-import {
-  getPersistentPokemonAvatar,
-  getPokemonAvatarBySeed,
-  isPokemonAvatar,
-  normalizePokemonAvatar
-} from "../../utils/avatar";
+import { getPersistentPokemonAvatar } from "../../utils/avatar";
+
+const artificialMessageContents = [
+  "节操碎了一地",
+  "月亮打了个喷嚏",
+  "今天也要发光",
+  "像素风吹过来了",
+  "快乐正在加载",
+  "星星掉线中",
+  "别卷了看星星",
+  "灵感砸到地上",
+  "晚风有点甜",
+  "代码正在冒泡",
+  "把烦恼丢出去",
+  "今天适合摸鱼",
+  "宇宙偷偷眨眼",
+  "留言正在坠落",
+  "快乐碎成小块",
+  "好运发射成功",
+  "夜空有回音",
+  "心情像素化",
+  "星河施工中",
+  "烦恼原地解散",
+  "明天一定早睡",
+  "键盘开始发光",
+  "风把字吹歪了",
+  "地面收到留言",
+  "灵魂正在掉帧",
+  "浪漫正在刷新",
+  "请接住好运",
+  "今天不许emo",
+  "碎片也会发光",
+  "路过留个像素"
+];
+
+const pixelColors = [
+  "#7df9ff",
+  "#fff36d",
+  "#ff8bd1",
+  "#9cff6a",
+  "#ffa45b",
+  "#a78bff",
+  "#73ffcf",
+  "#ff6b6b",
+  "#8ec5ff",
+  "#f8a5ff"
+];
 
 export default {
   mounted() {
+    this.artificialMessageList = this.createArtificialMessages();
     this.listMessage();
   },
   data() {
     return {
       messageContent: "",
       barrageList: [],
-      activeMessage: "",
+      artificialMessageList: [],
       isLaunching: false,
       launchingContent: "",
       launchTimer: null
@@ -108,7 +140,7 @@ export default {
       this.axios.post("/api/messages", message).then(({ data }) => {
         if (data.flag) {
           this.barrageList.push(
-            this.normalizeMessage(message, this.barrageList.length)
+            this.normalizeMessage(message, this.messageList.length)
           );
         } else {
           this.$toast({ type: "error", message: data.message });
@@ -128,28 +160,39 @@ export default {
       this.axios.get("/api/messages").then(({ data }) => {
         if (data.flag) {
           this.barrageList = data.data.map((item, index) =>
-            this.normalizeMessage(item, index)
+            this.normalizeMessage(item, this.artificialMessageList.length + index)
           );
         }
       });
     },
+    createArtificialMessages() {
+      return artificialMessageContents.map((content, index) =>
+        this.normalizeMessage(
+          {
+            id: "artificial-message-" + index,
+            nickname: "像素路人",
+            avatar: "",
+            messageContent: content
+          },
+          index
+        )
+      );
+    },
     normalizeMessage(item, index) {
       const message = Object.assign({}, item);
       message._messageKey = this.getMessageKey(message, index);
-      message._meteor = this.createMeteorMeta(index);
+      message._sky = this.createSkyMeta(index);
       return message;
     },
-    createMeteorMeta(index) {
-      const columns = [-10, -4, 2, 8, 14, 20, 26, 32];
-      const lane = index % columns.length;
+    createSkyMeta(index) {
+      const lanes = [12, 18, 24, 31, 38, 45, 52, 59, 66, 73];
+      const lane = index % lanes.length;
       return {
-        left: columns[lane] + Math.random() * 4,
-        top: -10 - Math.random() * 8,
-        driftX: 46 + Math.random() * 20,
-        driftY: 52 + Math.random() * 24,
-        duration: 18 + Math.random() * 6,
-        delay: 0.5 + index * 3.2 + Math.random() * 0.8,
-        scale: 0.58 + Math.random() * 0.22
+        top: lanes[lane] + Math.random() * 1.5,
+        duration: 22 + Math.random() * 10,
+        delay: Math.random() * 20,
+        floatY: -10 + Math.random() * 20,
+        color: this.getPixelColor(index)
       };
     },
     getMessageKey(item, index) {
@@ -158,28 +201,17 @@ export default {
         [item.nickname, item.avatar, item.messageContent, index].join("-")
       );
     },
-    getMeteorStyle(item) {
+    getSkyStyle(item) {
       return {
-        left: item._meteor.left + "%",
-        top: item._meteor.top + "vh",
-        "--drift-x": item._meteor.driftX + "vw",
-        "--drift-y": item._meteor.driftY + "vh",
-        "--fall-duration": item._meteor.duration + "s",
-        "--fall-delay": item._meteor.delay + "s",
-        "--meteor-scale": item._meteor.scale
+        top: item._sky.top + "vh",
+        "--sky-duration": item._sky.duration + "s",
+        "--sky-delay": item._sky.delay + "s",
+        "--sky-float-y": item._sky.floatY + "px",
+        "--pixel-color": item._sky.color
       };
     },
-    toggleMessage(item) {
-      this.activeMessage =
-        this.activeMessage === item._messageKey ? "" : item._messageKey;
-    },
-    getMessageAvatar(item) {
-      if (isPokemonAvatar(item.avatar)) {
-        return normalizePokemonAvatar(item.avatar);
-      }
-      return getPokemonAvatarBySeed(
-        ["message", item.nickname, item.avatar].join("-")
-      );
+    getPixelColor(index) {
+      return pixelColors[index % pixelColors.length];
     }
   },
   computed: {
@@ -196,8 +228,11 @@ export default {
         backgroundImage: "url(" + messageNightSky + ")"
       };
     },
-    meteorList() {
-      return this.barrageList.slice(-12);
+    messageList() {
+      return this.artificialMessageList.concat(this.barrageList);
+    },
+    skyMessageList() {
+      return this.messageList;
     }
   }
 };
@@ -360,131 +395,56 @@ export default {
 .message-input-wrapper.is-launching .launch-meteor {
   animation: input-meteor-launch 1.2s ease-in forwards;
 }
-.meteor-field {
+.pixel-sky-field {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   width: 100%;
-  z-index: 4;
   pointer-events: none;
 }
-.meteor-message {
-  --drift-x: 96vw;
-  --drift-y: 90vh;
-  --fall-duration: 22s;
-  --fall-delay: 0s;
-  --meteor-scale: 1;
+.pixel-sky-field {
+  z-index: 4;
+}
+.pixel-sky-message {
+  --sky-duration: 20s;
+  --sky-delay: 0s;
+  --sky-float-y: 0px;
+  --pixel-color: #eaffff;
   position: absolute;
-  width: 128px;
-  height: 110px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: auto;
-  transform: translate3d(0, 0, 0) scale(var(--meteor-scale));
-  animation: meteor-fall var(--fall-duration) linear var(--fall-delay) infinite
-    both;
+  left: 100vw;
+  max-width: 320px;
+  color: var(--pixel-color);
+  font-family: "Courier New", "Lucida Console", Monaco, monospace !important;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 4px;
+  text-shadow: 2px 0 0 rgba(0, 20, 44, 0.95),
+    0 2px 0 rgba(0, 20, 44, 0.95), 3px 3px 0 rgba(0, 8, 20, 0.78),
+    0 0 12px var(--pixel-color);
+  word-break: keep-all;
+  white-space: nowrap;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: pixel-sky-pass var(--sky-duration) linear var(--sky-delay)
+    infinite both;
 }
-.meteor-message:focus {
-  outline: none;
-}
-.meteor-message:focus .meteor-sprite,
-.meteor-message:hover .meteor-sprite,
-.meteor-message.active .meteor-sprite {
-  filter: drop-shadow(0 0 18px rgba(255, 224, 137, 0.98));
-}
-.meteor-sprite {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: 0.84;
-  filter: drop-shadow(0 0 8px rgba(255, 218, 132, 0.42));
-}
-.message-bubble {
-  position: absolute;
-  left: 74%;
-  bottom: 74px;
-  width: max-content;
-  max-width: 260px;
-  padding: 10px 14px;
-  border-radius: 18px 18px 18px 4px;
-  color: #1b2542;
-  text-align: left;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(-50%, 8px);
-  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-}
-.message-bubble::after {
-  content: "";
-  position: absolute;
-  left: 24px;
-  bottom: -8px;
-  width: 16px;
-  height: 16px;
-  background: rgba(255, 255, 255, 0.92);
-  transform: rotate(45deg);
-}
-.message-bubble strong,
-.message-bubble span {
-  position: relative;
-  z-index: 1;
-  display: block;
-}
-.message-bubble strong {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-  color: #5966a7;
-  font-size: 0.85rem;
-}
-.message-bubble strong img {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.message-bubble span {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  word-break: break-word;
-}
-.meteor-message.active .message-bubble,
-.meteor-message:hover .message-bubble {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-50%, 0);
-}
-@keyframes meteor-fall {
+@keyframes pixel-sky-pass {
   0% {
-    transform: translate3d(0, 0, 0) scale(var(--meteor-scale));
+    transform: translate3d(0, 0, 0);
     opacity: 0;
   }
-  6% {
-    opacity: 1;
+  8% {
+    opacity: 0.95;
   }
-  84% {
-    transform: translate3d(var(--drift-x), var(--drift-y), 0)
-      scale(var(--meteor-scale));
-    opacity: 1;
-  }
-  90% {
-    transform: translate3d(var(--drift-x), var(--drift-y), 0)
-      scale(calc(var(--meteor-scale) * 0.72));
-    opacity: 0;
+  50% {
+    transform: translate3d(-64vw, var(--sky-float-y), 0);
+    opacity: 0.95;
   }
   100% {
-    transform: translate3d(var(--drift-x), var(--drift-y), 0)
-      scale(calc(var(--meteor-scale) * 0.72));
+    transform: translate3d(-140vw, 0, 0);
     opacity: 0;
   }
 }
@@ -535,8 +495,9 @@ export default {
   .message-input-wrapper button {
     padding: 0 0.9rem;
   }
-  .message-bubble {
-    max-width: 210px;
+  .pixel-sky-message {
+    max-width: 240px;
+    font-size: 13px;
   }
 }
 </style>
