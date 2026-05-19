@@ -113,8 +113,9 @@
 
 <script>
 import Comment from "../../components/Comment";
-import spaceBg from "../../assets/images/link-galaxy/space-bg.png";
-import sunImg from "../../assets/images/link-galaxy/sun.png";
+
+const spaceBg = "https://pic.caiguoyu.cn/20260519195330293.png";
+const sunImg = "https://pic.caiguoyu.cn/20260519195330294.png";
 
 const PLANET_COLORS = [
   ["#7dd3fc", "#2563eb"],
@@ -684,7 +685,7 @@ export default {
   border-radius: 12px !important;
   background:
     linear-gradient(180deg, rgba(7, 12, 28, 0.99), rgba(4, 8, 22, 0.98)),
-    url("../../assets/images/link-galaxy/space-bg.png") center / cover;
+    url("https://pic.caiguoyu.cn/20260519195330293.png") center / cover;
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
   color: #f8fafc;
 }

@@ -167,7 +167,7 @@ export default {
       rgba(2, 6, 23, 0.72),
       rgba(2, 6, 23, 0.92)
     ),
-    url("../../assets/images/archive-hacker-bg.png") center bottom / cover
+    url("https://pic.caiguoyu.cn/20260519195307471.png") center bottom / cover
       no-repeat;
   animation: none;
   box-shadow: inset 0 28px 52px rgba(3, 7, 18, 0.82);
@@ -213,7 +213,7 @@ export default {
       rgba(67, 56, 202, 0.5),
       rgba(15, 23, 42, 0.88)
     ),
-    url("../../assets/images/about/about-hero.png") center 72% / cover no-repeat;
+    url("https://pic.caiguoyu.cn/20260519195330292.png") center 72% / cover no-repeat;
   animation: none;
   box-shadow: inset 0 24px 52px rgba(67, 56, 202, 0.32);
 }

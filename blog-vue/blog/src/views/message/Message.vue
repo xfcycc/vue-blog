@@ -54,9 +54,10 @@
 </template>
 
 <script>
-import messageMeteor from "../../assets/images/message-meteor-soft.png";
-import messageNightSky from "../../assets/images/message-night-sky.png";
 import { getPersistentPokemonAvatar } from "../../utils/avatar";
+
+const messageMeteor = "https://pic.caiguoyu.cn/20260519195330295.png";
+const messageNightSky = "https://pic.caiguoyu.cn/20260519195330296.png";
 
 const artificialMessageContents = [
   "节操碎了一地",

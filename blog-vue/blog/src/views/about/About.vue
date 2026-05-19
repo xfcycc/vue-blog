@@ -155,7 +155,8 @@
 <script>
 import Clipboard from "clipboard";
 import markdownToHtml from "../../utils/markdown";
-import generatedAboutCover from "../../assets/images/about/about-hero.png";
+
+const generatedAboutCover = "https://pic.caiguoyu.cn/20260519195330292.png";
 
 const defaultAboutConfig = {
   backgroundImage: "",

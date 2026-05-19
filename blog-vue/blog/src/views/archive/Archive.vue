@@ -121,7 +121,7 @@
 </template>
 
 <script>
-import archiveBackground from "../../assets/images/archive-hacker-bg.png";
+const archiveBackground = "https://pic.caiguoyu.cn/20260519195307471.png";
 
 const ARCHIVE_TITLE_TEXT = "System.Logs";
 const ARCHIVE_PAGE_SIZE = 10;
@@ -740,7 +740,7 @@ body.archive-route-bg .theme--light.v-application,
 body.archive-route-bg .theme--dark.v-application {
   background-color: #0a0a0a;
   background-image: linear-gradient(rgba(3, 7, 18, 0.62), rgba(3, 7, 18, 0.82)),
-    url("../../assets/images/archive-hacker-bg.png");
+    url("https://pic.caiguoyu.cn/20260519195307471.png");
   background-position: center top;
   background-size: cover;
   background-attachment: fixed;
