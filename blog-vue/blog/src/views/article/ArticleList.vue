@@ -1,5 +1,66 @@
 <template>
-  <div :class="{ 'category-article-page': isCategoryMode }" :style="pageStyle">
+  <div
+    :class="{
+      'category-article-page': isCategoryMode,
+      'tag-article-page': isTagMode,
+      'tag-article-leaving': tagLeaving,
+      'tag-cloud-returning': tagCloudMode && tagCloudReturning
+    }"
+    :style="pageStyle"
+  >
+    <template v-if="isTagMode">
+      <div class="tag-page-mask"></div>
+      <div class="star-layer star-layer-one"></div>
+      <div class="star-layer star-layer-two"></div>
+      <div class="star-layer star-layer-three"></div>
+      <div v-if="!tagCloudMode" class="tag-article-cloud">
+        <a
+          href="/tags"
+          class="tag-center-link"
+          aria-label="返回标签词云"
+          @click.prevent="backToTags"
+        >
+          <span class="tag-center-text">{{ name || "标签" }}</span>
+        </a>
+        <template v-for="(item, index) of articleList">
+          <span
+            :key="'line-' + item.id"
+            class="tag-article-line"
+            :style="getTagArticleLineStyle(item, index)"
+          ></span>
+          <router-link
+            :key="item.id"
+            :to="'/articles/' + item.id"
+            class="tag-article-node"
+            :style="getTagArticleStyle(item, index)"
+          >
+            <span class="tag-article-title">{{ item.articleTitle }}</span>
+            <span class="tag-article-date">{{ item.createTime | date }}</span>
+          </router-link>
+        </template>
+      </div>
+      <div v-else class="tag-return-cloud">
+        <a
+          v-for="item of styledTagList"
+          :key="item.id"
+          :href="'/tags/' + item.id"
+          class="tag-cloud-item"
+          :style="getTagStyle(item)"
+          @click.prevent="openTagFromCloud(item.id)"
+        >
+          <span class="tag-cloud-text">{{ item.tagName }}</span>
+        </a>
+      </div>
+      <infinite-loading
+        v-if="!tagCloudMode"
+        @infinite="infiniteHandler"
+        class="tag-cloud-loader"
+      >
+        <div slot="no-results" />
+        <div slot="no-more" />
+      </infinite-loading>
+    </template>
+    <template v-else>
     <!-- 标签或分类名 -->
     <div
       class="banner article-list-banner"
@@ -125,11 +186,51 @@
         <div slot="no-more" />
       </infinite-loading>
     </div>
+    </template>
   </div>
 </template>
 
 <script>
 const CATEGORY_COVER = "https://pic.caiguoyu.cn/20260518204951097.jpg";
+const TAG_COVER = "https://pic.caiguoyu.cn/20260518204951070.jpg";
+const TAG_COLORS = [
+  "#3b82f6",
+  "#ec4899",
+  "#8b5cf6",
+  "#10b981",
+  "#f59e0b",
+  "#6366f1",
+  "#14b8a6",
+  "#f43f5e",
+  "#0ea5e9",
+  "#475569"
+];
+const TAG_ARTICLE_POINTS = [
+  [-39, -27],
+  [-26, -33],
+  [-9, -31],
+  [10, -34],
+  [27, -31],
+  [40, -24],
+  [-43, -12],
+  [-30, -16],
+  [-16, -18],
+  [17, -18],
+  [31, -14],
+  [43, -8],
+  [-42, 8],
+  [-28, 13],
+  [-13, 18],
+  [14, 18],
+  [29, 13],
+  [42, 8],
+  [-36, 27],
+  [-21, 31],
+  [-3, 32],
+  [13, 31],
+  [29, 28],
+  [39, 23]
+];
 
 export default {
   created() {
@@ -139,6 +240,45 @@ export default {
     } else {
       this.title = "标签";
     }
+    this.activeTagId = this.$route.params.tagId || null;
+    if (this.isTagCloudRoute) {
+      this.tagCloudMode = true;
+      this.prepareTagCloud();
+    }
+  },
+  mounted() {
+    if (this.isTagCloudRoute) {
+      this.tagCloudMode = true;
+      this.prepareTagCloud();
+    }
+  },
+  beforeDestroy() {
+    if (this.tagReturnTimer) {
+      window.clearTimeout(this.tagReturnTimer);
+    }
+  },
+  watch: {
+    $route() {
+      if (this.isTagCloudRoute) {
+        this.activeTagId = null;
+        this.current = 1;
+        this.articleList = [];
+        this.name = "";
+        this.tagLeaving = false;
+        this.tagCloudMode = true;
+        this.prepareTagCloud();
+        return;
+      }
+      if (this.isTagMode) {
+        this.activeTagId = this.$route.params.tagId || null;
+        this.current = 1;
+        this.articleList = [];
+        this.name = "";
+        this.tagLeaving = false;
+        this.tagCloudReturning = false;
+        this.tagCloudMode = false;
+      }
+    }
   },
   data: function() {
     return {
@@ -147,6 +287,13 @@ export default {
       articleList: [],
       name: "",
       title: "",
+      tagLeaving: false,
+      tagCloudMode: false,
+      tagCloudReturning: false,
+      tagReturnTimer: null,
+      activeTagId: null,
+      tagList: [],
+      styledTagList: [],
       marqueeList: [
         "// 暂无文章",
         "// 等待信号",
@@ -161,7 +308,7 @@ export default {
         .get("/api/articles/condition", {
           params: {
             categoryId: this.$route.params.categoryId,
-            tagId: this.$route.params.tagId,
+            tagId: this.activeTagId || this.$route.params.tagId,
             current: this.current,
             size: this.isCategoryMode ? 200 : this.size
           }
@@ -179,6 +326,80 @@ export default {
             $state.complete();
           }
         });
+    },
+    backToTags() {
+      if (this.tagLeaving) {
+        return;
+      }
+      if (this.tagReturnTimer) {
+        window.clearTimeout(this.tagReturnTimer);
+        this.tagReturnTimer = null;
+      }
+      this.prepareTagCloud();
+      this.tagLeaving = true;
+      window.setTimeout(() => {
+        this.tagCloudMode = true;
+        this.tagLeaving = false;
+        this.tagCloudReturning = true;
+        this.activeTagId = null;
+        document.title = "标签";
+        window.history.replaceState({}, "", "/tags");
+        this.tagReturnTimer = window.setTimeout(() => {
+          this.tagCloudReturning = false;
+          this.tagReturnTimer = null;
+        }, 900);
+      }, 520);
+    },
+    openTagFromCloud(tagId) {
+      this.activeTagId = tagId;
+      this.current = 1;
+      this.articleList = [];
+      this.name = "";
+      this.tagLeaving = false;
+      this.tagCloudReturning = false;
+      this.tagCloudMode = false;
+      window.history.pushState({}, "", "/tags/" + tagId);
+    },
+    prepareTagCloud() {
+      if (this.styledTagList.length) {
+        return;
+      }
+      this.axios.get("/api/tags").then(({ data }) => {
+        this.tagList = data.data.recordList;
+        this.styledTagList = this.tagList.map(item => {
+          const size = Math.floor(Math.random() * 24) + 16;
+          const driftX = Math.floor(Math.random() * 280) - 140;
+          const driftY = Math.floor(Math.random() * 220) - 110;
+          return {
+            ...item,
+            size,
+            color: TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)],
+            x: Math.floor(Math.random() * 78) + 8,
+            y: Math.floor(Math.random() * 72) + 14,
+            driftX,
+            driftY,
+            driftHalfX: Math.round(driftX * -0.45),
+            driftHalfY: Math.round(driftY * 0.45),
+            duration: Math.floor(Math.random() * 4) + 5,
+            delay: (Math.random() * -6).toFixed(2)
+          };
+        });
+      });
+    },
+    getTagStyle(item) {
+      return {
+        left: item.x + "%",
+        top: item.y + "%",
+        color: item.color,
+        fontSize: item.size + "px",
+        fontWeight: item.size > 24 ? 600 : 400,
+        animationDelay: item.delay + "s",
+        animationDuration: item.duration + "s",
+        "--drift-x": item.driftX + "px",
+        "--drift-y": item.driftY + "px",
+        "--drift-half-x": item.driftHalfX + "px",
+        "--drift-half-y": item.driftHalfY + "px"
+      };
     },
     getArticleId(index) {
       return String(index + 1).padStart(2, "0");
@@ -205,13 +426,83 @@ export default {
         backgroundPosition: "center",
         backgroundSize: "cover"
       };
+    },
+    getTagArticleSeed(item, index) {
+      const text = String(item.id || item.articleTitle || index);
+      let seed = 0;
+      for (let i = 0; i < text.length; i++) {
+        seed = (seed * 31 + text.charCodeAt(i)) % 9973;
+      }
+      return seed + index * 37;
+    },
+    getTagArticlePoint(item, index) {
+      const seed = this.getTagArticleSeed(item, index);
+      const tagSeed = Number(this.$route.params.tagId || 0);
+      const slot = (index * 7 + tagSeed) % TAG_ARTICLE_POINTS.length;
+      const loop = Math.floor(index / TAG_ARTICLE_POINTS.length);
+      const point = TAG_ARTICLE_POINTS[slot];
+      const narrow = typeof window != "undefined" && window.innerWidth < 760;
+      const scaleX = narrow ? 0.74 : 1;
+      const scaleY = narrow ? 0.86 : 1;
+      const xJitter = ((seed % 13) - 6) * 0.42 + loop * 1.6;
+      const yJitter = (((seed / 13) % 11) - 5) * 0.38 + loop * 1.2;
+      const x = (point[0] + xJitter) * scaleX;
+      const y = (point[1] + yJitter) * scaleY;
+      return {
+        x,
+        y,
+        angle: Math.atan2(y, x) * (180 / Math.PI),
+        distance: Math.sqrt(x * x + y * y)
+      };
+    },
+    getTagArticleStyle(item, index) {
+      const point = this.getTagArticlePoint(item, index);
+      const seed = this.getTagArticleSeed(item, index);
+      return {
+        left: 50 + point.x + "%",
+        top: 50 + point.y + "%",
+        zIndex: 2 + (seed % 5),
+        backgroundImage:
+          "linear-gradient(135deg, rgba(2, 6, 23, 0.22), rgba(2, 6, 23, 0.76)), url(" +
+          item.articleCover +
+          ")",
+        animationDelay: (0.12 + (index % 12) * 0.04).toFixed(2) + "s"
+      };
+    },
+    getTagArticleLineStyle(item, index) {
+      const point = this.getTagArticlePoint(item, index);
+      const cloud = document.querySelector(".tag-article-cloud");
+      const rect = cloud && cloud.getBoundingClientRect();
+      const width =
+        (rect && rect.width) || (typeof window != "undefined" ? window.innerWidth : 1200);
+      const height =
+        (rect && rect.height) ||
+        (typeof window != "undefined" ? window.innerHeight - 60 : 660);
+      const x = (point.x / 100) * width;
+      const y = (point.y / 100) * height;
+      return {
+        width: Math.sqrt(x * x + y * y) + "px",
+        "--line-angle": Math.atan2(y, x) * (180 / Math.PI) + "deg",
+        animationDelay: (0.08 + (index % 12) * 0.04).toFixed(2) + "s"
+      };
     }
   },
   computed: {
     isCategoryMode() {
       return this.$route.path.indexOf("/categories") != -1;
     },
+    isTagMode() {
+      return this.$route.path.indexOf("/tags") != -1;
+    },
+    isTagCloudRoute() {
+      return this.isTagMode && !this.$route.params.tagId;
+    },
     pageStyle() {
+      if (this.isTagMode) {
+        return (
+          "background: url(" + TAG_COVER + ") center top / cover fixed no-repeat"
+        );
+      }
       if (!this.isCategoryMode) {
         return "";
       }
@@ -369,6 +660,9 @@ export default {
     min-height: 134px;
     padding: 18px 18px 16px;
   }
+  .tag-article-cloud {
+    min-height: calc(100vh - 60px);
+  }
 }
 @media (max-width: 759px) {
   .article-list-wrapper {
@@ -435,6 +729,243 @@ export default {
   .article-item-info {
     line-height: 1.7;
     padding: 15px 15px 12px 18px;
+  }
+}
+.tag-article-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  margin-top: -60px;
+  padding-top: 60px;
+  background-color: #111827;
+  animation: tag-page-in 0.55s ease-out both;
+}
+.tag-page-mask {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      circle at 20% 18%,
+      rgba(96, 165, 250, 0.22),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 78% 36%,
+      rgba(236, 72, 153, 0.16),
+      transparent 30%
+    ),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.34), rgba(2, 6, 23, 0.62));
+}
+.star-layer {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background-repeat: repeat;
+  will-change: transform, opacity;
+}
+.star-layer-one {
+  opacity: 0.42;
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.82) 1px,
+    transparent 1.5px
+  );
+  background-size: 78px 78px;
+  animation: star-drift 36s linear infinite;
+}
+.star-layer-two {
+  opacity: 0.34;
+  background-image: radial-gradient(
+    circle,
+    rgba(191, 219, 254, 0.78) 1px,
+    transparent 1.7px
+  );
+  background-size: 126px 126px;
+  background-position: 28px 42px;
+  animation: star-drift-reverse 58s linear infinite;
+}
+.star-layer-three {
+  opacity: 0.28;
+  background-image: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.9) 1px,
+      transparent 1.4px
+    ),
+    radial-gradient(circle, rgba(125, 211, 252, 0.72) 1px, transparent 1.5px);
+  background-size: 180px 180px, 240px 240px;
+  background-position: 12px 70px, 90px 24px;
+  animation: star-twinkle 4.8s ease-in-out infinite;
+}
+.tag-article-cloud {
+  position: relative;
+  z-index: 1;
+  animation: tag-cloud-in 0.7s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+.tag-return-cloud {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 60px);
+}
+.tag-cloud-returning .tag-return-cloud {
+  animation: tag-field-return-in 0.86s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+.tag-article-leaving .tag-article-cloud {
+  animation: tag-cloud-out 0.52s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.tag-center-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 10;
+  color: #fff !important;
+  font-size: clamp(34px, 4.2vw, 58px);
+  font-weight: 800;
+  line-height: 1.12;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.5),
+    0 0 22px rgba(125, 211, 252, 0.35);
+  transform: translate(-50%, -50%);
+  animation: tag-center-in 0.62s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+.tag-center-text {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: min(320px, 42vw);
+  padding: 0 10px;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  animation: tag-center-breathe 3.8s ease-in-out 0.7s infinite;
+}
+.tag-center-link:hover {
+  color: #fff !important;
+  text-shadow: 0 8px 28px rgba(0, 0, 0, 0.56),
+    0 0 30px rgba(236, 72, 153, 0.5);
+}
+.tag-article-leaving .tag-center-text {
+  animation: tag-center-out 0.42s ease-in both;
+}
+.tag-article-line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.48);
+  opacity: 0.68;
+  z-index: 1;
+  pointer-events: none;
+  transform-origin: left center;
+  transform: rotate(var(--line-angle)) scaleX(0);
+  animation: tag-line-in 0.78s ease-out both;
+}
+.tag-article-leaving .tag-article-line {
+  animation: tag-line-out 0.42s ease-in both;
+}
+.tag-article-node {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: clamp(118px, 12vw, 190px);
+  min-height: clamp(70px, 7.4vw, 112px);
+  padding: clamp(10px, 1.3vw, 16px);
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.3);
+  color: #fff !important;
+  text-decoration: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.74);
+  animation: tag-node-in 0.68s cubic-bezier(0.19, 1, 0.22, 1) both;
+  transition: opacity 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+.tag-article-leaving .tag-article-node {
+  pointer-events: none;
+  animation: tag-node-out 0.46s ease-in both;
+}
+.tag-article-node:hover {
+  color: #fff !important;
+  box-shadow: 0 24px 58px rgba(2, 6, 23, 0.48);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+.tag-article-title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: clamp(15px, 1.45vw, 23px);
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.54);
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.tag-article-date {
+  margin-top: 7px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.46);
+}
+.tag-cloud-loader {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.tag-cloud-item {
+  position: absolute;
+  display: inline-block;
+  opacity: 0.88;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.5;
+  transform-origin: center center;
+  animation-name: tag-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  transition: opacity 0.25s, text-shadow 0.25s;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.32);
+}
+.tag-cloud-item:hover {
+  z-index: 12;
+  opacity: 1;
+  animation-play-state: paused;
+  text-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+.tag-cloud-text {
+  display: inline-block;
+  transform-origin: center center;
+}
+.tag-cloud-item:hover .tag-cloud-text {
+  animation: tag-shake 0.9s ease-in-out infinite;
+}
+@media (max-width: 759px) {
+  .tag-article-page,
+  .tag-article-cloud,
+  .tag-return-cloud {
+    min-height: 86vh;
+  }
+  .tag-center-link {
+    font-size: 30px;
+  }
+  .tag-center-text {
+    max-width: 150px;
+  }
+  .tag-article-node {
+    width: 118px;
+    min-height: 74px;
+    padding: 10px;
+  }
+  .tag-article-title {
+    font-size: 15px;
   }
 }
 .category-article-page {
@@ -794,6 +1325,169 @@ export default {
   }
   100% {
     transform: translateY(40px);
+  }
+}
+@keyframes tag-page-in {
+  0% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes tag-cloud-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes tag-cloud-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+@keyframes tag-center-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes tag-center-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.72);
+  }
+}
+@keyframes tag-center-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.05);
+  }
+}
+@keyframes tag-field-return-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes tag-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(var(--drift-half-x), var(--drift-half-y), 0)
+      scale(1.04);
+  }
+  100% {
+    transform: translate3d(var(--drift-x), var(--drift-y), 0) scale(1);
+  }
+}
+@keyframes tag-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  25% {
+    transform: translate3d(1px, -1px, 0) scale(1.08);
+  }
+  50% {
+    transform: translate3d(-1px, 1px, 0) scale(1.08);
+  }
+  75% {
+    transform: translate3d(1px, 1px, 0) scale(1.08);
+  }
+}
+@keyframes tag-line-in {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--line-angle)) scaleX(0);
+  }
+  100% {
+    opacity: 0.68;
+    transform: rotate(var(--line-angle)) scaleX(1);
+  }
+}
+@keyframes tag-line-out {
+  0% {
+    opacity: 0.68;
+    transform: rotate(var(--line-angle)) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--line-angle)) scaleX(0);
+  }
+}
+@keyframes tag-node-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.68);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes tag-node-out {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+}
+@keyframes star-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(78px, 78px, 0);
+  }
+}
+@keyframes star-drift-reverse {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-126px, 126px, 0);
+  }
+}
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.46;
+    transform: scale(1.015);
   }
 }
 </style>

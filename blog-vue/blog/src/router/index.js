@@ -45,8 +45,8 @@ const routes = [
     component: () => import("../views/album/Photo.vue")
   },
   {
-    path: "/tags",
-    component: () => import("../views/tag/Tag.vue"),
+    path: "/tags/:tagId?",
+    component: () => import("../views/article/ArticleList.vue"),
     meta: {
       title: "标签"
     }
@@ -60,10 +60,6 @@ const routes = [
   },
   {
     path: "/categories/:categoryId",
-    component: () => import("../views/article/ArticleList.vue")
-  },
-  {
-    path: "/tags/:tagId",
     component: () => import("../views/article/ArticleList.vue")
   },
   {
