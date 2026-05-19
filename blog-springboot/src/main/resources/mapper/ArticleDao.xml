@@ -83,7 +83,7 @@
 		id,
 		article_cover,
 		article_title,
-		article_content,
+        IFNULL(article_summary, SUBSTR(article_content, 1, 500)) AS article_content,
 	    type,
 		is_top,
 		create_time,
@@ -302,5 +302,11 @@
         ORDER BY
             date DESC
     </select>
+
+    <update id="updateArticleSummary">
+        UPDATE tb_article
+        SET article_summary = #{articleSummary}
+        WHERE id = #{articleId}
+    </update>
 
 </mapper>

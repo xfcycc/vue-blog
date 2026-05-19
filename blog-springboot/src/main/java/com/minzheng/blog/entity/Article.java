@@ -55,6 +55,11 @@ public class Article {
     private String articleContent;
 
     /**
+     * 概要
+     */
+    private String articleSummary;
+
+    /**
      * 文章类型
      */
     private Integer type;

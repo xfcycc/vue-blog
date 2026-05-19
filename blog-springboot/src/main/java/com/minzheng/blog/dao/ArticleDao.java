@@ -79,4 +79,12 @@ public interface ArticleDao extends BaseMapper<Article> {
      */
     List<ArticleStatisticsDTO> listArticleStatistics();
 
+    /**
+     * 更新文章概要
+     *
+     * @param articleId      文章id
+     * @param articleSummary 文章概要
+     */
+    void updateArticleSummary(@Param("articleId") Integer articleId, @Param("articleSummary") String articleSummary);
+
 }

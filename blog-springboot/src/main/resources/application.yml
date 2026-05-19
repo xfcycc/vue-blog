@@ -31,8 +31,8 @@ spring:
   # redis配置
   redis:
     host: 127.0.0.1
-    port: 6379
-    password: 123456
+    port: 6380
+    password:
   # 邮箱配置
   mail:
     host:
@@ -91,3 +91,13 @@ baidu:
   sitemap:
     site: https://yourwebsite
     token:
+
+# DeepSeek OpenAI兼容接口，用于发布文章后异步生成概要
+deepseek:
+  enabled: false
+  base-url: https://api.deepseek.com
+  api-key:
+  model: deepseek-v4-pro
+  thinking-enabled: false
+  max-tokens: 512
+  summary-prompt: 你是个人技术博客首页文章卡片的摘要生成器。摘要展示在标题下方，用一句自然中文告诉读者这篇内容讲什么。请先判断文章类型：如果是事故复盘、踩坑记录或个人经历，优先描述发生了什么事件、如何处理以及结果或经验；如果是教程或技术笔记，概括解决的问题、核心技术和读者收获。摘要尽量写到45到50个中文字符，不能少于35个中文字符。不要机械重复标题，但可以保留关键事件主体；不要堆关键词，不要写成目录；不要出现“本文”“文章”“作者”“概要”等字样；不要使用Markdown、引号、换行、序号或夸张营销语；只输出摘要本身。

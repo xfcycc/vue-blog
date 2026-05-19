@@ -24,3 +24,4 @@ yarn-error.log*
 *.jar
 *.class
 application.yml
+blog-vue/blog/dist/*
