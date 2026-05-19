@@ -59,25 +59,6 @@
             ></path>
           </svg>
         </div>
-        <div v-if="socialLoginList.length > 0">
-          <div class="social-login-title">社交账号登录</div>
-          <div class="social-login-wrapper">
-            <!-- 微博登录 -->
-            <a
-              v-if="showLogin('weibo')"
-              class="mr-3 iconfont iconweibo"
-              style="color:#e05244"
-              @click="weiboLogin"
-            />
-            <!-- qq登录 -->
-            <a
-              v-if="showLogin('qq')"
-              class="iconfont iconqq"
-              style="color:#00AAEE"
-              @click="qqLogin"
-            />
-          </div>
-        </div>
       </div>
     </v-card>
   </v-dialog>
@@ -107,14 +88,6 @@ export default {
         return false;
       }
       return true;
-    },
-    socialLoginList() {
-      return this.$store.state.blogInfo.websiteConfig.socialLoginList;
-    },
-    showLogin() {
-      return function(type) {
-        return this.socialLoginList.indexOf(type) != -1;
-      };
     }
   },
   methods: {
@@ -159,40 +132,6 @@ export default {
           that.$toast({ type: "error", message: data.message });
         }
       });
-    },
-    qqLogin() {
-      //保留当前路径
-      this.$store.commit("saveLoginUrl", this.$route.path);
-      if (
-        navigator.userAgent.match(
-          /(iPhone|iPod|Android|ios|iOS|iPad|Backerry|WebOS|Symbian|Windows Phone|Phone)/i
-        )
-      ) {
-        // eslint-disable-next-line no-undef
-        QC.Login.showPopup({
-          appId: this.config.QQ_APP_ID,
-          redirectURI: this.config.QQ_REDIRECT_URI
-        });
-      } else {
-        window.open(
-          "https://graph.qq.com/oauth2.0/show?which=Login&display=pc&client_id=" +
-            +this.config.QQ_APP_ID +
-            "&response_type=token&scope=all&redirect_uri=" +
-            this.config.QQ_REDIRECT_URI,
-          "_self"
-        );
-      }
-    },
-    weiboLogin() {
-      //保留当前路径
-      this.$store.commit("saveLoginUrl", this.$route.path);
-      window.open(
-        "https://api.weibo.com/oauth2/authorize?client_id=" +
-          this.config.WEIBO_APP_ID +
-          "&response_type=code&redirect_uri=" +
-          this.config.WEIBO_REDIRECT_URI,
-        "_self"
-      );
     }
   }
 };

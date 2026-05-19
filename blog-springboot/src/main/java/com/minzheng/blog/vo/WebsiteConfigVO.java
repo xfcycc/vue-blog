@@ -71,22 +71,10 @@ public class WebsiteConfigVO {
     private String websiteRecordNo;
 
     /**
-     * 社交登录列表
-     */
-    @ApiModelProperty(name = "socialLoginList", value = "社交登录列表", required = true, dataType = "List<String>")
-    private List<String> socialLoginList;
-
-    /**
      * 社交url列表
      */
     @ApiModelProperty(name = "socialUrlList", value = "社交url列表", required = true, dataType = "List<String>")
     private List<String> socialUrlList;
-
-    /**
-     * qq
-     */
-    @ApiModelProperty(name = "qq", value = "qq", required = true, dataType = "String")
-    private String qq;
 
     /**
      * github

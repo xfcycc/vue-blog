@@ -20,7 +20,6 @@ import com.minzheng.blog.service.BlogInfoService;
 import com.minzheng.blog.service.RedisService;
 import com.minzheng.blog.service.UserAuthService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.minzheng.blog.strategy.context.SocialLoginStrategyContext;
 import com.minzheng.blog.util.BeanCopyUtils;
 import com.minzheng.blog.util.PageUtils;
 import com.minzheng.blog.util.UserUtils;
@@ -68,8 +67,6 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> impl
     private BlogInfoService blogInfoService;
     @Resource
     private JavaMailSender javaMailSender;
-    @Resource
-    private SocialLoginStrategyContext socialLoginStrategyContext;
     @Resource
     private UserDetailsServiceImpl userDetailsService;
     @Value("${spring.mail.username}")
@@ -203,18 +200,6 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthDao, UserAuth> impl
         // 获取后台用户列表
         List<UserBackDTO> userBackDTOList = userAuthDao.listUsers(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
         return new PageResult<>(userBackDTOList, count);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public UserInfoDTO qqLogin(QQLoginVO qqLoginVO) {
-        return socialLoginStrategyContext.executeLoginStrategy(JSON.toJSONString(qqLoginVO), LoginTypeEnum.QQ);
-    }
-
-    @Transactional(rollbackFor = BizException.class)
-    @Override
-    public UserInfoDTO weiboLogin(WeiboLoginVO weiboLoginVO) {
-        return socialLoginStrategyContext.executeLoginStrategy(JSON.toJSONString(weiboLoginVO), LoginTypeEnum.WEIBO);
     }
 
     /**

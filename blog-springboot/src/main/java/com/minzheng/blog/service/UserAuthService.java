@@ -42,22 +42,6 @@ public interface UserAuthService extends IService<UserAuth> {
     void register(UserVO user);
 
     /**
-     * qq登录
-     *
-     * @param qqLoginVO qq登录信息
-     * @return 用户登录信息
-     */
-    UserInfoDTO qqLogin(QQLoginVO qqLoginVO);
-
-    /**
-     * 微博登录
-     *
-     * @param weiboLoginVO 微博登录信息
-     * @return 用户登录信息
-     */
-    UserInfoDTO weiboLogin(WeiboLoginVO weiboLoginVO);
-
-    /**
      * 修改密码
      *
      * @param user 用户对象

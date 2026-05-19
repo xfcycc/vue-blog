@@ -86,14 +86,6 @@ const routes = [
   {
     path: "/user",
     redirect: "/"
-  },
-  {
-    path: "/oauth/login/qq",
-    redirect: "/"
-  },
-  {
-    path: "/oauth/login/weibo",
-    redirect: "/"
   }
 ];
 

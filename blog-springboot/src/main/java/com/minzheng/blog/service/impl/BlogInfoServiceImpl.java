@@ -137,6 +137,7 @@ public class BlogInfoServiceImpl implements BlogInfoService {
         if (Objects.isNull(websiteConfigVO.getAboutContent())) {
             websiteConfigVO.setAboutContent(this.getWebsiteConfig().getAboutContent());
         }
+        sanitizeWebsiteConfig(websiteConfigVO);
         // 修改网站配置
         WebsiteConfig websiteConfig = WebsiteConfig.builder()
                 .id(1)
@@ -161,6 +162,7 @@ public class BlogInfoServiceImpl implements BlogInfoService {
             redisService.set(WEBSITE_CONFIG, config);
         }
         fillLegacyAboutContent(websiteConfigVO);
+        sanitizeWebsiteConfig(websiteConfigVO);
         return websiteConfigVO;
     }
 
@@ -244,6 +246,16 @@ public class BlogInfoServiceImpl implements BlogInfoService {
         if (Objects.nonNull(aboutContent)) {
             websiteConfigVO.setAboutContent(aboutContent.toString());
         }
+    }
+
+    private void sanitizeWebsiteConfig(WebsiteConfigVO websiteConfigVO) {
+        if (CollectionUtils.isEmpty(websiteConfigVO.getSocialUrlList())) {
+            return;
+        }
+        List<String> socialUrlList = websiteConfigVO.getSocialUrlList().stream()
+                .filter(item -> "github".equals(item) || "gitee".equals(item))
+                .collect(Collectors.toList());
+        websiteConfigVO.setSocialUrlList(socialUrlList);
     }
 
 }

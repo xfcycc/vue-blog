@@ -43,15 +43,7 @@ public enum StatusCodeEnum {
     /**
      * 用户名不存在
      */
-    USERNAME_NOT_EXIST(52002, "用户名不存在"),
-    /**
-     * qq登录错误
-     */
-    QQ_LOGIN_ERROR(53001, "qq登录错误"),
-    /**
-     * 微博登录错误
-     */
-    WEIBO_LOGIN_ERROR(53002, "微博登录错误");
+    USERNAME_NOT_EXIST(52002, "用户名不存在");
 
     /**
      * 状态码

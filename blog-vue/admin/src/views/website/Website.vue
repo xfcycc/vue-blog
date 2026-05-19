@@ -69,12 +69,6 @@
               style="width:400px"
             />
           </el-form-item>
-          <el-form-item label="第三方登录">
-            <el-checkbox-group v-model="websiteConfigForm.socialLoginList">
-              <el-checkbox label="qq">QQ</el-checkbox>
-              <el-checkbox label="weibo">微博</el-checkbox>
-            </el-checkbox-group>
-          </el-form-item>
           <el-button
             type="primary"
             size="medium"
@@ -89,14 +83,6 @@
       <el-tab-pane label="社交信息" name="notice">
         <el-form label-width="70px" :model="websiteConfigForm">
           <el-checkbox-group v-model="websiteConfigForm.socialUrlList">
-            <el-form-item label="QQ">
-              <el-input
-                v-model="websiteConfigForm.qq"
-                size="small"
-                style="width:400px;margin-right:1rem"
-              />
-              <el-checkbox label="qq">是否展示</el-checkbox>
-            </el-form-item>
             <el-form-item label="Github">
               <el-input
                 v-model="websiteConfigForm.github"
@@ -278,9 +264,7 @@ export default {
         websiteNotice: "",
         websiteCreateTime: null,
         websiteRecordNo: "",
-        socialLoginList: [],
         socialUrlList: [],
-        qq: "",
         github: "",
         gitee: "",
         userAvatar: "",

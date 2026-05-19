@@ -3,7 +3,6 @@ package com.minzheng.blog.controller;
 
 import com.minzheng.blog.annotation.AccessLimit;
 import com.minzheng.blog.dto.UserAreaDTO;
-import com.minzheng.blog.dto.UserInfoDTO;
 import com.minzheng.blog.vo.PageResult;
 import com.minzheng.blog.dto.UserBackDTO;
 import com.minzheng.blog.service.UserAuthService;
@@ -129,30 +128,6 @@ public class UserAuthController {
     public Result<?> updateAdminPassword(@Valid @RequestBody PasswordVO passwordVO) {
         userAuthService.updateAdminPassword(passwordVO);
         return Result.ok();
-    }
-
-    /**
-     * 微博登录
-     *
-     * @param weiBoLoginVO 微博登录信息
-     * @return {@link Result<UserInfoDTO>} 用户信息
-     */
-    @ApiOperation(value = "微博登录")
-    @PostMapping("/users/oauth/weibo")
-    public Result<UserInfoDTO> weiboLogin(@Valid @RequestBody WeiboLoginVO weiBoLoginVO) {
-        return Result.fail("主站已关闭登录功能");
-    }
-
-    /**
-     * qq登录
-     *
-     * @param qqLoginVO qq登录信息
-     * @return {@link Result<UserInfoDTO>} 用户信息
-     */
-    @ApiOperation(value = "qq登录")
-    @PostMapping("/users/oauth/qq")
-    public Result<UserInfoDTO> qqLogin(@Valid @RequestBody QQLoginVO qqLoginVO) {
-        return Result.fail("主站已关闭登录功能");
     }
 
 }
