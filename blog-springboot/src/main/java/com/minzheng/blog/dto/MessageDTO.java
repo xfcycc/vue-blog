@@ -43,4 +43,9 @@ public class MessageDTO {
      */
     private Integer time;
 
+    /**
+     * 客户端标识
+     */
+    private String clientId;
+
 }

@@ -37,7 +37,13 @@
         <div
           v-for="(item, index) in skyMessageList"
           :key="'sky-' + getMessageKey(item, index)"
-          class="pixel-sky-message"
+          :class="[
+            'pixel-sky-message',
+            {
+              'is-framed': item._marker === 'frame',
+              'is-live-bubble': item._marker === 'bubble'
+            }
+          ]"
           :style="getSkyStyle(item)"
         >
           {{ item.messageContent }}
@@ -100,8 +106,10 @@ const pixelColors = [
 
 export default {
   mounted() {
+    this.messageClientId = this.createMessageClientId();
     this.artificialMessageList = this.createArtificialMessages();
     this.listMessage();
+    this.connectMessageStream();
   },
   data() {
     return {
@@ -110,11 +118,18 @@ export default {
       artificialMessageList: [],
       isLaunching: false,
       launchingContent: "",
-      launchTimer: null
+      launchTimer: null,
+      pendingMessageTimers: [],
+      messageClientId: "",
+      messageEventSource: null
     };
   },
   beforeDestroy() {
     clearTimeout(this.launchTimer);
+    this.pendingMessageTimers.forEach(timer => clearTimeout(timer));
+    if (this.messageEventSource) {
+      this.messageEventSource.close();
+    }
   },
   methods: {
     addToList() {
@@ -134,14 +149,13 @@ export default {
         avatar: this.currentAvatar,
         nickname: userNickname,
         messageContent: content,
-        time: Math.floor(Math.random() * (10 - 7)) + 7
+        time: Math.floor(Math.random() * (10 - 7)) + 7,
+        clientId: this.messageClientId
       };
       this.messageContent = "";
       this.axios.post("/api/messages", message).then(({ data }) => {
         if (data.flag) {
-          this.barrageList.push(
-            this.normalizeMessage(message, this.messageList.length)
-          );
+          this.queueSentMessage(message);
         } else {
           this.$toast({ type: "error", message: data.message });
         }
@@ -160,10 +174,74 @@ export default {
       this.axios.get("/api/messages").then(({ data }) => {
         if (data.flag) {
           this.barrageList = data.data.map((item, index) =>
-            this.normalizeMessage(item, this.artificialMessageList.length + index)
+            this.normalizeMessage(
+              item,
+              this.artificialMessageList.length + index
+            )
           );
         }
       });
+    },
+    connectMessageStream() {
+      if (!window.EventSource) {
+        return;
+      }
+      const streamUrl =
+        "/api/messages/subscribe?clientId=" +
+        encodeURIComponent(this.messageClientId);
+      this.messageEventSource = new EventSource(streamUrl);
+      this.messageEventSource.addEventListener("message", event => {
+        this.handleStreamMessage(event);
+      });
+    },
+    handleStreamMessage(event) {
+      try {
+        const message = JSON.parse(event.data);
+        if (!message || message.clientId === this.messageClientId) {
+          return;
+        }
+        this.addLiveMessage(message);
+      } catch (error) {
+        // SSE 推送异常不影响留言页主流程
+      }
+    },
+    addLiveMessage(message) {
+      const liveMessage = this.normalizeMessage(
+        message,
+        this.messageList.length,
+        {
+          immediate: true,
+          marker: "bubble"
+        }
+      );
+      this.barrageList.push(liveMessage);
+      this.clearMessageMarker(liveMessage);
+    },
+    queueSentMessage(message) {
+      const timer = setTimeout(() => {
+        const freshMessage = this.normalizeMessage(
+          message,
+          this.messageList.length,
+          {
+            immediate: true,
+            marker: "frame"
+          }
+        );
+        this.barrageList.push(freshMessage);
+        this.clearMessageMarker(freshMessage);
+      }, 3000);
+      this.pendingMessageTimers.push(timer);
+    },
+    clearMessageMarker(message) {
+      const timer = setTimeout(() => {
+        this.$set(message, "_marker", "");
+      }, (message._sky.duration + 0.2) * 1000);
+      this.pendingMessageTimers.push(timer);
+    },
+    createMessageClientId() {
+      return (
+        "message-" + Date.now() + "-" + Math.random().toString(16).slice(2)
+      );
     },
     createArtificialMessages() {
       return artificialMessageContents.map((content, index) =>
@@ -178,19 +256,20 @@ export default {
         )
       );
     },
-    normalizeMessage(item, index) {
+    normalizeMessage(item, index, options = {}) {
       const message = Object.assign({}, item);
       message._messageKey = this.getMessageKey(message, index);
-      message._sky = this.createSkyMeta(index);
+      message._marker = options.marker || "";
+      message._sky = this.createSkyMeta(index, options);
       return message;
     },
-    createSkyMeta(index) {
+    createSkyMeta(index, options = {}) {
       const lanes = [12, 18, 24, 31, 38, 45, 52, 59, 66, 73];
       const lane = index % lanes.length;
       return {
         top: lanes[lane] + Math.random() * 1.5,
         duration: 22 + Math.random() * 10,
-        delay: Math.random() * 20,
+        delay: options.immediate ? 0 : Math.random() * 20,
         floatY: -10 + Math.random() * 20,
         color: this.getPixelColor(index)
       };
@@ -430,6 +509,36 @@ export default {
   pointer-events: none;
   animation: pixel-sky-pass var(--sky-duration) linear var(--sky-delay)
     infinite both;
+}
+.pixel-sky-message.is-framed {
+  padding: 4px 10px;
+  border: 2px solid var(--pixel-color);
+  background: rgba(5, 18, 42, 0.46);
+  box-shadow: 0 0 0 2px rgba(3, 9, 24, 0.78),
+    0 0 18px var(--pixel-color);
+}
+.pixel-sky-message.is-live-bubble {
+  min-width: 46px;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 2px solid var(--pixel-color);
+  border-radius: 999px;
+  background: rgba(5, 18, 42, 0.56);
+  box-shadow: 0 0 0 3px rgba(3, 9, 24, 0.74),
+    0 0 18px var(--pixel-color);
+}
+.pixel-sky-message.is-live-bubble::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  bottom: -8px;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid var(--pixel-color);
+  border-bottom: 2px solid var(--pixel-color);
+  background: rgba(5, 18, 42, 0.56);
+  transform: rotate(45deg);
+  box-shadow: 3px 3px 0 rgba(3, 9, 24, 0.74);
 }
 @keyframes pixel-sky-pass {
   0% {

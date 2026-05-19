@@ -8,6 +8,7 @@ import com.minzheng.blog.dto.MessageDTO;
 import com.minzheng.blog.entity.Message;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.minzheng.blog.vo.ReviewVO;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -32,6 +33,13 @@ public interface MessageService extends IService<Message> {
      * @return 留言列表
      */
     List<MessageDTO> listMessages();
+
+    /**
+     * 订阅留言实时推送
+     *
+     * @return 留言推送连接
+     */
+    SseEmitter subscribeMessages();
 
     /**
      * 审核留言

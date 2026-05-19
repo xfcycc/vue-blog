@@ -50,4 +50,10 @@ public class MessageVO {
     @NotNull(message = "弹幕速度不能为空")
     @ApiModelProperty(name = "time", value = "弹幕速度", required = true, dataType = "Integer")
     private Integer time;
+
+    /**
+     * 客户端标识
+     */
+    @ApiModelProperty(name = "clientId", value = "客户端标识", dataType = "String")
+    private String clientId;
 }

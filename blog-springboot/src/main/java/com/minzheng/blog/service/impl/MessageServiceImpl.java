@@ -8,6 +8,7 @@ import com.minzheng.blog.dao.UserInfoDao;
 import com.minzheng.blog.dto.EmailDTO;
 import com.minzheng.blog.dto.MessageBackDTO;
 import com.minzheng.blog.service.BlogInfoService;
+import com.minzheng.blog.service.MessageSseService;
 import com.minzheng.blog.util.AvatarUtils;
 import com.minzheng.blog.util.HTMLUtils;
 import com.minzheng.blog.util.PageUtils;
@@ -28,6 +29,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -55,6 +57,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageDao, Message> impleme
     @Resource
     private BlogInfoService blogInfoService;
     @Resource
+    private MessageSseService messageSseService;
+    @Resource
     private UserInfoDao userInfoDao;
     @Resource
     private JavaMailSender javaMailSender;
@@ -81,6 +85,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageDao, Message> impleme
         message.setIpSource(ipSource);
         message.setAvatar(AvatarUtils.getVisitorAvatar(request).getAvatar());
         messageDao.insert(message);
+        if (message.getIsReview().equals(TRUE)) {
+            MessageDTO messageDTO = BeanCopyUtils.copyObject(message, MessageDTO.class);
+            messageDTO.setClientId(messageVO.getClientId());
+            messageSseService.sendMessage(messageDTO);
+        }
         // 判断是否开启邮箱通知,通知博主
         if (websiteConfig.getIsEmailNotice().equals(TRUE)) {
             CompletableFuture.runAsync(() -> notice(message));
@@ -94,6 +103,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageDao, Message> impleme
                 .select(Message::getId, Message::getNickname, Message::getAvatar, Message::getMessageContent, Message::getTime)
                 .eq(Message::getIsReview, TRUE));
         return BeanCopyUtils.copyList(messageList, MessageDTO.class);
+    }
+
+    @Override
+    public SseEmitter subscribeMessages() {
+        return messageSseService.subscribe();
     }
 
     @Transactional(rollbackFor = Exception.class)

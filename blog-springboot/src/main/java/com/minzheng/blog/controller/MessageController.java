@@ -10,8 +10,9 @@ import com.minzheng.blog.dto.MessageDTO;
 import com.minzheng.blog.service.MessageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -58,6 +59,17 @@ public class MessageController {
     }
 
     /**
+     * 订阅留言实时推送
+     *
+     * @return {@link SseEmitter} 留言推送连接
+     */
+    @ApiOperation(value = "订阅留言实时推送")
+    @GetMapping(value = "/messages/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribeMessages() {
+        return messageService.subscribeMessages();
+    }
+
+    /**
      * 查看后台留言列表
      *
      * @param condition 条件
@@ -98,4 +110,3 @@ public class MessageController {
     }
 
 }
-
