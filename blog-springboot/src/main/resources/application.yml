@@ -1,6 +1,6 @@
 # 配置端口
 server:
-  port: 8080
+  port: 8089
   servlet:
     session:
       timeout: 21600
