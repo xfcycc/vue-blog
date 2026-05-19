@@ -62,19 +62,19 @@ export default {
     return {
       navClass: "nav",
       navItems: [
-        { to: "/", label: "首页", icon: "iconzhuye", exact: true },
-        { to: "/archives", label: "归档", icon: "iconguidang" },
-        { to: "/categories", label: "分类", icon: "iconfenlei" },
-        { to: "/tags", label: "标签", icon: "iconbiaoqian" },
-        { to: "/links", label: "友链", icon: "iconlianjie" },
-        { to: "/about", label: "关于", icon: "iconzhifeiji" },
-        { to: "/message", label: "留言", icon: "iconpinglunzu" }
+        { to: "/", label: "星港", icon: "iconzhuye", exact: true },
+        { to: "/archives", label: "星历", icon: "iconguidang" },
+        { to: "/categories", label: "星图", icon: "iconfenlei" },
+        { to: "/tags", label: "星标", icon: "iconbiaoqian" },
+        { to: "/links", label: "星链", icon: "iconlianjie" },
+        { to: "/about", label: "星星", icon: "iconyueliang" },
+        { to: "/message", label: "星声", icon: "iconqunliao" }
       ],
       routeStyles: [
         {
           match: path => path === "/",
-          label: "首页",
-          tagline: "今日灵感正在发光",
+          label: "星港",
+          tagline: "从这里启程去看灵感发光",
           className: "nav-theme-home"
         },
         {
@@ -85,38 +85,38 @@ export default {
         },
         {
           match: path => path.startsWith("/archives"),
-          label: "归档",
-          tagline: "把时间折进记录里",
+          label: "星历",
+          tagline: "把时间折进一册航行日志",
           className: "nav-theme-archive"
         },
         {
           match: path => path.startsWith("/categories"),
-          label: "分类",
-          tagline: "沿着主题慢慢找",
+          label: "星图",
+          tagline: "沿着主题航线寻找答案",
           className: "nav-theme-category"
         },
         {
           match: path => path.startsWith("/tags"),
-          label: "标签",
-          tagline: "在词云里遇见灵感",
+          label: "星标",
+          tagline: "在关键词坐标里捕捉灵感",
           className: "nav-theme-tag"
         },
         {
           match: path => path.startsWith("/links"),
-          label: "友链",
-          tagline: "穿过星河拜访朋友",
+          label: "星链",
+          tagline: "接入星河里的朋友信号",
           className: "nav-theme-link"
         },
         {
           match: path => path.startsWith("/about"),
-          label: "关于",
-          tagline: "把自我写成风景",
+          label: "星星",
+          tagline: "看看这趟航行的驾驶者",
           className: "nav-theme-about"
         },
         {
           match: path => path.startsWith("/message"),
-          label: "留言",
-          tagline: "把回声留在这里",
+          label: "星声",
+          tagline: "向这片星域留下一段讯息",
           className: "nav-theme-message"
         },
         {

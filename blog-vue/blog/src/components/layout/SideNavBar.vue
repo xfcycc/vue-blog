@@ -45,37 +45,37 @@
     <div class="menu-container">
       <div class="menus-item">
         <router-link to="/">
-          <i class="iconfont iconzhuye" /> 首页
+          <i class="iconfont iconzhuye" /> 星港
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/archives">
-          <i class="iconfont iconguidang" /> 归档
+          <i class="iconfont iconguidang" /> 星历
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/categories">
-          <i class="iconfont iconfenlei" /> 分类
+          <i class="iconfont iconfenlei" /> 星图
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/tags">
-          <i class="iconfont iconbiaoqian" /> 标签
+          <i class="iconfont iconbiaoqian" /> 星标
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/links">
-          <i class="iconfont iconlianjie" /> 友链
+          <i class="iconfont iconlianjie" /> 星链
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/about">
-          <i class="iconfont iconzhifeiji" /> 关于
+          <i class="iconfont iconyueliang" /> 星星
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/message">
-          <i class="iconfont iconpinglunzu" /> 留言
+          <i class="iconfont iconqunliao" /> 星声
         </router-link>
       </div>
     </div>
