@@ -95,6 +95,7 @@
         AND status = 1
 		ORDER BY
          is_top DESC,
+		 create_time DESC,
 		 id DESC
 		LIMIT #{current} , #{size}
 	 ) a
@@ -103,6 +104,7 @@
 	 JOIN tb_tag t ON t.id = atg.tag_id
 	 ORDER BY
 	   a.is_top DESC,
+	   a.create_time DESC,
 	   a.id DESC
     </select>
 
