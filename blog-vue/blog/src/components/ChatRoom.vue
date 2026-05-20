@@ -1297,8 +1297,22 @@ export default {
   cursor: pointer;
   height: 60px !important;
   width: 60px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(45, 212, 191, 0.55);
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  box-shadow: 0 14px 30px rgba(15, 118, 110, 0.24);
   z-index: 1000 !important;
   user-select: none;
+}
+.chat-btn:hover {
+  background: linear-gradient(135deg, #0f172a, #0f766e);
+}
+.chat-btn img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
 }
 .header {
   display: flex;

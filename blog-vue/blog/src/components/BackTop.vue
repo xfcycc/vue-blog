@@ -34,7 +34,7 @@ export default {
         document.body.scrollTop;
       that.scrollTop = scrollTop;
       if (that.scrollTop > 20) {
-        that.isShow = "opacity: 1;transform: translateX(-38px);";
+        that.isShow = "opacity: 1;transform: translateX(0);";
       } else {
         that.isShow = "";
       }
@@ -47,23 +47,28 @@ export default {
 .rightside {
   z-index: 4;
   position: fixed;
-  right: -38px;
-  bottom: 85px;
+  right: 5px;
+  bottom: 86px;
+  opacity: 0;
+  transform: translateX(92px);
   transition: all 0.5s;
 }
 .rightside-icon {
   display: block;
   margin-bottom: 2px;
-  width: 30px;
-  height: 30px;
-  background-color: #49b1f5;
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgba(45, 212, 191, 0.55);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
   text-align: center;
-  font-size: 16px;
-  line-height: 30px;
+  font-size: 24px;
+  line-height: 60px;
+  box-shadow: 0 14px 30px rgba(15, 118, 110, 0.24);
   cursor: pointer;
 }
 .rightside-icon:hover {
-  background-color: #ff7242;
+  background: linear-gradient(135deg, #0f172a, #0f766e);
 }
 </style>

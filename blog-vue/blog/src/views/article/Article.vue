@@ -7,6 +7,33 @@
       <div class="article-info-container">
         <!-- 文章标题 -->
         <div class="article-title">{{ article.articleTitle }}</div>
+        <div class="article-time-row">
+          <span>
+            <v-icon size="16" color="#e5e7eb">mdi-calendar-plus</v-icon>
+            {{ article.createTime | date }}
+          </span>
+          <span>
+            <v-icon size="16" color="#e5e7eb">mdi-calendar-refresh</v-icon>
+            <template v-if="article.updateTime">
+              {{ article.updateTime | date }}
+            </template>
+            <template v-else>
+              {{ article.createTime | date }}
+            </template>
+          </span>
+          <span>
+            <v-icon size="16" color="#e5e7eb">mdi-eye-outline</v-icon>
+            {{ article.viewsCount || 0 }}
+          </span>
+          <span>
+            <v-icon size="16" color="#e5e7eb">mdi-comment-outline</v-icon>
+            {{ commentCount || 0 }}
+          </span>
+          <span>
+            <v-icon size="16" color="#e5e7eb">mdi-text-box-outline</v-icon>
+            {{ wordNum | num }}
+          </span>
+        </div>
         <div class="article-info">
           <div class="article-taxonomy-row">
             <!-- 文章分类 -->
@@ -35,9 +62,50 @@
       </div>
     </div>
     <!-- 内容 -->
-    <v-row class="article-container">
-      <v-col md="9" cols="12">
+    <div class="article-container article-detail-layout">
+      <aside class="article-layout-side article-left-side">
+        <div
+          ref="articleSidebar"
+          class="article-sidebar-sticky"
+          :style="{ '--article-sidebar-top': articleSidebarTop }"
+        >
+          <!-- 文章目录 -->
+          <v-card class="right-container article-side-card toc-card">
+            <div class="toc-header">
+              <v-icon size="20" color="#334155">mdi-menu</v-icon>
+              <span>目录</span>
+            </div>
+            <div class="toc-doc-entry">
+              <div class="toc-doc-icon">
+                <v-icon size="18" color="#059669">mdi-book-open-page-variant</v-icon>
+              </div>
+              <div class="toc-doc-info">
+                <div class="toc-doc-title">{{ article.articleTitle }}</div>
+                <div class="toc-doc-count">共 {{ tocHeadingCount }} 个核心章节</div>
+              </div>
+            </div>
+            <div id="toc" />
+          </v-card>
+        </div>
+      </aside>
+      <main class="article-main">
         <v-card class="article-wrapper article-reading-card">
+          <div class="article-card-actions">
+            <button type="button" class="side-action-btn like-action-btn" @click="like">
+              <v-icon size="17" color="#ffffff">mdi-thumb-up</v-icon>
+              <strong class="action-count">{{ article.likeCount || 0 }}</strong>
+              <span
+                v-for="effect in likeEffects"
+                :key="effect.id"
+                class="like-float"
+              >
+                {{ effect.icon }}
+              </span>
+            </button>
+            <button type="button" class="side-action-btn" @click="copyShareText">
+              <v-icon size="17" color="#0f172a">mdi-share-variant</v-icon>
+            </button>
+          </div>
           <div class="article-summary" v-if="articleSummary">
             <div class="summary-label">摘要</div>
             <div class="summary-text">{{ articleSummary }}</div>
@@ -167,99 +235,8 @@
           <!-- 评论 -->
           <comment :type="commentType" @getCommentCount="getCommentCount" />
         </v-card>
-      </v-col>
-      <!-- 侧边功能 -->
-      <v-col md="3" cols="12" class="d-md-block d-none">
-        <div class="article-sidebar-sticky">
-          <v-card class="right-container article-side-card article-stat-card">
-            <div class="article-stat-list">
-              <div class="article-stat-item">
-                <span>字数</span>
-                <strong>{{ wordNum | num }}</strong>
-              </div>
-              <div class="article-stat-item">
-                <span>阅读时长</span>
-                <strong>{{ readTime }}</strong>
-              </div>
-              <div class="article-stat-item">
-                <span>阅读量</span>
-                <strong>{{ article.viewsCount || 0 }}</strong>
-              </div>
-              <div class="article-stat-item">
-                <span>评论数</span>
-                <strong>{{ commentCount || 0 }}</strong>
-              </div>
-              <div class="article-stat-item article-stat-wide">
-                <span>发表时间</span>
-                <strong>{{ article.createTime | date }}</strong>
-              </div>
-              <div class="article-stat-item article-stat-wide">
-                <span>更新时间</span>
-                <strong>
-                  <template v-if="article.updateTime">
-                    {{ article.updateTime | date }}
-                  </template>
-                  <template v-else>
-                    {{ article.createTime | date }}
-                  </template>
-                </strong>
-              </div>
-            </div>
-            <div class="article-side-actions">
-              <button type="button" class="side-action-btn like-action-btn" @click="like">
-                <v-icon size="17" color="#ffffff">mdi-thumb-up</v-icon>
-                <strong class="action-count">{{ article.likeCount || 0 }}</strong>
-                <span
-                  v-for="effect in likeEffects"
-                  :key="effect.id"
-                  class="like-float"
-                >
-                  {{ effect.icon }}
-                </span>
-              </button>
-              <button type="button" class="side-action-btn" @click="copyShareText">
-                <v-icon size="17" color="#0f172a">mdi-share-variant</v-icon>
-                <span>分享</span>
-              </button>
-            </div>
-          </v-card>
-          <!-- 文章目录 -->
-          <v-card class="right-container article-side-card toc-card">
-            <div class="right-title">
-              <i class="iconfont iconhanbao" style="font-size:16.8px" />
-              <span style="margin-left:10px">目录</span>
-            </div>
-            <div id="toc" />
-          </v-card>
-          <!-- 最新文章 -->
-          <v-card class="right-container article-side-card newest-card">
-            <div class="right-title">
-              <i class="iconfont icongengxinshijian" style="font-size:16.8px" />
-              <span style="margin-left:10px">最新文章</span>
-            </div>
-            <div class="article-list">
-              <div
-                class="article-item"
-                v-for="item of article.newestArticleList"
-                :key="item.id"
-              >
-                <router-link :to="'/articles/' + item.id" class="content-cover">
-                  <img :src="item.articleCover" />
-                </router-link>
-                <div class="content">
-                  <div class="content-title">
-                    <router-link :to="'/articles/' + item.id">
-                      {{ item.articleTitle }}
-                    </router-link>
-                  </div>
-                  <div class="content-time">{{ item.createTime | date }}</div>
-                </div>
-              </div>
-            </div>
-          </v-card>
-        </div>
-      </v-col>
-    </v-row>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -275,13 +252,36 @@ export default {
   created() {
     this.getArticle();
   },
+  mounted() {
+    window.addEventListener("scroll", this.requestSyncArticleSidebarTop, {
+      passive: true
+    });
+    window.addEventListener("resize", this.requestSyncArticleSidebarTop);
+    this.$nextTick(() => {
+      this.requestSyncArticleSidebarTop();
+      window.setTimeout(() => {
+        this.requestSyncArticleSidebarTop();
+      }, 120);
+    });
+  },
   destroyed() {
     if (this.clipboard) {
       this.clipboard.destroy();
     }
     window.removeEventListener("scroll", this.requestSyncTocActiveLink);
+    window.removeEventListener("scroll", this.requestSyncArticleSidebarTop);
+    window.removeEventListener("resize", this.requestSyncArticleSidebarTop);
     if (this.tocScrollRaf) {
       window.cancelAnimationFrame(this.tocScrollRaf);
+    }
+    if (this.articleSidebarRaf) {
+      window.cancelAnimationFrame(this.articleSidebarRaf);
+    }
+    if (this.articleSidebarTimer) {
+      window.clearTimeout(this.articleSidebarTimer);
+    }
+    if (this.tocClickScrollTimer) {
+      window.clearTimeout(this.tocClickScrollTimer);
     }
     tocbot.destroy();
   },
@@ -301,14 +301,19 @@ export default {
         newestArticleList: []
       },
       wordNum: "",
-      readTime: "",
       commentType: 1,
       articleHref: window.location.href,
       clipboard: null,
       commentCount: 0,
       likeEffectId: 0,
       likeEffects: [],
-      tocScrollRaf: null
+      tocHeadingCount: 0,
+      tocScrollRaf: null,
+      tocClickScrollTimer: null,
+      tocLockedHash: "",
+      articleSidebarRaf: null,
+      articleSidebarTimer: null,
+      articleSidebarTop: "80px"
     };
   },
   methods: {
@@ -325,8 +330,6 @@ export default {
         this.$nextTick(() => {
           // 统计文章字数
           this.wordNum = this.deleteHTMLTag(this.article.articleContent).length;
-          // 计算阅读时间
-          this.readTime = Math.round(this.wordNum / 400) + "分钟";
           // 添加代码复制功能
           this.clipboard = new Clipboard(".copy-btn");
           this.clipboard.on("success", () => {
@@ -334,23 +337,31 @@ export default {
           });
           // 添加文章生成目录功能
           let nodes = this.$refs.article.children;
+          let tocHeadingCount = 0;
           if (nodes.length) {
             for (let i = 0; i < nodes.length; i++) {
               let node = nodes[i];
               let reg = /^H[1-4]{1}$/;
               if (reg.exec(node.tagName)) {
                 node.id = i;
+                if (/^H[1-3]{1}$/.exec(node.tagName)) {
+                  tocHeadingCount++;
+                }
               }
             }
           }
+          this.tocHeadingCount = tocHeadingCount;
           tocbot.init({
             tocSelector: "#toc", //要把目录添加元素位置，支持选择器
             contentSelector: ".article-content", //获取html的元素
             headingSelector: "h1, h2, h3", //要显示的id的目录
             hasInnerContainers: true,
+            collapseDepth: 6,
             disableTocScrollSync: true,
             onClick: function(e) {
               e.preventDefault();
+              e.stopPropagation();
+              that.handleTocClick(e);
             }
           });
           window.removeEventListener("scroll", this.requestSyncTocActiveLink);
@@ -358,6 +369,7 @@ export default {
             passive: true
           });
           this.requestSyncTocActiveLink();
+          this.requestSyncArticleSidebarTop();
           // 添加图片预览功能
           const imgList = this.$refs.article.getElementsByTagName("img");
           for (var i = 0; i < imgList.length; i++) {
@@ -369,14 +381,82 @@ export default {
         });
         });
     },
+    requestSyncArticleSidebarTop() {
+      if (this.articleSidebarRaf) {
+        return;
+      }
+      this.articleSidebarRaf = window.requestAnimationFrame(() => {
+        this.articleSidebarRaf = null;
+        this.syncArticleSidebarTop();
+      });
+      if (this.articleSidebarTimer) {
+        window.clearTimeout(this.articleSidebarTimer);
+      }
+      this.articleSidebarTimer = window.setTimeout(() => {
+        this.articleSidebarTimer = null;
+        this.syncArticleSidebarTop();
+      }, 260);
+    },
+    syncArticleSidebarTop() {
+      const nav = document.querySelector(".v-app-bar");
+      const navBottom = nav ? Math.max(nav.getBoundingClientRect().bottom, 0) : 0;
+      const nextTop = Math.round(navBottom + 20) + "px";
+      if (this.$refs.articleSidebar) {
+        this.$refs.articleSidebar.style.setProperty(
+          "--article-sidebar-top",
+          nextTop
+        );
+      }
+      if (this.articleSidebarTop !== nextTop) {
+        this.articleSidebarTop = nextTop;
+      }
+    },
     requestSyncTocActiveLink() {
       if (this.tocScrollRaf) {
         return;
       }
       this.tocScrollRaf = window.requestAnimationFrame(() => {
         this.tocScrollRaf = null;
+        if (this.tocLockedHash) {
+          this.syncLockedTocActive();
+          this.scheduleReleaseTocLock();
+          return;
+        }
         this.syncTocActiveLink();
       });
+    },
+    scheduleReleaseTocLock() {
+      if (this.tocClickScrollTimer) {
+        window.clearTimeout(this.tocClickScrollTimer);
+      }
+      this.tocClickScrollTimer = window.setTimeout(() => {
+        this.tocLockedHash = "";
+        this.tocClickScrollTimer = null;
+        this.requestSyncTocActiveLink();
+      }, 180);
+    },
+    syncLockedTocActive() {
+      const toc = document.getElementById("toc");
+      if (!toc || !this.tocLockedHash) {
+        return;
+      }
+      const link = toc.querySelector(
+        `.toc-link[href="${this.tocLockedHash.replace(/"/g, '\\"')}"]`
+      );
+      if (!link) {
+        return;
+      }
+      toc.querySelectorAll(".is-active-link").forEach(item => {
+        item.classList.remove("is-active-link");
+      });
+      toc.querySelectorAll(".is-active-li").forEach(item => {
+        item.classList.remove("is-active-li");
+      });
+      link.classList.add("is-active-link");
+      if (link.parentElement) {
+        link.parentElement.classList.add("is-active-li");
+      }
+      this.scrollTocActiveLinkIntoView(link, "auto");
     },
     syncTocActiveLink() {
       const toc = document.getElementById("toc");
@@ -385,6 +465,13 @@ export default {
       }
       const activeLink = toc.querySelector(".is-active-link");
       if (!activeLink) {
+        return;
+      }
+      this.scrollTocActiveLinkIntoView(activeLink, "smooth");
+    },
+    scrollTocActiveLinkIntoView(activeLink, behavior) {
+      const toc = document.getElementById("toc");
+      if (!toc || toc.scrollHeight <= toc.clientHeight) {
         return;
       }
       const tocRect = toc.getBoundingClientRect();
@@ -398,7 +485,45 @@ export default {
       }
       const activeCenter =
         activeRect.top - tocRect.top + toc.scrollTop + activeRect.height / 2;
-      toc.scrollTop = Math.max(activeCenter - toc.clientHeight / 2, 0);
+      toc.scrollTo({
+        top: Math.max(activeCenter - toc.clientHeight / 2, 0),
+        behavior
+      });
+    },
+    handleTocClick(e) {
+      const link = e.target.closest(".toc-link");
+      if (!link || !link.hash) {
+        return;
+      }
+      const targetId = decodeURIComponent(link.hash.slice(1));
+      const target = document.getElementById(targetId);
+      if (!target) {
+        return;
+      }
+      const toc = document.getElementById("toc");
+      if (toc) {
+        toc.querySelectorAll(".is-active-link").forEach(item => {
+          item.classList.remove("is-active-link");
+        });
+        toc.querySelectorAll(".is-active-li").forEach(item => {
+          item.classList.remove("is-active-li");
+        });
+      }
+      link.classList.add("is-active-link");
+      if (link.parentElement) {
+        link.parentElement.classList.add("is-active-li");
+      }
+      this.tocLockedHash = link.hash;
+      this.scrollTocActiveLinkIntoView(link, "smooth");
+      this.scheduleReleaseTocLock();
+      const nav = document.querySelector(".v-app-bar");
+      const navHeight = nav ? Math.max(nav.getBoundingClientRect().height, 0) : 0;
+      const targetTop =
+        target.getBoundingClientRect().top + window.pageYOffset - navHeight - 18;
+      window.scrollTo({
+        top: Math.max(targetTop, 0),
+        behavior: "smooth"
+      });
     },
     like() {
       // 判断登录
@@ -622,7 +747,7 @@ export default {
   }
   .article-title {
     max-width: 900px;
-    margin: 0 auto 28px;
+    margin: 0 auto 18px;
     font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
       sans-serif !important;
     font-size: 48px;
@@ -630,6 +755,10 @@ export default {
     letter-spacing: 0;
     line-height: 1.12;
     text-shadow: 0 4px 28px rgba(2, 6, 23, 0.62);
+  }
+  .article-time-row {
+    justify-content: center;
+    margin-bottom: 20px;
   }
   .pagination-post {
     display: flex;
@@ -674,8 +803,11 @@ export default {
     font-size: 1.7rem;
     font-weight: 900;
     line-height: 1.24;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.6rem;
     text-shadow: 0 3px 18px rgba(2, 6, 23, 0.58);
+  }
+  .article-time-row {
+    margin-bottom: 0.8rem;
   }
   .article-info {
     align-items: center;
@@ -719,11 +851,51 @@ export default {
   }
 }
 .article-content {
-  max-width: 860px;
+  max-width: none;
   margin: 0 auto;
   color: #263238;
   font-size: 16px;
-  line-height: 1.9;
+  line-height: 2.05;
+}
+.article-time-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+.article-time-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 4px 12px;
+  border: 1px solid rgba(226, 232, 240, 0.18);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(10px);
+}
+.article-detail-layout {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  width: calc(100% - 48px);
+  max-width: none;
+  padding: 0;
+}
+.article-main {
+  min-width: 0;
+}
+.article-layout-side {
+  align-self: stretch;
+  width: 380px;
+}
+.article-detail-layout .article-wrapper {
+  padding: 54px 48px 46px;
 }
 .article-reading-card {
   position: relative;
@@ -780,7 +952,7 @@ export default {
     0 10px 24px rgba(2, 6, 23, 0.14);
 }
 .article-summary {
-  max-width: 860px;
+  max-width: none;
   margin: 0 auto 30px;
   padding: 18px 20px;
   border: 1px solid #dbeafe;
@@ -800,8 +972,8 @@ export default {
 }
 .aritcle-copyright {
   position: relative;
-  margin-top: 40px;
-  margin-bottom: 10px;
+  max-width: none;
+  margin: 40px auto 10px;
   font-size: 0.875rem;
   line-height: 2;
   padding: 1rem 1.25rem;
@@ -1000,7 +1172,10 @@ hr {
 }
 .article-sidebar-sticky {
   position: sticky;
-  top: 20px;
+  top: var(--article-sidebar-top, 20px);
+  max-height: calc(100vh - var(--article-sidebar-top, 20px) - 20px);
+  transition: top 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+    max-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .article-side-card {
   overflow: hidden;
@@ -1014,24 +1189,25 @@ hr {
   margin: -20px -24px 16px;
   background: linear-gradient(90deg, #34d399, #38bdf8);
 }
-.article-stat-card {
-  margin-bottom: 20px;
-}
-.article-side-actions {
+.article-card-actions {
+  position: absolute;
+  top: 34px;
+  right: 72px;
+  z-index: 2;
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 8px;
 }
 .side-action-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
   gap: 7px;
-  height: 40px;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 999px;
   background: #f8fafc;
   color: #0f172a;
   font-size: 13px;
@@ -1071,44 +1247,60 @@ hr {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
-.article-stat-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+.toc-card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--article-sidebar-top, 20px) - 20px);
+  margin-top: 0;
+  padding: 0;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06) !important;
+  transition: max-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.article-stat-item {
-  padding: 10px 8px;
-  border-radius: 8px;
-  background: #f8fafc;
-  text-align: center;
+.toc-card:before {
+  display: none;
 }
-.article-stat-item span {
-  display: block;
-  margin-bottom: 4px;
-  color: #64748b;
-  font-size: 12px;
+.toc-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.9);
+  color: #1e293b;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
-.article-stat-item strong {
-  color: #0f172a;
-  font-size: 14px;
+.toc-doc-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 24px 14px;
 }
-.article-stat-wide {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: max-content max-content;
+.toc-doc-icon {
+  flex: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  column-gap: 18px;
-  text-align: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #ecfdf5;
 }
-.article-stat-wide span {
-  margin-bottom: 0;
+.toc-doc-info {
+  min-width: 0;
 }
-.toc-card {
-  margin-top: 0;
+.toc-doc-title {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.45;
 }
-.newest-card {
-  margin-top: 20px;
+.toc-doc-count {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .right-title {
   display: flex;
@@ -1123,9 +1315,12 @@ hr {
   font-weight: bold;
 }
 #toc {
-  max-height: 50vh;
+  max-height: calc(100vh - var(--article-sidebar-top, 20px) - 170px);
   overflow-y: auto;
-  padding-right: 4px;
+  direction: rtl;
+  padding: 4px 16px 20px 20px;
+  scroll-behavior: smooth;
+  transition: max-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .recommend-container {
   margin-top: 40px;
@@ -1211,9 +1406,41 @@ hr {
   font-size: 85%;
   line-height: 2;
 }
+@media (max-width: 1199px) {
+  .article-detail-layout {
+    display: block;
+    width: auto;
+    max-width: 1200px;
+    padding: 0 5px;
+  }
+  .article-layout-side {
+    display: none;
+  }
+}
+@media (max-width: 759px) {
+  .article-detail-layout .article-wrapper {
+    padding: 34px 18px 32px;
+  }
+  .article-card-actions {
+    position: static;
+    justify-content: flex-end;
+    margin: 0 0 18px;
+  }
+  .side-action-btn {
+    min-width: 34px;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
 </style>
 
 <style>
+.article-detail-page .article-content.markdown-body p {
+  margin-bottom: 26px !important;
+  line-height: 2.05 !important;
+}
+
 .article-detail-page .article-content.markdown-body ul,
 .article-detail-page .article-content.markdown-body ol {
   margin-left: 0;
@@ -1230,6 +1457,111 @@ hr {
 
 .article-detail-page .article-content.markdown-body blockquote > :last-child {
   margin-bottom: 0 !important;
+}
+
+.article-detail-page #toc .toc-list,
+.article-detail-page #toc .toc-list-item,
+.article-detail-page #toc .toc-link {
+  direction: ltr;
+}
+
+.article-detail-page #toc .toc-list {
+  margin: 0;
+  padding-left: 0 !important;
+}
+
+.article-detail-page #toc .toc-list .toc-list {
+  position: relative;
+  margin: 4px 0 8px 22px;
+  padding-left: 0 !important;
+  border-left: 1px solid #e2e8f0;
+}
+
+.article-detail-page #toc .toc-list-item {
+  position: relative;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.article-detail-page #toc .toc-link {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 2px 0;
+  padding: 9px 10px;
+  border-left: 0;
+  border-radius: 8px;
+  letter-spacing: 0;
+  transition: color 0.08s ease, background 0.08s ease;
+}
+
+.article-detail-page #toc .toc-link:hover {
+  background: #f1f5f9;
+  color: #0f172a !important;
+}
+
+.article-detail-page #toc .toc-link.node-name--H1 {
+  padding-left: 8px;
+  color: #0f172a !important;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.article-detail-page #toc .toc-link.node-name--H2 {
+  margin-left: 0;
+  padding: 8px 12px 8px 16px;
+  border-radius: 0 8px 8px 0;
+  color: #334155 !important;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.75;
+}
+
+.article-detail-page #toc .toc-link.node-name--H3 {
+  margin-left: 14px;
+  width: calc(100% - 14px);
+  padding: 7px 12px 7px 16px;
+  border-radius: 0 8px 8px 0;
+  color: #475569 !important;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.article-detail-page #toc .toc-link.is-active-link {
+  background: rgba(209, 250, 229, 0.72);
+  color: #065f46 !important;
+  font-weight: 800;
+}
+
+.article-detail-page #toc .toc-link.is-active-link:before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 20%;
+  width: 3px;
+  height: 60%;
+  border-radius: 999px;
+  background: #10b981;
+}
+
+.article-detail-page #toc .is-collapsed {
+  display: block;
+}
+
+.article-detail-page #toc::-webkit-scrollbar {
+  width: 6px;
+}
+
+.article-detail-page #toc::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.72);
+}
+
+.article-detail-page #toc::-webkit-scrollbar-track {
+  background: transparent;
 }
 </style>
 
@@ -1306,13 +1638,7 @@ pre.hljs {
     }
   }
   b.name {
-    position: absolute;
-    top: 8px;
-    right: 45px;
-    z-index: 1;
-    font-size: 12px;
-    color: #57606a;
-    pointer-events: none;
+    display: none;
   }
   .copy-btn {
     position: absolute;
