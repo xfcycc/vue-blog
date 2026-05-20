@@ -89,7 +89,10 @@
         </div>
       </aside>
       <main class="article-main">
-        <v-card class="article-wrapper article-reading-card">
+        <v-card
+          class="article-wrapper article-reading-card"
+          :class="{ 'has-article-summary': articleSummary }"
+        >
           <div class="article-card-actions">
             <button type="button" class="side-action-btn like-action-btn" @click="like">
               <v-icon size="17" color="#ffffff">mdi-thumb-up</v-icon>
@@ -1196,6 +1199,11 @@ hr {
   z-index: 2;
   display: flex;
   gap: 8px;
+}
+.has-article-summary .article-card-actions {
+  position: static;
+  justify-content: flex-end;
+  margin: 0 0 18px;
 }
 .side-action-btn {
   position: relative;
