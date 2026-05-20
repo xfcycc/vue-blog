@@ -102,10 +102,10 @@
           </el-tag>
           <!-- 标签选项 -->
           <el-popover
+            ref="tagPopover"
             placement="bottom-start"
             width="460"
             trigger="click"
-            v-if="article.tagNameList.length < 3"
           >
             <div class="popover-title">标签</div>
             <!-- 搜索框 -->
@@ -134,10 +134,10 @@
                 {{ item.tagName }}
               </el-tag>
             </div>
-            <el-button type="primary" plain slot="reference" size="small">
-              添加标签
-            </el-button>
           </el-popover>
+          <el-button v-popover:tagPopover type="primary" plain size="small">
+            添加标签
+          </el-button>
         </el-form-item>
         <el-form-item label="文章类型">
           <el-select v-model="article.type" placeholder="请选择类型">
