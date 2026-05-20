@@ -1201,9 +1201,18 @@ hr {
   gap: 8px;
 }
 .has-article-summary .article-card-actions {
-  position: static;
+  top: 14px;
+  right: 14px;
   justify-content: flex-end;
-  margin: 0 0 18px;
+}
+.has-article-summary .side-action-btn {
+  min-width: 34px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.has-article-summary .side-action-btn .v-icon {
+  font-size: 15px !important;
 }
 .side-action-btn {
   position: relative;
