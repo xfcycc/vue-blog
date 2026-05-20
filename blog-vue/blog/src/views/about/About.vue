@@ -23,33 +23,6 @@
             <v-icon size="18" color="#f59e0b">mdi-lightning-bolt</v-icon>
           </p>
         </div>
-
-        <div class="terminal-card">
-          <div class="terminal-top">
-            <span />
-            <span />
-            <span />
-            <em>guest@magic-tower:~</em>
-          </div>
-          <div class="terminal-body">
-            <p>
-              <strong>➜</strong> <b>~</b>
-              <span>whoami</span>
-            </p>
-            <p class="terminal-output">[ {{ roleText }} ]</p>
-            <p>
-              <strong>➜</strong> <b>~</b>
-              <span>./check_status.sh</span>
-            </p>
-            <p class="terminal-status">
-              {{ mounted ? "> System loaded... 100%" : "> Loading..." }}
-            </p>
-            <p class="terminal-output cursor-line">
-              &gt; Current Status: {{ aboutConfig.terminalStatus }}
-              <i />
-            </p>
-          </div>
-        </div>
       </section>
 
       <section v-if="!isLegacyMode" class="about-grid">
@@ -68,7 +41,8 @@
               v-for="(skill, index) in sortedSkills"
               :key="skill.name + index"
               class="skill-item"
-              :style="{ transitionDelay: index * 80 + 'ms' }"
+              :class="{ mounted }"
+              :style="{ '--skill-delay': getSkillDelay(index) + 'ms' }"
             >
               <div class="skill-meta">
                 <div>
@@ -78,7 +52,6 @@
                   <strong>{{ skill.name }}</strong>
                   <small>{{ skill.category }}</small>
                 </div>
-                <em>{{ normalizedLevel(skill.level) }}%</em>
               </div>
               <div class="skill-track">
                 <span
@@ -105,6 +78,8 @@
               v-for="(paper, index) in aboutConfig.papers"
               :key="paper.title + index"
               class="paper-item"
+              :class="{ mounted }"
+              :style="{ '--paper-delay': getPaperDelay(index) + 'ms' }"
             >
               <h4>{{ paper.title }}</h4>
               <div class="paper-tags">
@@ -165,8 +140,6 @@ const defaultAboutConfig = {
   profileTitle: "关于我",
   profileSubtitle: "Full-stack developer / Researcher / Lifelong builder",
   quote: '"Talk is cheap. Show me the code."',
-  terminalRoles: ["Developer", "Researcher", "Otaku", "Night Owl"],
-  terminalStatus: "Coding & Debugging...",
   skills: [
     { name: "JavaScript / TypeScript", level: 95, category: "语言" },
     { name: "React / Vue.js", level: 92, category: "前端框架" },
@@ -284,9 +257,6 @@ export default {
         if (!Array.isArray(config.papers) || config.papers.length === 0) {
           config.papers = cloneDefaultConfig().papers;
         }
-        if (!Array.isArray(config.terminalRoles)) {
-          config.terminalRoles = cloneDefaultConfig().terminalRoles;
-        }
         return config;
       } catch (e) {
         return null;
@@ -311,6 +281,13 @@ export default {
         return { grade: "B", text: "grade-b", bar: "bar-b" };
       }
       return { grade: "C", text: "grade-c", bar: "bar-c" };
+    },
+    getSkillDelay(index) {
+      const lastIndex = Math.max(this.sortedSkills.length - 1, 1);
+      return Math.round((1080 / lastIndex) * index);
+    },
+    getPaperDelay(index) {
+      return 1600 + index * 160;
     },
     previewImg(img) {
       this.$imagePreview({
@@ -354,12 +331,6 @@ export default {
       return this.aboutConfig.skills
         .slice()
         .sort((a, b) => this.normalizedLevel(b.level) - this.normalizedLevel(a.level));
-    },
-    roleText() {
-      return this.aboutConfig.terminalRoles
-        .filter(item => item)
-        .map(item => "'" + item + "'")
-        .join(", ");
     }
   }
 };
@@ -468,84 +439,6 @@ export default {
   font-size: 15px;
   font-weight: 700;
 }
-.terminal-card {
-  width: min(100%, 680px);
-  margin: 30px auto 0;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #1e1e2e;
-  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.28);
-  color: #cdd6f4;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 14px;
-  text-align: left;
-}
-.terminal-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 34px;
-  padding: 0 14px;
-  background: #181825;
-}
-.terminal-top span {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-}
-.terminal-top span:nth-child(1) {
-  background: #f38ba8;
-}
-.terminal-top span:nth-child(2) {
-  background: #f9e2af;
-}
-.terminal-top span:nth-child(3) {
-  background: #a6e3a1;
-}
-.terminal-top em {
-  margin-left: 4px;
-  color: #6c7086;
-  font-size: 12px;
-  font-style: normal;
-}
-.terminal-body {
-  padding: 20px;
-}
-.terminal-body p {
-  margin: 0;
-}
-.terminal-body p + p {
-  margin-top: 8px;
-}
-.terminal-body strong {
-  color: #f38ba8;
-}
-.terminal-body b {
-  color: #89b4fa;
-}
-.terminal-body span {
-  color: #a6e3a1;
-}
-.terminal-output {
-  padding-left: 22px;
-  color: #bac2de;
-}
-.terminal-status {
-  padding-left: 22px;
-  color: #f9e2af;
-}
-.cursor-line {
-  display: flex;
-  align-items: center;
-}
-.cursor-line i {
-  display: inline-block;
-  width: 8px;
-  height: 18px;
-  margin-left: 8px;
-  background: #bac2de;
-  animation: cursor-blink 1s steps(1) infinite;
-}
 .about-grid {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -594,9 +487,14 @@ export default {
   gap: 22px;
 }
 .skill-item {
-  transition: transform 0.28s;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
 }
-.skill-item:hover {
+.skill-item.mounted {
+  animation: skill-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) var(--skill-delay)
+    both;
+}
+.skill-item.mounted:hover {
   transform: translateX(4px);
 }
 .skill-meta {
@@ -655,16 +553,14 @@ export default {
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background:
-    radial-gradient(#111827 1px, transparent 1px) 0 0 / 4px 4px,
-    #f3f4f6;
+  background: #f3f4f6;
   box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 .skill-bar {
   display: block;
   height: 100%;
   border-radius: 999px;
-  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.42s cubic-bezier(0.16, 1, 0.3, 1) var(--skill-delay);
 }
 .bar-s {
   background: linear-gradient(90deg, #f59e0b, #facc15);
@@ -685,15 +581,21 @@ export default {
 .paper-item {
   position: relative;
   overflow: hidden;
+  opacity: 0;
   padding: 22px;
   border: 1px solid #f1f5f9;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.74);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  clip-path: inset(0 100% 0 0);
   transition:
     transform 0.28s,
     box-shadow 0.28s,
     border-color 0.28s;
+}
+.paper-item.mounted {
+  animation: paper-item-reveal 0.45s cubic-bezier(0.16, 1, 0.3, 1)
+    var(--paper-delay) both;
 }
 .paper-item::before {
   position: absolute;
@@ -707,12 +609,12 @@ export default {
   transform-origin: top;
   transition: transform 0.28s;
 }
-.paper-item:hover {
+.paper-item.mounted:hover {
   border-color: #fbcfe8;
   box-shadow: 0 18px 36px rgba(236, 72, 153, 0.12);
   transform: translateY(-3px);
 }
-.paper-item:hover::before {
+.paper-item.mounted:hover::before {
   transform: scaleY(1);
 }
 .paper-item h4 {
@@ -820,9 +722,29 @@ export default {
   opacity: 1;
   transform: translateY(0);
 }
-@keyframes cursor-blink {
-  50% {
-    opacity: 0;
+.paper-panel.about-animate {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+.paper-panel.about-animate.mounted {
+  animation: paper-reveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.5s both;
+}
+@keyframes skill-reveal {
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+@keyframes paper-reveal {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes paper-item-reveal {
+  to {
+    opacity: 1;
+    clip-path: inset(0);
   }
 }
 @media (max-width: 960px) {
@@ -861,9 +783,6 @@ export default {
   }
   .about-quote {
     flex-wrap: wrap;
-  }
-  .terminal-card {
-    font-size: 12px;
   }
   .skill-meta,
   .skill-meta div {
