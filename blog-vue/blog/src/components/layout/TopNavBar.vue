@@ -185,7 +185,7 @@ ul {
     var(--glass-start),
     var(--glass-end)
   ) !important;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: none;
   box-shadow: 0 12px 36px var(--glass-shadow);
   backdrop-filter: blur(18px) saturate(145%);
   -webkit-backdrop-filter: blur(18px) saturate(145%);
@@ -231,7 +231,7 @@ ul {
     var(--fixed-glass-start),
     var(--fixed-glass-end)
   ) !important;
-  border-bottom: 1px solid var(--fixed-border);
+  border-bottom: none;
   box-shadow: 0 10px 34px var(--fixed-shadow);
   backdrop-filter: blur(22px) saturate(160%);
   -webkit-backdrop-filter: blur(22px) saturate(160%);

@@ -230,54 +230,86 @@ p {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: rgba(73, 177, 245, 0.2);
-  border-radius: 2em;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #49b1f5;
-  background-image: -webkit-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.4) 25%,
-    transparent 25%,
-    transparent 50%,
-    rgba(255, 255, 255, 0.4) 50%,
-    rgba(255, 255, 255, 0.4) 75%,
-    transparent 75%,
-    transparent
-  );
-  border-radius: 2em;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.68),
+      rgba(168, 85, 247, 0.38) 42%,
+      rgba(124, 58, 237, 0.5)
+    )
+    padding-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -8px 18px rgba(124, 58, 237, 0.18),
+    0 0 18px rgba(168, 85, 247, 0.2);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(192, 132, 252, 0.5) 42%,
+      rgba(139, 92, 246, 0.64)
+    )
+    padding-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -8px 18px rgba(124, 58, 237, 0.22),
+    0 0 22px rgba(168, 85, 247, 0.28);
 }
 
 ::-webkit-scrollbar-corner {
-  background-color: transparent;
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.52) transparent;
 }
 
 html.tag-page-scrollbar,
 body.tag-page-scrollbar {
-  scrollbar-color: rgba(148, 163, 184, 0.55) rgba(2, 6, 23, 0.92);
+  scrollbar-color: rgba(168, 85, 247, 0.52) transparent;
 }
 
 html.tag-page-scrollbar::-webkit-scrollbar-track,
 body.tag-page-scrollbar::-webkit-scrollbar-track {
-  background-color: rgba(2, 6, 23, 0.92);
+  background: transparent;
 }
 
 html.tag-page-scrollbar::-webkit-scrollbar-thumb,
 body.tag-page-scrollbar::-webkit-scrollbar-thumb {
-  border: 2px solid rgba(2, 6, 23, 0.92);
-  background-color: rgba(148, 163, 184, 0.65);
-  background-image: none;
+  border: 2px solid transparent;
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.68),
+      rgba(168, 85, 247, 0.38) 42%,
+      rgba(124, 58, 237, 0.5)
+    )
+    padding-box;
 }
 
 html.tag-page-scrollbar::-webkit-scrollbar-thumb:hover,
 body.tag-page-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(191, 219, 254, 0.78);
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(192, 132, 252, 0.5) 42%,
+      rgba(139, 92, 246, 0.64)
+    )
+    padding-box;
 }
 
 ::-moz-selection {

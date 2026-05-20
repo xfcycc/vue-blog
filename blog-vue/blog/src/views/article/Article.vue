@@ -1574,7 +1574,16 @@ hr {
 
 .article-detail-page #toc::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.72);
+  border: 2px solid transparent;
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.68),
+      rgba(168, 85, 247, 0.38) 42%,
+      rgba(124, 58, 237, 0.5)
+    )
+    padding-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 0 16px rgba(168, 85, 247, 0.2);
 }
 
 .article-detail-page #toc::-webkit-scrollbar-track {
@@ -1618,14 +1627,22 @@ pre.hljs {
     &::-webkit-scrollbar-thumb {
       border-radius: 5px;
       width: 6px;
-      background: #c9d1d9;
+      border: 1px solid transparent;
+      background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.68),
+          rgba(168, 85, 247, 0.38) 42%,
+          rgba(124, 58, 237, 0.5)
+        )
+        padding-box;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
     }
     &::-webkit-scrollbar-corner,
     &::-webkit-scrollbar-track {
-      background: #f6f8fa;
+      background: transparent;
     }
     &::-webkit-scrollbar-track-piece {
-      background: #f6f8fa;
+      background: transparent;
       width: 6px;
     }
   }
