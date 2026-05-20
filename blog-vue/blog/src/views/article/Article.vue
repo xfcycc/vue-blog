@@ -493,33 +493,8 @@ export default {
         return id ? "post full" : "post";
       };
     },
-    articlePlainText() {
-      const html = this.article.articleContent || "";
-      let text = "";
-      if (typeof document !== "undefined") {
-        const container = document.createElement("div");
-        container.innerHTML = html;
-        text = Array.from(container.querySelectorAll("p, li"))
-          .map(node => node.textContent)
-          .join(" ");
-      }
-      if (!text) {
-        text = this.deleteHTMLTag(html);
-      }
-      text = text.replace(/\s+/g, " ").trim();
-      const title = this.article.articleTitle || "";
-      if (title && text.indexOf(title) === 0) {
-        return text.slice(title.length).trim();
-      }
-      return text;
-    },
     articleSummary() {
-      if (!this.articlePlainText) {
-        return "";
-      }
-      return this.articlePlainText.length > 160
-        ? this.articlePlainText.slice(0, 160) + "..."
-        : this.articlePlainText;
+      return (this.article.articleSummary || "").replace(/\s+/g, " ").trim();
     },
     shareText() {
       return [
