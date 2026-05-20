@@ -25,3 +25,6 @@ yarn-error.log*
 *.class
 application.yml
 blog-vue/blog/dist/*
+.agents/skills/vueblog-deploy/*
+blog-vue/admin/dist/*
+
