@@ -1213,6 +1213,26 @@ hr {
 }
 </style>
 
+<style>
+.article-detail-page .article-content.markdown-body ul,
+.article-detail-page .article-content.markdown-body ol {
+  margin-left: 0;
+  padding-left: 1.35em !important;
+}
+
+.article-detail-page .article-content.markdown-body li {
+  padding-left: 0.15em;
+}
+
+.article-detail-page .article-content.markdown-body blockquote {
+  padding: 14px 18px 12px;
+}
+
+.article-detail-page .article-content.markdown-body blockquote > :last-child {
+  margin-bottom: 0 !important;
+}
+</style>
+
 <style lang="scss">
 pre.hljs {
   padding: 14px 2px 14px 42px !important;
