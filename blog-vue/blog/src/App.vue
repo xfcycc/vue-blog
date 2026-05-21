@@ -14,10 +14,6 @@
     <BackTop v-if="showFloatingTools"></BackTop>
     <!-- 音乐播放器 -->
     <Player v-if="websiteConfig.isMusicPlayer == 1 && !isMobile" />
-    <!-- 聊天室 -->
-    <ChatRoom
-      v-if="showFloatingTools && websiteConfig.isChatRoom == 1"
-    ></ChatRoom>
   </v-app>
 </template>
 
@@ -27,7 +23,6 @@ import SideNavBar from "./components/layout/SideNavBar";
 import Footer from "./components/layout/Footer";
 import BackTop from "./components/BackTop";
 import Player from "./components/zw-player/player.vue";
-import ChatRoom from "./components/ChatRoom";
 import { getPersistentPokemonAvatar } from "./utils/avatar";
 
 const defaultBlogInfo = {
@@ -54,8 +49,7 @@ export default {
     Player,
     SideNavBar,
     Footer,
-    BackTop,
-    ChatRoom
+    BackTop
   },
   methods: {
     getBlogInfo() {

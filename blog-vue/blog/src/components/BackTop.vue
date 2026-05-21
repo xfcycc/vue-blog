@@ -48,7 +48,7 @@ export default {
   z-index: 4;
   position: fixed;
   right: 5px;
-  bottom: 86px;
+  bottom: 24px;
   opacity: 0;
   transform: translateX(92px);
   transition: all 0.5s;
@@ -70,5 +70,17 @@ export default {
 }
 .rightside-icon:hover {
   background: linear-gradient(135deg, #0f172a, #0f766e);
+}
+@media (max-width: 759px) {
+  .rightside {
+    right: 12px;
+    bottom: 18px;
+  }
+  .rightside-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    line-height: 48px;
+  }
 }
 </style>
