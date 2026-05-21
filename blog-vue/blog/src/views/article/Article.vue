@@ -1460,6 +1460,95 @@ hr {
 </style>
 
 <style>
+.article-detail-page .article-content.markdown-body h1,
+.article-detail-page .article-content.markdown-body h2,
+.article-detail-page .article-content.markdown-body h3,
+.article-detail-page .article-content.markdown-body h4,
+.article-detail-page .article-content.markdown-body h5,
+.article-detail-page .article-content.markdown-body h6 {
+  color: #14532d;
+  letter-spacing: 0;
+  scroll-margin-top: 92px;
+}
+
+.article-detail-page .article-content.markdown-body h1 {
+  margin: 48px 0 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #bbf7d0;
+  font-size: 2em;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.article-detail-page .article-content.markdown-body h2 {
+  position: relative;
+  margin: 44px 0 20px;
+  padding: 0 0 10px 18px;
+  border-bottom: 1px solid #dcfce7;
+  font-size: 1.58em;
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.article-detail-page .article-content.markdown-body h2::before {
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 5px;
+  height: 1.05em;
+  margin: 0;
+  border-radius: 999px;
+  background: #16a34a;
+  vertical-align: 0;
+}
+
+.article-detail-page .article-content.markdown-body h3 {
+  margin: 36px 0 16px;
+  padding: 0 0 8px 12px;
+  border-left: 4px solid #22c55e;
+  border-bottom: 1px solid #dcfce7;
+  font-size: 1.28em;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.article-detail-page .article-content.markdown-body h4 {
+  margin: 30px 0 12px;
+  padding-left: 12px;
+  border-left: 3px solid #86efac;
+  color: #166534;
+  font-size: 1.08em;
+  font-weight: 760;
+  line-height: 1.4;
+}
+
+.article-detail-page .article-content.markdown-body h5 {
+  margin: 24px 0 10px;
+  color: #15803d;
+  font-size: 0.98em;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.article-detail-page .article-content.markdown-body h5::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  vertical-align: 0.16em;
+  content: "";
+}
+
+.article-detail-page .article-content.markdown-body h6 {
+  margin: 20px 0 8px;
+  color: #166534;
+  font-size: 0.92em;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .article-detail-page .article-content.markdown-body p {
   margin-bottom: 26px !important;
   line-height: 2.05 !important;
@@ -1477,6 +1566,9 @@ hr {
 
 .article-detail-page .article-content.markdown-body blockquote {
   padding: 14px 18px 12px;
+  color: #475569;
+  background: #f8fafc;
+  border-left-color: #cbd5e1;
 }
 
 .article-detail-page .article-content.markdown-body blockquote > :last-child {
