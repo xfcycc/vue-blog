@@ -344,10 +344,10 @@ export default {
           if (nodes.length) {
             for (let i = 0; i < nodes.length; i++) {
               let node = nodes[i];
-              let reg = /^H[1-4]{1}$/;
+              let reg = /^H[1-5]{1}$/;
               if (reg.exec(node.tagName)) {
                 node.id = i;
-                if (/^H[1-3]{1}$/.exec(node.tagName)) {
+                if (/^H[1-5]{1}$/.exec(node.tagName)) {
                   tocHeadingCount++;
                 }
               }
@@ -357,7 +357,7 @@ export default {
           tocbot.init({
             tocSelector: "#toc", //要把目录添加元素位置，支持选择器
             contentSelector: ".article-content", //获取html的元素
-            headingSelector: "h1, h2, h3", //要显示的id的目录
+            headingSelector: "h1, h2, h3, h4, h5", //要显示的id的目录
             hasInnerContainers: true,
             collapseDepth: 6,
             disableTocScrollSync: true,
@@ -1545,6 +1545,28 @@ hr {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.65;
+}
+
+.article-detail-page #toc .toc-link.node-name--H4 {
+  margin-left: 28px;
+  width: calc(100% - 28px);
+  padding: 6px 12px 6px 14px;
+  border-radius: 0 8px 8px 0;
+  color: #64748b !important;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.article-detail-page #toc .toc-link.node-name--H5 {
+  margin-left: 42px;
+  width: calc(100% - 42px);
+  padding: 5px 10px 5px 12px;
+  border-radius: 0 8px 8px 0;
+  color: #64748b !important;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .article-detail-page #toc .toc-link.is-active-link {
