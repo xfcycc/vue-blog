@@ -358,6 +358,8 @@ export default {
             tocSelector: "#toc", //要把目录添加元素位置，支持选择器
             contentSelector: ".article-content", //获取html的元素
             headingSelector: "h1, h2, h3, h4, h5", //要显示的id的目录
+            headingsOffset: this.getArticleHeadingOffset(),
+            scrollSmoothOffset: -this.getArticleHeadingOffset(),
             hasInnerContainers: true,
             collapseDepth: 6,
             disableTocScrollSync: true,
@@ -413,6 +415,11 @@ export default {
       if (this.articleSidebarTop !== nextTop) {
         this.articleSidebarTop = nextTop;
       }
+    },
+    getArticleHeadingOffset() {
+      const nav = document.querySelector(".v-app-bar");
+      const navBottom = nav ? Math.max(nav.getBoundingClientRect().bottom, 0) : 0;
+      return Math.round(navBottom + 18);
     },
     requestSyncTocActiveLink() {
       if (this.tocScrollRaf) {
@@ -519,10 +526,10 @@ export default {
       this.tocLockedHash = link.hash;
       this.scrollTocActiveLinkIntoView(link, "smooth");
       this.scheduleReleaseTocLock();
-      const nav = document.querySelector(".v-app-bar");
-      const navHeight = nav ? Math.max(nav.getBoundingClientRect().height, 0) : 0;
       const targetTop =
-        target.getBoundingClientRect().top + window.pageYOffset - navHeight - 18;
+        target.getBoundingClientRect().top +
+        window.pageYOffset -
+        this.getArticleHeadingOffset();
       window.scrollTo({
         top: Math.max(targetTop, 0),
         behavior: "smooth"
