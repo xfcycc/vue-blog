@@ -33,25 +33,6 @@
       @imgAdd="uploadImg"
       style="height:calc(100vh - 260px)"
     />
-    <div class="key-chapter-container" v-if="keyChapterOptions.length">
-      <div class="key-chapter-title">重点章节</div>
-      <el-checkbox-group v-model="selectedKeyChapterKeys">
-        <el-checkbox
-          v-for="item of keyChapterOptions"
-          :key="item.key"
-          :label="item.key"
-          class="key-chapter-item"
-        >
-          <span
-            class="key-chapter-label"
-            :style="{ paddingLeft: (item.level - 2) * 16 + 'px' }"
-          >
-            <span class="key-chapter-level">H{{ item.level }}</span>
-            {{ item.title }}
-          </span>
-        </el-checkbox>
-      </el-checkbox-group>
-    </div>
     <!-- 添加文章对话框 -->
     <el-dialog :visible.sync="addOrEdit" width="40%" top="3vh">
       <div class="dialog-title-container" slot="title">
@@ -167,6 +148,29 @@
               :value="item.type"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="重点章节">
+          <div class="key-chapter-container" v-if="keyChapterOptions.length">
+            <el-checkbox-group v-model="selectedKeyChapterKeys">
+              <el-checkbox
+                v-for="item of keyChapterOptions"
+                :key="item.key"
+                :label="item.key"
+                class="key-chapter-item"
+              >
+                <span
+                  class="key-chapter-label"
+                  :style="{ paddingLeft: (item.level - 2) * 16 + 'px' }"
+                >
+                  <span class="key-chapter-level">H{{ item.level }}</span>
+                  {{ item.title }}
+                </span>
+              </el-checkbox>
+            </el-checkbox-group>
+          </div>
+          <span v-else class="key-chapter-empty">
+            正文中暂无二级到五级标题
+          </span>
         </el-form-item>
         <!-- 文章类型 -->
         <el-form-item label="原文地址" v-if="article.type != 1">
@@ -639,17 +643,12 @@ export default {
   color: #f56c6c;
 }
 .key-chapter-container {
-  margin: 1rem 0 0;
+  max-height: 220px;
   padding: 14px 16px;
   border: 1px solid #ebeef5;
   border-radius: 4px;
   background: #fff;
-}
-.key-chapter-title {
-  margin-bottom: 10px;
-  color: #303133;
-  font-size: 14px;
-  font-weight: 600;
+  overflow-y: auto;
 }
 .key-chapter-item {
   display: block;
@@ -664,6 +663,9 @@ export default {
 .key-chapter-level {
   color: #909399;
   font-size: 12px;
+}
+.key-chapter-empty {
+  color: #909399;
 }
 .tag-item {
   margin-right: 1rem;
