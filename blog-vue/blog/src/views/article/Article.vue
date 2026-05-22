@@ -570,11 +570,19 @@ export default {
           !itemIndex ||
           itemIndex === headingIndex ||
           itemIndex === headingIndex + 1;
+        if (itemTitle) {
+          return matchTitle && matchLevel;
+        }
         return matchTitle && matchLevel && matchIndex;
       });
     },
     normalizeHeadingText(text) {
-      return (text || "").replace(/\s+/g, " ").trim();
+      return (text || "")
+        .replace(/`([^`]+)`/g, "$1")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[*_~]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
     },
     markKeyChapterTocLinks(keyChapterHeadingIds) {
       if (!keyChapterHeadingIds.length) {
@@ -1865,12 +1873,16 @@ hr {
 }
 
 .article-detail-page .article-content.markdown-body h2.is-key-chapter,
-.article-detail-page .article-content.markdown-body h3.is-key-chapter {
+.article-detail-page .article-content.markdown-body h3.is-key-chapter,
+.article-detail-page .article-content.markdown-body h4.is-key-chapter,
+.article-detail-page .article-content.markdown-body h5.is-key-chapter {
   border-bottom-color: rgba(245, 158, 11, 0.35);
   color: #78350f;
 }
 
-.article-detail-page .article-content.markdown-body h2.is-key-chapter {
+.article-detail-page .article-content.markdown-body h2.is-key-chapter,
+.article-detail-page .article-content.markdown-body h4.is-key-chapter,
+.article-detail-page .article-content.markdown-body h5.is-key-chapter {
   border-radius: 8px;
   background: linear-gradient(
     90deg,
@@ -1892,8 +1904,18 @@ hr {
   );
 }
 
+.article-detail-page .article-content.markdown-body h4.is-key-chapter {
+  border-left-color: #f59e0b;
+}
+
+.article-detail-page .article-content.markdown-body h5.is-key-chapter::before {
+  background: #f59e0b;
+}
+
 .article-detail-page .article-content.markdown-body h2.is-key-chapter::after,
-.article-detail-page .article-content.markdown-body h3.is-key-chapter::after {
+.article-detail-page .article-content.markdown-body h3.is-key-chapter::after,
+.article-detail-page .article-content.markdown-body h4.is-key-chapter::after,
+.article-detail-page .article-content.markdown-body h5.is-key-chapter::after {
   display: inline-flex;
   align-items: center;
   height: 22px;
