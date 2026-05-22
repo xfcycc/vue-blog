@@ -791,7 +791,7 @@ export default {
 <style scoped>
 @font-face {
   font-family: "ReejiChaoZeng";
-  src: url("../../assets/fonts/sf.ttf") format("truetype");
+  src: url("https://pic.blog.caiguoyu.cn/static/fonts/sf.ttf") format("truetype");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
