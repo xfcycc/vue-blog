@@ -459,11 +459,13 @@ export default {
       const headingNodes = articleElement
         ? articleElement.querySelectorAll("h1, h2, h3, h4, h5")
         : [];
+      let keyChapterHeadingIds = [];
       if (headingNodes.length) {
         for (let i = 0; i < headingNodes.length; i++) {
           headingNodes[i].id = i;
           tocHeadingCount++;
         }
+        keyChapterHeadingIds = this.markKeyChapterHeadings(headingNodes);
       } else if (nodes.length) {
         for (let i = 0; i < nodes.length; i++) {
           let node = nodes[i];
@@ -491,6 +493,7 @@ export default {
             that.handleTocClick(e);
           }
         });
+        this.markKeyChapterTocLinks(keyChapterHeadingIds);
         window.addEventListener("scroll", this.requestSyncTocActiveLink, {
           passive: true
         });
@@ -507,6 +510,86 @@ export default {
         imgList[i].addEventListener("click", function(e) {
           that.previewImg(e.target.currentSrc);
         });
+      }
+    },
+    markKeyChapterHeadings(headingNodes) {
+      const keyChapterList = this.getKeyChapterList();
+      const keyChapterHeadingIds = [];
+      for (let i = 0; i < headingNodes.length; i++) {
+        const heading = headingNodes[i];
+        if (!this.isKeyChapterHeading(heading, i, keyChapterList)) {
+          continue;
+        }
+        heading.classList.add("is-key-chapter");
+        heading.setAttribute("data-key-chapter-label", "重点");
+        keyChapterHeadingIds.push(heading.id);
+      }
+      return keyChapterHeadingIds;
+    },
+    getKeyChapterList() {
+      const source = this.article.keyChapterList;
+      if (Array.isArray(source)) {
+        return source;
+      }
+      if (typeof source !== "string" || source.trim() === "") {
+        return [];
+      }
+      try {
+        const parsed = JSON.parse(source);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return source
+          .split(",")
+          .map(item => item.trim())
+          .filter(Boolean);
+      }
+    },
+    isKeyChapterHeading(heading, headingIndex, keyChapterList) {
+      const title = this.normalizeHeadingText(heading.textContent);
+      const level = Number(heading.tagName.replace("H", ""));
+      return keyChapterList.some(item => {
+        if (typeof item === "number") {
+          return item === headingIndex || item === headingIndex + 1;
+        }
+        if (typeof item === "string") {
+          return this.normalizeHeadingText(item) === title;
+        }
+        if (!item || typeof item !== "object") {
+          return false;
+        }
+        const itemTitle = this.normalizeHeadingText(
+          item.title || item.text || ""
+        );
+        const rawLevel = item.level != null ? item.level : item.headingLevel;
+        const rawIndex = item.index != null ? item.index : item.headingIndex;
+        const itemLevel = Number(rawLevel || 0);
+        const itemIndex = Number(rawIndex || 0);
+        const matchTitle = !itemTitle || itemTitle === title;
+        const matchLevel = !itemLevel || itemLevel === level;
+        const matchIndex =
+          !itemIndex ||
+          itemIndex === headingIndex ||
+          itemIndex === headingIndex + 1;
+        return matchTitle && matchLevel && matchIndex;
+      });
+    },
+    normalizeHeadingText(text) {
+      return (text || "").replace(/\s+/g, " ").trim();
+    },
+    markKeyChapterTocLinks(keyChapterHeadingIds) {
+      if (!keyChapterHeadingIds.length) {
+        return;
+      }
+      const idSet = new Set(keyChapterHeadingIds.map(String));
+      const tocLinks = document.querySelectorAll("#toc .toc-link");
+      for (let i = 0; i < tocLinks.length; i++) {
+        const link = tocLinks[i];
+        const href = link.getAttribute("href") || "";
+        const headingId = href.charAt(0) === "#" ? href.slice(1) : "";
+        if (idSet.has(headingId)) {
+          link.classList.add("is-key-chapter");
+          link.setAttribute("data-key-chapter-label", "重点");
+        }
       }
     },
     requestSyncArticleSidebarTop() {
@@ -1030,8 +1113,8 @@ export default {
   max-width: none;
   margin: 0 auto;
   color: #263238;
-  font-size: 16px;
-  line-height: 2.05;
+  font-size: 17px;
+  line-height: 2.08;
 }
 .article-content-chunk {
   display: contents;
@@ -1750,7 +1833,7 @@ hr {
 .article-detail-page .article-content.markdown-body h2 {
   position: relative;
   margin: 44px 0 20px;
-  padding: 0 0 10px 18px;
+  padding: 12px 0 12px 28px;
   border-bottom: 1px solid #dcfce7;
   font-size: 1.58em;
   font-weight: 850;
@@ -1760,18 +1843,20 @@ hr {
 .article-detail-page .article-content.markdown-body h2::before {
   position: absolute;
   left: 0;
-  top: 0.2em;
+  top: 50%;
   width: 5px;
-  height: 1.05em;
+  height: calc(100% - 24px);
+  min-height: 1.05em;
   margin: 0;
   border-radius: 999px;
   background: #16a34a;
+  transform: translateY(-50%);
   vertical-align: 0;
 }
 
 .article-detail-page .article-content.markdown-body h3 {
   margin: 36px 0 16px;
-  padding: 0 0 8px 12px;
+  padding: 10px 0 10px 12px;
   border-left: 4px solid #22c55e;
   border-bottom: 1px solid #dcfce7;
   font-size: 1.28em;
@@ -1779,9 +1864,55 @@ hr {
   line-height: 1.35;
 }
 
+.article-detail-page .article-content.markdown-body h2.is-key-chapter,
+.article-detail-page .article-content.markdown-body h3.is-key-chapter {
+  border-bottom-color: rgba(245, 158, 11, 0.35);
+  color: #78350f;
+}
+
+.article-detail-page .article-content.markdown-body h2.is-key-chapter {
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(254, 243, 199, 0.82),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+.article-detail-page .article-content.markdown-body h2.is-key-chapter::before {
+  background: #f59e0b;
+}
+
+.article-detail-page .article-content.markdown-body h3.is-key-chapter {
+  border-left-color: #f59e0b;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 251, 235, 0.92),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+.article-detail-page .article-content.markdown-body h2.is-key-chapter::after,
+.article-detail-page .article-content.markdown-body h3.is-key-chapter::after {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  margin-left: 10px;
+  padding: 0 8px;
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #b45309;
+  content: attr(data-key-chapter-label);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: 0.14em;
+}
+
 .article-detail-page .article-content.markdown-body h4 {
   margin: 30px 0 12px;
-  padding-left: 12px;
+  padding: 6px 0 6px 12px;
   border-left: 3px solid #86efac;
   color: #166534;
   font-size: 1.08em;
@@ -1818,7 +1949,7 @@ hr {
 
 .article-detail-page .article-content.markdown-body p {
   margin-bottom: 26px !important;
-  line-height: 2.05 !important;
+  line-height: 2.08 !important;
 }
 
 .article-detail-page .article-content.markdown-body ul,
@@ -1875,6 +2006,7 @@ hr {
   padding: 9px 10px;
   border-left: 0;
   border-radius: 8px;
+  color: #1f2937 !important;
   letter-spacing: 0;
   transition: color 0.08s ease, background 0.08s ease;
 }
@@ -1896,7 +2028,7 @@ hr {
   margin-left: 0;
   padding: 8px 12px 8px 16px;
   border-radius: 0 8px 8px 0;
-  color: #334155 !important;
+  color: #111827 !important;
   font-size: 14px;
   font-weight: 650;
   line-height: 1.75;
@@ -1907,7 +2039,7 @@ hr {
   width: calc(100% - 14px);
   padding: 7px 12px 7px 16px;
   border-radius: 0 8px 8px 0;
-  color: #475569 !important;
+  color: #1f2937 !important;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.65;
@@ -1918,7 +2050,7 @@ hr {
   width: calc(100% - 28px);
   padding: 6px 12px 6px 14px;
   border-radius: 0 8px 8px 0;
-  color: #64748b !important;
+  color: #334155 !important;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.55;
@@ -1929,7 +2061,7 @@ hr {
   width: calc(100% - 42px);
   padding: 5px 10px 5px 12px;
   border-radius: 0 8px 8px 0;
-  color: #64748b !important;
+  color: #334155 !important;
   font-size: 12px;
   font-weight: 500;
   line-height: 1.45;
@@ -1939,6 +2071,36 @@ hr {
   background: rgba(209, 250, 229, 0.72);
   color: #065f46 !important;
   font-weight: 800;
+}
+
+.article-detail-page #toc .toc-link.is-key-chapter {
+  padding-right: 54px;
+  background: rgba(255, 251, 235, 0.86);
+  color: #92400e !important;
+  font-weight: 800;
+}
+
+.article-detail-page #toc .toc-link.is-key-chapter::after {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #fff;
+  content: attr(data-key-chapter-label);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.article-detail-page #toc .toc-link.is-key-chapter.is-active-link {
+  background: #fef3c7;
+  color: #78350f !important;
 }
 
 .article-detail-page #toc .toc-link.is-active-link:before {

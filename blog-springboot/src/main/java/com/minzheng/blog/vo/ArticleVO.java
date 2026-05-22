@@ -43,6 +43,12 @@ public class ArticleVO {
     private String articleContent;
 
     /**
+     * 重点章节
+     */
+    @ApiModelProperty(name = "keyChapterList", value = "重点章节", dataType = "String")
+    private String keyChapterList;
+
+    /**
      * 文章封面
      */
     @ApiModelProperty(name = "articleCover", value = "文章缩略图", dataType = "String")

@@ -47,6 +47,11 @@ public class ArticleDTO {
     private String articleSummary;
 
     /**
+     * 重点章节
+     */
+    private String keyChapterList;
+
+    /**
      * 点赞量
      */
     private Integer likeCount;

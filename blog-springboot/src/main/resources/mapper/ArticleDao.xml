@@ -37,6 +37,7 @@
         <result column="article_title" property="articleTitle"/>
         <result column="article_content" property="articleContent"/>
         <result column="article_summary" property="articleSummary"/>
+        <result column="key_chapter_list" property="keyChapterList"/>
         <result column="type" property="type"/>
         <result column="original_url" property="originalUrl"/>
         <result column="create_time" property="createTime"/>
@@ -160,6 +161,7 @@
 	 article_title,
 	 article_content,
 	 article_summary,
+	 key_chapter_list,
 	 a.type,
 	 a.original_url,
 	 a.create_time,

@@ -33,6 +33,25 @@
       @imgAdd="uploadImg"
       style="height:calc(100vh - 260px)"
     />
+    <div class="key-chapter-container" v-if="keyChapterOptions.length">
+      <div class="key-chapter-title">重点章节</div>
+      <el-checkbox-group v-model="selectedKeyChapterKeys">
+        <el-checkbox
+          v-for="item of keyChapterOptions"
+          :key="item.key"
+          :label="item.key"
+          class="key-chapter-item"
+        >
+          <span
+            class="key-chapter-label"
+            :style="{ paddingLeft: (item.level - 2) * 16 + 'px' }"
+          >
+            <span class="key-chapter-level">H{{ item.level }}</span>
+            {{ item.title }}
+          </span>
+        </el-checkbox>
+      </el-checkbox-group>
+    </div>
     <!-- 添加文章对话框 -->
     <el-dialog :visible.sync="addOrEdit" width="40%" top="3vh">
       <div class="dialog-title-container" slot="title">
@@ -213,11 +232,17 @@ export default {
     if (articleId) {
       this.axios.get("/api/admin/articles/" + articleId).then(({ data }) => {
         this.article = data.data;
+        this.selectedKeyChapterKeys = this.getSelectedKeyChapterKeys(
+          this.article.keyChapterList
+        );
       });
     } else {
       const article = sessionStorage.getItem("article");
       if (article) {
         this.article = JSON.parse(article);
+        this.selectedKeyChapterKeys = this.getSelectedKeyChapterKeys(
+          this.article.keyChapterList
+        );
       }
     }
   },
@@ -231,6 +256,7 @@ export default {
       autoSave: true,
       categoryName: "",
       tagName: "",
+      selectedKeyChapterKeys: [],
       categoryList: [],
       tagList: [],
       typeList: [
@@ -255,6 +281,7 @@ export default {
         categoryName: null,
         tagNameList: [],
         originalUrl: "",
+        keyChapterList: "",
         isTop: 0,
         type: 1,
         status: 1
@@ -336,6 +363,7 @@ export default {
         this.$message.error("文章内容不能为空");
         return false;
       }
+      this.syncKeyChapterList();
       this.article.status = 3;
       this.axios.post("/api/admin/articles", this.article).then(({ data }) => {
         if (data.flag) {
@@ -382,6 +410,7 @@ export default {
         this.$message.error("文章封面不能为空");
         return false;
       }
+      this.syncKeyChapterList();
       this.axios.post("/api/admin/articles", this.article).then(({ data }) => {
         if (data.flag) {
           if (this.article.id === null) {
@@ -414,6 +443,7 @@ export default {
         this.article.articleContent.trim() != "" &&
         this.article.id != null
       ) {
+        this.syncKeyChapterList();
         this.axios
           .post("/api/admin/articles", this.article)
           .then(({ data }) => {
@@ -432,8 +462,83 @@ export default {
       }
       // 保存本地文章记录
       if (this.autoSave && this.article.id == null) {
+        this.syncKeyChapterList();
         sessionStorage.setItem("article", JSON.stringify(this.article));
       }
+    },
+    syncKeyChapterList() {
+      const selectedMap = new Set(this.selectedKeyChapterKeys);
+      const keyChapterList = this.keyChapterOptions
+        .filter(item => selectedMap.has(item.key))
+        .map(item => ({
+          level: item.level,
+          title: item.title,
+          index: item.index
+        }));
+      this.article.keyChapterList = keyChapterList.length
+        ? JSON.stringify(keyChapterList)
+        : "";
+    },
+    getSelectedKeyChapterKeys(keyChapterList) {
+      const selectedList = this.parseKeyChapterList(keyChapterList);
+      if (!selectedList.length) {
+        return [];
+      }
+      return this.keyChapterOptions
+        .filter(option =>
+          selectedList.some(item => {
+            const level = Number(item.level || item.headingLevel || 0);
+            const index = Number(item.index || item.headingIndex || 0);
+            return (
+              option.title === (item.title || item.text || "") &&
+              option.level === level &&
+              option.index === index
+            );
+          })
+        )
+        .map(item => item.key);
+    },
+    parseKeyChapterList(keyChapterList) {
+      if (Array.isArray(keyChapterList)) {
+        return keyChapterList;
+      }
+      if (typeof keyChapterList !== "string" || keyChapterList.trim() === "") {
+        return [];
+      }
+      try {
+        const parsed = JSON.parse(keyChapterList);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    },
+    parseMarkdownHeadings(content) {
+      const lines = (content || "").split(/\n/);
+      const headings = [];
+      let inFence = false;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (/^\s*```/.test(line)) {
+          inFence = !inFence;
+          continue;
+        }
+        if (inFence) {
+          continue;
+        }
+        const match = /^(#{2,5})\s+(.+?)\s*#*\s*$/.exec(line.trim());
+        if (!match) {
+          continue;
+        }
+        const title = match[2].trim();
+        const index = headings.length + 1;
+        headings.push({
+          key: match[1].length + "-" + index + "-" + title,
+          level: match[1].length,
+          title,
+          index
+        });
+      }
+      return headings;
     },
     searchCategories(keywords, cb) {
       this.axios
@@ -500,11 +605,22 @@ export default {
     }
   },
   computed: {
+    keyChapterOptions() {
+      return this.parseMarkdownHeadings(this.article.articleContent);
+    },
     tagClass() {
       return function(item) {
         const index = this.article.tagNameList.indexOf(item.tagName);
         return index != -1 ? "tag-item-select" : "tag-item";
       };
+    }
+  },
+  watch: {
+    keyChapterOptions() {
+      const optionKeys = new Set(this.keyChapterOptions.map(item => item.key));
+      this.selectedKeyChapterKeys = this.selectedKeyChapterKeys.filter(item =>
+        optionKeys.has(item)
+      );
     }
   }
 };
@@ -521,6 +637,33 @@ export default {
   margin-left: 0.75rem;
   background: #fff;
   color: #f56c6c;
+}
+.key-chapter-container {
+  margin: 1rem 0 0;
+  padding: 14px 16px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  background: #fff;
+}
+.key-chapter-title {
+  margin-bottom: 10px;
+  color: #303133;
+  font-size: 14px;
+  font-weight: 600;
+}
+.key-chapter-item {
+  display: block;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.key-chapter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.key-chapter-level {
+  color: #909399;
+  font-size: 12px;
 }
 .tag-item {
   margin-right: 1rem;

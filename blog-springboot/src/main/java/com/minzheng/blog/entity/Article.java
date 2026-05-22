@@ -60,6 +60,11 @@ public class Article {
     private String articleSummary;
 
     /**
+     * 重点章节
+     */
+    private String keyChapterList;
+
+    /**
      * 文章类型
      */
     private Integer type;
