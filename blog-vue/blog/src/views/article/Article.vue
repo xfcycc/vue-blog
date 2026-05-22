@@ -4,9 +4,9 @@
     <div class="banner" :style="articleCover">
       <div class="article-banner-grid"></div>
       <div class="article-banner-glow"></div>
-      <div class="article-ink-layer"></div>
       <span class="article-category">
         <router-link :to="'/categories/' + article.categoryId">
+          <v-icon size="14" color="#34d399">mdi-console</v-icon>
           {{ article.categoryName }}
         </router-link>
       </span>
@@ -15,31 +15,32 @@
         <div class="article-title">{{ article.articleTitle }}</div>
         <div class="article-time-row">
           <span>
-            <v-icon size="16" color="#e5e7eb">mdi-calendar-plus</v-icon>
+            <v-icon size="16" color="#cbd5e1">mdi-calendar-plus</v-icon>
             {{ article.createTime | date }}
           </span>
           <span>
-            <v-icon size="16" color="#e5e7eb">mdi-eye-outline</v-icon>
+            <v-icon size="16" color="#cbd5e1">mdi-eye-outline</v-icon>
             {{ article.viewsCount || 0 }}
           </span>
           <span>
-            <v-icon size="16" color="#e5e7eb">mdi-comment-outline</v-icon>
+            <v-icon size="16" color="#cbd5e1">mdi-comment-outline</v-icon>
             {{ commentCount || 0 }}
           </span>
           <span>
-            <v-icon size="16" color="#e5e7eb">mdi-text-box-outline</v-icon>
+            <v-icon size="16" color="#cbd5e1">mdi-text-box-outline</v-icon>
             {{ wordNum | num }}
           </span>
         </div>
         <!-- 文章标签 -->
         <span class="article-tags">
           <i class="iconfont iconbiaoqian article-tag-icon" />
-          <template v-if="article.tagDTOList && article.tagDTOList.length">
+          <template v-if="displayTagList.length">
             <router-link
-              v-for="item of article.tagDTOList"
+              v-for="item of displayTagList"
               :key="item.id"
               :to="'/tags/' + item.id"
             >
+              <v-icon size="14" class="article-tag-v-icon">mdi-tag-outline</v-icon>
               {{ item.tagName }}
             </router-link>
           </template>
@@ -762,6 +763,22 @@ export default {
         "摘要：" + this.articleSummary
       ].join("\n");
     },
+    displayTagList() {
+      const tagList = this.article.tagDTOList || [];
+      if (!import.meta.env.DEV) {
+        return tagList;
+      }
+      return tagList.concat([
+        { id: "mock-1", tagName: "高吞吐设计" },
+        { id: "mock-2", tagName: "顺序 I/O" },
+        { id: "mock-3", tagName: "Page Cache" },
+        { id: "mock-4", tagName: "Zero-Copy 零拷贝" },
+        { id: "mock-5", tagName: "消费者组与 Partition 协调机制" },
+        { id: "mock-6", tagName: "超长标签用于验证移动端自动换行和容器适配效果" },
+        { id: "mock-7", tagName: "Broker" },
+        { id: "mock-8", tagName: "Rebalance" }
+      ]);
+    },
     isMobileArticleReader() {
       return /Android|iPhone|iPod|iPad|Mobile|MicroMessenger|MQQBrowser/i.test(
         navigator.userAgent
@@ -795,9 +812,11 @@ export default {
   right: 0;
   height: 100%;
   z-index: 1;
-  background:
-    radial-gradient(circle at 16% 24%, rgba(255, 255, 255, 0.24), transparent 24%),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.18), rgba(2, 6, 23, 0.58));
+  background: linear-gradient(
+    180deg,
+    rgba(2, 6, 23, 0.48),
+    rgba(2, 6, 23, 0.78)
+  );
 }
 .article-banner-grid {
   position: absolute;
@@ -825,53 +844,17 @@ export default {
   border-radius: 50%;
   filter: blur(80px);
 }
-.article-ink-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 1;
-  background:
-    radial-gradient(circle at 10% 26%, rgba(255, 255, 255, 0.58) 0 3px, transparent 4px),
-    radial-gradient(circle at 14% 31%, rgba(255, 255, 255, 0.34) 0 10px, transparent 11px),
-    radial-gradient(circle at 83% 24%, rgba(255, 255, 255, 0.42) 0 5px, transparent 6px),
-    radial-gradient(circle at 79% 59%, rgba(255, 255, 255, 0.34) 0 8px, transparent 9px),
-    linear-gradient(102deg, transparent 6%, rgba(255, 255, 255, 0.26) 13%, transparent 32%),
-    linear-gradient(165deg, transparent 50%, rgba(255, 255, 255, 0.2) 64%, transparent 77%);
-  mix-blend-mode: screen;
-}
-.article-ink-layer:before,
-.article-ink-layer:after {
+.article-banner-glow:before {
   content: "";
   position: absolute;
+  left: -78vw;
+  bottom: -26px;
+  width: min(420px, 62vw);
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(4, 120, 87, 0.18);
+  filter: blur(46px);
   pointer-events: none;
-}
-.article-ink-layer:before {
-  top: 68px;
-  left: 5%;
-  width: min(560px, 46vw);
-  height: 120px;
-  background:
-    radial-gradient(circle at 18% 48%, rgba(255, 255, 255, 0.52), transparent 24%),
-    radial-gradient(circle at 55% 42%, rgba(250, 204, 21, 0.28), transparent 16%),
-    linear-gradient(98deg, transparent, rgba(255, 255, 255, 0.46) 24%, rgba(255, 255, 255, 0.18) 72%, transparent);
-  clip-path: polygon(0 52%, 8% 31%, 22% 40%, 33% 22%, 49% 35%, 67% 18%, 100% 44%, 92% 69%, 72% 61%, 58% 82%, 36% 65%, 14% 78%);
-  filter: blur(6px);
-  opacity: 0.88;
-  transform: rotate(-3deg);
-}
-.article-ink-layer:after {
-  right: 7%;
-  bottom: 66px;
-  width: min(740px, 58vw);
-  height: 92px;
-  background:
-    radial-gradient(circle at 18% 54%, rgba(255, 255, 255, 0.4), transparent 10%),
-    radial-gradient(circle at 72% 42%, rgba(255, 255, 255, 0.3), transparent 12%),
-    linear-gradient(93deg, transparent, rgba(255, 255, 255, 0.34) 18%, rgba(255, 255, 255, 0.14) 76%, transparent);
-  clip-path: polygon(0 45%, 16% 26%, 31% 37%, 47% 18%, 69% 34%, 100% 24%, 92% 58%, 70% 50%, 52% 76%, 30% 58%, 14% 72%);
-  filter: blur(7px);
-  opacity: 0.72;
 }
 .article-info-container {
   z-index: 3;
@@ -888,33 +871,18 @@ export default {
   height: auto;
   margin: 0;
   padding: 0;
-  font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
-    "SimSun", serif;
-  font-size: clamp(46px, 4.2vw, 76px) !important;
-  font-weight: 900;
+  font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
+    sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.18em;
   text-align: left;
   opacity: 1;
   writing-mode: horizontal-tb;
   text-orientation: mixed;
-  transform: rotate(-2deg);
-  filter: drop-shadow(0 10px 18px rgba(255, 255, 255, 0.16))
-    drop-shadow(0 14px 24px rgba(2, 6, 23, 0.3));
-}
-.article-category:before {
-  content: "";
-  position: absolute;
-  inset: 18% -12% 4% -8%;
-  z-index: -1;
-  background:
-    radial-gradient(circle at 8% 50%, rgba(255, 255, 255, 0.32), transparent 16%),
-    radial-gradient(circle at 92% 42%, rgba(250, 204, 21, 0.22), transparent 13%),
-    linear-gradient(95deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.02));
-  clip-path: polygon(0 48%, 9% 29%, 21% 39%, 35% 18%, 51% 35%, 70% 21%, 100% 42%, 89% 69%, 65% 57%, 51% 80%, 30% 63%, 9% 75%);
-  filter: blur(3px);
-  opacity: 0.9;
-  transform: rotate(1deg);
+  transform: none;
+  filter: none;
 }
 @media (min-width: 760px) {
   .banner {
@@ -922,7 +890,9 @@ export default {
   }
   .article-info-container {
     position: absolute;
-    bottom: 4.6rem;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-36%);
     padding: 0 8%;
     width: 100%;
     text-align: center;
@@ -931,32 +901,15 @@ export default {
     position: relative;
     display: inline-block;
     max-width: 1120px;
-    margin: 0 auto 16px;
-    font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
-      sans-serif !important;
-    font-size: 46px;
-    font-weight: 900;
-    color: #fff;
+    margin: 0 auto 28px;
+    font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC",
+      "Microsoft YaHei", sans-serif !important;
+    font-size: 56px;
+    font-weight: 400;
+    color: #f8fafc !important;
     letter-spacing: 0;
     line-height: 1.14;
-    text-shadow:
-      0 2px 0 rgba(15, 23, 42, 0.7),
-      0 8px 28px rgba(2, 6, 23, 0.84),
-      0 0 24px rgba(255, 255, 255, 0.38);
-  }
-  .article-title:after {
-    content: "";
-    position: absolute;
-    left: 3%;
-    right: 3%;
-    bottom: -10px;
-    z-index: -1;
-    height: 24px;
-    background:
-      radial-gradient(circle at 12% 50%, rgba(255, 255, 255, 0.22), transparent 18%),
-      linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-    clip-path: polygon(0 42%, 14% 25%, 31% 39%, 50% 22%, 74% 36%, 100% 27%, 94% 64%, 68% 53%, 49% 78%, 26% 57%, 8% 71%);
-    filter: blur(2px);
+    text-shadow: 0 5px 28px rgba(2, 6, 23, 0.72);
   }
   .article-time-row {
     justify-content: center;
@@ -981,53 +934,79 @@ export default {
 @media (max-width: 759px) {
   .banner {
     color: #eee !important;
-    height: 360px;
+    height: 520px;
   }
   .separator:first-child {
     display: none;
   }
   .blog-container {
-    margin: 322px 5px 0 5px;
+    margin: 482px 5px 0 5px;
+  }
+  .article-container {
+    margin-top: 472px !important;
   }
   .article-info-container {
     position: absolute;
-    bottom: 1.25rem;
+    top: 188px;
+    bottom: auto;
+    transform: none;
     padding: 0 5%;
     width: 100%;
     color: #eee;
     text-align: center;
   }
   .article-category {
-    top: 82px;
-    left: 5%;
-    max-width: 72vw;
+    top: 136px;
+    left: 6%;
+    max-width: 88vw;
     height: auto;
-    font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
-      "SimSun", serif;
-    font-size: 2.2rem !important;
+    font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
+      sans-serif !important;
+    font-size: 12px !important;
     line-height: 1;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.12em;
   }
   .article-category a {
-    font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
-      "SimSun", serif !important;
+    font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
+      sans-serif !important;
   }
   .article-title {
-    font-size: 1.7rem;
-    font-weight: 900;
+    display: block;
+    font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC",
+      "Microsoft YaHei", sans-serif !important;
+    font-size: 1.45rem;
+    font-weight: 400;
     line-height: 1.24;
-    margin-bottom: 0.6rem;
+    margin: 0 auto 0.8rem;
+    max-width: 94%;
+    color: #f8fafc !important;
     text-shadow: 0 3px 18px rgba(2, 6, 23, 0.58);
   }
   .article-time-row {
-    margin-bottom: 0.8rem;
+    justify-content: center;
+    gap: 8px 18px;
+    margin-bottom: 0.75rem;
+    font-size: 12px;
   }
   .article-tags {
     width: auto !important;
     justify-content: center !important;
-    overflow: visible !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     white-space: normal !important;
-    max-width: 90%;
+    max-width: 94%;
+    max-height: 154px;
+    padding-right: 2px !important;
+  }
+  .article-tags a {
+    max-width: 100%;
+    min-height: 30px;
+    padding: 7px 10px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .article-tag-v-icon {
+    flex: 0 0 auto;
   }
   .post {
     width: 100%;
@@ -1060,23 +1039,23 @@ export default {
 .article-time-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 18px;
-  color: rgba(226, 232, 240, 0.92);
-  font-size: 13px;
+  gap: 12px 28px;
+  color: rgba(203, 213, 225, 0.78);
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.8;
 }
 .article-time-row span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   box-sizing: border-box;
   min-height: 30px;
-  padding: 4px 12px;
-  border: 1px solid rgba(226, 232, 240, 0.18);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.38);
-  backdrop-filter: blur(10px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
 }
 .article-detail-layout {
   display: grid;
@@ -1117,46 +1096,35 @@ export default {
   box-shadow: 0 28px 78px rgba(15, 23, 42, 0.14) !important;
 }
 .article-category a {
-  display: block;
-  font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
-    "SimSun", serif !important;
-  color: #fff !important;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 1),
-    rgba(255, 255, 255, 0.98) 38%,
-    rgba(255, 255, 255, 0.94) 68%,
-    rgba(254, 240, 138, 0.92)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 0.35px rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.5);
+  color: rgba(203, 213, 225, 0.96) !important;
+  font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
+    sans-serif !important;
+  -webkit-text-fill-color: currentColor;
   white-space: nowrap;
   word-break: keep-all;
-  text-shadow:
-    0 1px 0 rgba(15, 23, 42, 0.42),
-    0 0 24px rgba(255, 255, 255, 0.86),
-    0 0 48px rgba(254, 240, 138, 0.44),
-    0 14px 28px rgba(2, 6, 23, 0.62);
-}
-@media (max-width: 759px) {
-  .article-category,
-  .article-category a {
-    font-family: "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", "SimSun", serif !important;
-  }
+  text-shadow: none;
+  backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.16);
 }
 .article-tags {
   display: inline-flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 24px;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   backdrop-filter: none !important;
-  max-width: 680px;
+  max-width: min(920px, 82vw);
 }
 .article-tag-icon {
   display: none;
@@ -1165,22 +1133,100 @@ export default {
   position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   box-sizing: border-box;
-  height: 32px;
+  min-height: 34px;
+  height: auto;
+  max-width: 280px;
   margin-left: 0;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 0;
-  background:
-    radial-gradient(circle at 16% 48%, rgba(255, 255, 255, 0.18), transparent 18%),
-    linear-gradient(135deg, rgba(2, 6, 23, 0.92), rgba(15, 23, 42, 0.72));
-  clip-path: polygon(4% 19%, 18% 4%, 34% 13%, 49% 0, 66% 12%, 91% 5%, 100% 33%, 93% 78%, 73% 91%, 55% 82%, 36% 100%, 18% 86%, 0 75%);
-  color: #f8fafc !important;
+  padding: 8px 14px;
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  clip-path: none;
+  color: #34d399 !important;
   font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
-  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22);
+  font-weight: 600;
+  line-height: 1.28;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-shadow: none;
+  backdrop-filter: blur(8px);
+  box-shadow: none;
+}
+.article-tags a:nth-of-type(2) {
+  border-color: rgba(59, 130, 246, 0.24);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa !important;
+}
+.article-tags a:nth-of-type(3) {
+  border-color: rgba(168, 85, 247, 0.24);
+  background: rgba(168, 85, 247, 0.1);
+  color: #c084fc !important;
+}
+.article-tags a:nth-of-type(4) {
+  border-color: rgba(249, 115, 22, 0.26);
+  background: rgba(249, 115, 22, 0.1);
+  color: #fb923c !important;
+}
+.article-tags a:nth-of-type(5) {
+  border-color: rgba(236, 72, 153, 0.26);
+  background: rgba(236, 72, 153, 0.1);
+  color: #f472b6 !important;
+}
+.article-tags a:nth-of-type(6) {
+  border-color: rgba(6, 182, 212, 0.26);
+  background: rgba(6, 182, 212, 0.1);
+  color: #22d3ee !important;
+}
+.article-tags a:nth-of-type(7) {
+  border-color: rgba(234, 179, 8, 0.26);
+  background: rgba(234, 179, 8, 0.1);
+  color: #facc15 !important;
+}
+.article-tags a:nth-of-type(8n) {
+  border-color: rgba(244, 63, 94, 0.26);
+  background: rgba(244, 63, 94, 0.1);
+  color: #fb7185 !important;
+}
+.article-tags a:nth-of-type(8n + 1) {
+  border-color: rgba(16, 185, 129, 0.24);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399 !important;
+}
+.article-tags a:nth-of-type(8n + 2) {
+  border-color: rgba(59, 130, 246, 0.24);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa !important;
+}
+.article-tags a:nth-of-type(8n + 3) {
+  border-color: rgba(168, 85, 247, 0.24);
+  background: rgba(168, 85, 247, 0.1);
+  color: #c084fc !important;
+}
+.article-tags a:nth-of-type(8n + 4) {
+  border-color: rgba(249, 115, 22, 0.26);
+  background: rgba(249, 115, 22, 0.1);
+  color: #fb923c !important;
+}
+.article-tags a:nth-of-type(8n + 5) {
+  border-color: rgba(236, 72, 153, 0.26);
+  background: rgba(236, 72, 153, 0.1);
+  color: #f472b6 !important;
+}
+.article-tags a:nth-of-type(8n + 6) {
+  border-color: rgba(6, 182, 212, 0.26);
+  background: rgba(6, 182, 212, 0.1);
+  color: #22d3ee !important;
+}
+.article-tags a:nth-of-type(8n + 7) {
+  border-color: rgba(234, 179, 8, 0.26);
+  background: rgba(234, 179, 8, 0.1);
+  color: #facc15 !important;
+}
+.article-tag-v-icon {
+  color: currentColor !important;
 }
 .article-summary {
   max-width: none;
