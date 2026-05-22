@@ -4,6 +4,12 @@
     <div class="banner" :style="articleCover">
       <div class="article-banner-grid"></div>
       <div class="article-banner-glow"></div>
+      <div class="article-ink-layer"></div>
+      <span class="article-category">
+        <router-link :to="'/categories/' + article.categoryId">
+          {{ article.categoryName }}
+        </router-link>
+      </span>
       <div class="article-info-container">
         <!-- 文章标题 -->
         <div class="article-title">{{ article.articleTitle }}</div>
@@ -11,15 +17,6 @@
           <span>
             <v-icon size="16" color="#e5e7eb">mdi-calendar-plus</v-icon>
             {{ article.createTime | date }}
-          </span>
-          <span>
-            <v-icon size="16" color="#e5e7eb">mdi-calendar-refresh</v-icon>
-            <template v-if="article.updateTime">
-              {{ article.updateTime | date }}
-            </template>
-            <template v-else>
-              {{ article.createTime | date }}
-            </template>
           </span>
           <span>
             <v-icon size="16" color="#e5e7eb">mdi-eye-outline</v-icon>
@@ -34,31 +31,20 @@
             {{ wordNum | num }}
           </span>
         </div>
-        <div class="article-info">
-          <div class="article-taxonomy-row">
-            <!-- 文章分类 -->
-            <span class="article-category">
-              <i class="iconfont iconfenlei1" />
-              <router-link :to="'/categories/' + article.categoryId">
-                {{ article.categoryName }}
-              </router-link>
-            </span>
-            <!-- 文章标签 -->
-            <span class="article-tags">
-              <i class="iconfont iconbiaoqian article-tag-icon" />
-              <template v-if="article.tagDTOList && article.tagDTOList.length">
-                <router-link
-                  v-for="item of article.tagDTOList"
-                  :key="item.id"
-                  :to="'/tags/' + item.id"
-                >
-                  {{ item.tagName }}
-                </router-link>
-              </template>
-              <template v-else>暂无标签</template>
-            </span>
-          </div>
-        </div>
+        <!-- 文章标签 -->
+        <span class="article-tags">
+          <i class="iconfont iconbiaoqian article-tag-icon" />
+          <template v-if="article.tagDTOList && article.tagDTOList.length">
+            <router-link
+              v-for="item of article.tagDTOList"
+              :key="item.id"
+              :to="'/tags/' + item.id"
+            >
+              {{ item.tagName }}
+            </router-link>
+          </template>
+          <template v-else>暂无标签</template>
+        </span>
       </div>
     </div>
     <!-- 内容 -->
@@ -116,9 +102,15 @@
           <article
             id="write"
             class="article-content markdown-body"
-            v-html="article.articleContent"
             ref="article"
-          />
+          >
+            <section
+              v-for="item of articleContentChunks"
+              :key="item.key"
+              class="article-content-chunk"
+              v-html="item.html"
+            />
+          </article>
           <!-- 版权声明 -->
           <div class="aritcle-copyright">
             <div>
@@ -286,6 +278,7 @@ export default {
     if (this.tocClickScrollTimer) {
       window.clearTimeout(this.tocClickScrollTimer);
     }
+    this.clearArticleRenderTask();
     tocbot.destroy();
   },
   data: function() {
@@ -316,75 +309,204 @@ export default {
       tocLockedHash: "",
       articleSidebarRaf: null,
       articleSidebarTimer: null,
-      articleSidebarTop: "80px"
+      articleSidebarTop: "80px",
+      articleContentChunks: [],
+      articleRenderToken: 0,
+      articleRenderCancel: null
     };
   },
   methods: {
     getArticle() {
-      const that = this;
+      const articleId = Number(this.$route.params.articleId);
+      if (!Number.isInteger(articleId) || articleId <= 0) {
+        this.$router.replace("/");
+        return;
+      }
+      this.clearArticleRenderTask();
+      this.articleContentChunks = [];
       //查询文章
-      this.axios.get("/api" + this.$route.path).then(({ data }) => {
-        document.title = data.data.articleTitle;
+      this.axios.get("/api/articles/" + articleId).then(({ data }) => {
+        const article = data.data || {};
+        document.title = article.articleTitle || "文章详情";
         //将markdown转换为Html
-        this.article = data.data;
-        this.article.articleContent = markdownToHtml(
-          this.article.articleContent
-        );
+        this.article = {
+          ...article,
+          nextArticle: article.nextArticle || {
+            id: 0,
+            articleCover: ""
+          },
+          lastArticle: article.lastArticle || {
+            id: 0,
+            articleCover: ""
+          },
+          recommendArticleList: article.recommendArticleList || [],
+          newestArticleList: article.newestArticleList || [],
+          articleContent: ""
+        };
+        this.renderArticleContent(article.articleContent || "");
+        });
+    },
+    renderArticleContent(content) {
+      const token = ++this.articleRenderToken;
+      const chunks = this.isMobileArticleReader
+        ? this.splitMarkdownContent(content)
+        : [content];
+      let index = 0;
+      const renderNext = () => {
+        if (token !== this.articleRenderToken) {
+          return;
+        }
+        const chunk = chunks[index];
+        if (chunk == null) {
+          this.$nextTick(() => {
+            this.initArticleDom();
+          });
+          return;
+        }
+        this.articleContentChunks.push({
+          key: token + "-" + index,
+          html: markdownToHtml(chunk)
+        });
+        index++;
+        if (index < chunks.length) {
+          this.scheduleArticleRenderTask(renderNext);
+          return;
+        }
         this.$nextTick(() => {
-          // 统计文章字数
-          this.wordNum = this.deleteHTMLTag(this.article.articleContent).length;
-          // 添加代码复制功能
-          this.clipboard = new Clipboard(".copy-btn");
-          this.clipboard.on("success", () => {
-            this.$toast({ type: "success", message: "复制成功" });
-          });
-          // 添加文章生成目录功能
-          let nodes = this.$refs.article.children;
-          let tocHeadingCount = 0;
-          if (nodes.length) {
-            for (let i = 0; i < nodes.length; i++) {
-              let node = nodes[i];
-              let reg = /^H[1-5]{1}$/;
-              if (reg.exec(node.tagName)) {
-                node.id = i;
-                if (/^H[1-5]{1}$/.exec(node.tagName)) {
-                  tocHeadingCount++;
-                }
-              }
-            }
+          this.initArticleDom();
+        });
+      };
+      renderNext();
+    },
+    splitMarkdownContent(content) {
+      if (!content) {
+        return [""];
+      }
+      const chunks = [];
+      const lines = content.split(/\n/);
+      let buffer = [];
+      let bufferLength = 0;
+      let inFence = false;
+      const flush = () => {
+        if (!buffer.length) {
+          return;
+        }
+        chunks.push(buffer.join("\n"));
+        buffer = [];
+        bufferLength = 0;
+      };
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        const isFence = /^(```|~~~)/.test(trimmed);
+        const isHeading = /^#{1,2}\s+/.test(line);
+        const isBlank = trimmed === "";
+        if (!inFence && isHeading && bufferLength > 0) {
+          flush();
+        }
+        buffer.push(line);
+        bufferLength += line.length + 1;
+        if (isFence) {
+          inFence = !inFence;
+        }
+        if (!inFence && isBlank && bufferLength >= 10000) {
+          flush();
+        }
+      });
+      flush();
+      return chunks;
+    },
+    scheduleArticleRenderTask(task) {
+      this.clearArticleRenderTask();
+      if (window.requestIdleCallback) {
+        const handle = window.requestIdleCallback(task, { timeout: 500 });
+        this.articleRenderCancel = () => {
+          window.cancelIdleCallback(handle);
+        };
+        return;
+      }
+      const handle = window.setTimeout(task, 80);
+      this.articleRenderCancel = () => {
+        window.clearTimeout(handle);
+      };
+    },
+    clearArticleRenderTask() {
+      if (this.articleRenderCancel) {
+        this.articleRenderCancel();
+        this.articleRenderCancel = null;
+      }
+    },
+    initArticleDom() {
+      const that = this;
+      const articleElement = this.$refs.article;
+      const articleHtml = articleElement ? articleElement.innerHTML : "";
+      // 统计文章字数
+      this.wordNum = this.deleteHTMLTag(articleHtml).length;
+      if (this.clipboard) {
+        this.clipboard.destroy();
+        this.clipboard = null;
+      }
+      window.removeEventListener("scroll", this.requestSyncTocActiveLink);
+      tocbot.destroy();
+      // 添加代码复制功能
+      this.clipboard = new Clipboard(".copy-btn");
+      this.clipboard.on("success", () => {
+        this.$toast({ type: "success", message: "复制成功" });
+      });
+      // 添加文章生成目录功能
+      let nodes = articleElement ? articleElement.children : [];
+      let tocHeadingCount = 0;
+      const headingNodes = articleElement
+        ? articleElement.querySelectorAll("h1, h2, h3, h4, h5")
+        : [];
+      if (headingNodes.length) {
+        for (let i = 0; i < headingNodes.length; i++) {
+          headingNodes[i].id = i;
+          tocHeadingCount++;
+        }
+      } else if (nodes.length) {
+        for (let i = 0; i < nodes.length; i++) {
+          let node = nodes[i];
+          let reg = /^H[1-5]{1}$/;
+          if (reg.exec(node.tagName)) {
+            node.id = i;
+            tocHeadingCount++;
           }
-          this.tocHeadingCount = tocHeadingCount;
-          tocbot.init({
-            tocSelector: "#toc", //要把目录添加元素位置，支持选择器
-            contentSelector: ".article-content", //获取html的元素
-            headingSelector: "h1, h2, h3, h4, h5", //要显示的id的目录
-            headingsOffset: this.getArticleHeadingOffset(),
-            scrollSmoothOffset: -this.getArticleHeadingOffset(),
-            hasInnerContainers: true,
-            collapseDepth: 6,
-            disableTocScrollSync: true,
-            onClick: function(e) {
-              e.preventDefault();
-              e.stopPropagation();
-              that.handleTocClick(e);
-            }
-          });
-          window.removeEventListener("scroll", this.requestSyncTocActiveLink);
-          window.addEventListener("scroll", this.requestSyncTocActiveLink, {
-            passive: true
-          });
-          this.requestSyncTocActiveLink();
-          this.requestSyncArticleSidebarTop();
-          // 添加图片预览功能
-          const imgList = this.$refs.article.getElementsByTagName("img");
-          for (var i = 0; i < imgList.length; i++) {
-            this.imgList.push(imgList[i].src);
-            imgList[i].addEventListener("click", function(e) {
-              that.previewImg(e.target.currentSrc);
-            });
+        }
+      }
+      this.tocHeadingCount = tocHeadingCount;
+      if (!this.isMobileArticleReader) {
+        tocbot.init({
+          tocSelector: "#toc", //要把目录添加元素位置，支持选择器
+          contentSelector: ".article-content", //获取html的元素
+          headingSelector: "h1, h2, h3, h4, h5", //要显示的id的目录
+          headingsOffset: this.getArticleHeadingOffset(),
+          scrollSmoothOffset: -this.getArticleHeadingOffset(),
+          hasInnerContainers: true,
+          collapseDepth: 6,
+          disableTocScrollSync: true,
+          onClick: function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            that.handleTocClick(e);
           }
         });
+        window.addEventListener("scroll", this.requestSyncTocActiveLink, {
+          passive: true
         });
+        this.requestSyncTocActiveLink();
+      }
+      this.requestSyncArticleSidebarTop();
+      // 添加图片预览功能
+      this.imgList = [];
+      const imgList = articleElement
+        ? articleElement.getElementsByTagName("img")
+        : [];
+      for (var i = 0; i < imgList.length; i++) {
+        this.imgList.push(imgList[i].src);
+        imgList[i].addEventListener("click", function(e) {
+          that.previewImg(e.target.currentSrc);
+        });
+      }
     },
     requestSyncArticleSidebarTop() {
       if (this.articleSidebarRaf) {
@@ -639,12 +761,25 @@ export default {
         "",
         "摘要：" + this.articleSummary
       ].join("\n");
+    },
+    isMobileArticleReader() {
+      return /Android|iPhone|iPod|iPad|Mobile|MicroMessenger|MQQBrowser/i.test(
+        navigator.userAgent
+      );
     }
   }
 };
 </script>
 
 <style scoped>
+@font-face {
+  font-family: "ReejiChaoZeng";
+  src: url("../../assets/fonts/sf.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 .article-detail-page {
   min-height: 100vh;
   background: linear-gradient(180deg, rgba(2, 6, 23, 0.02), rgba(248, 250, 252, 0.7) 520px);
@@ -660,18 +795,16 @@ export default {
   right: 0;
   height: 100%;
   z-index: 1;
-  background: linear-gradient(
-    180deg,
-    rgba(2, 6, 23, 0.48),
-    rgba(2, 6, 23, 0.78)
-  );
+  background:
+    radial-gradient(circle at 16% 24%, rgba(255, 255, 255, 0.24), transparent 24%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.18), rgba(2, 6, 23, 0.58));
 }
 .article-banner-grid {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  opacity: 0.32;
+  opacity: 0.18;
   background-image: linear-gradient(
       to right,
       rgba(255, 255, 255, 0.18) 1px,
@@ -692,83 +825,141 @@ export default {
   border-radius: 50%;
   filter: blur(80px);
 }
+.article-ink-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 1;
+  background:
+    radial-gradient(circle at 10% 26%, rgba(255, 255, 255, 0.58) 0 3px, transparent 4px),
+    radial-gradient(circle at 14% 31%, rgba(255, 255, 255, 0.34) 0 10px, transparent 11px),
+    radial-gradient(circle at 83% 24%, rgba(255, 255, 255, 0.42) 0 5px, transparent 6px),
+    radial-gradient(circle at 79% 59%, rgba(255, 255, 255, 0.34) 0 8px, transparent 9px),
+    linear-gradient(102deg, transparent 6%, rgba(255, 255, 255, 0.26) 13%, transparent 32%),
+    linear-gradient(165deg, transparent 50%, rgba(255, 255, 255, 0.2) 64%, transparent 77%);
+  mix-blend-mode: screen;
+}
+.article-ink-layer:before,
+.article-ink-layer:after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.article-ink-layer:before {
+  top: 68px;
+  left: 5%;
+  width: min(560px, 46vw);
+  height: 120px;
+  background:
+    radial-gradient(circle at 18% 48%, rgba(255, 255, 255, 0.52), transparent 24%),
+    radial-gradient(circle at 55% 42%, rgba(250, 204, 21, 0.28), transparent 16%),
+    linear-gradient(98deg, transparent, rgba(255, 255, 255, 0.46) 24%, rgba(255, 255, 255, 0.18) 72%, transparent);
+  clip-path: polygon(0 52%, 8% 31%, 22% 40%, 33% 22%, 49% 35%, 67% 18%, 100% 44%, 92% 69%, 72% 61%, 58% 82%, 36% 65%, 14% 78%);
+  filter: blur(6px);
+  opacity: 0.88;
+  transform: rotate(-3deg);
+}
+.article-ink-layer:after {
+  right: 7%;
+  bottom: 66px;
+  width: min(740px, 58vw);
+  height: 92px;
+  background:
+    radial-gradient(circle at 18% 54%, rgba(255, 255, 255, 0.4), transparent 10%),
+    radial-gradient(circle at 72% 42%, rgba(255, 255, 255, 0.3), transparent 12%),
+    linear-gradient(93deg, transparent, rgba(255, 255, 255, 0.34) 18%, rgba(255, 255, 255, 0.14) 76%, transparent);
+  clip-path: polygon(0 45%, 16% 26%, 31% 37%, 47% 18%, 69% 34%, 100% 24%, 92% 58%, 70% 50%, 52% 76%, 30% 58%, 14% 72%);
+  filter: blur(7px);
+  opacity: 0.72;
+}
 .article-info-container {
   z-index: 3;
   box-sizing: border-box;
 }
-.article-info i {
-  font-size: 14px;
-}
-.article-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 900px;
-  margin: 0 auto;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.article-info > div {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-.article-info span:not(.separator) {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  box-sizing: border-box;
-  padding: 5px 11px;
-  border: 1px solid rgba(226, 232, 240, 0.22);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.48);
-  color: #e5e7eb;
-  backdrop-filter: blur(10px);
-}
 .article-category {
+  position: absolute;
+  top: 90px;
+  left: 6%;
+  z-index: 3;
+  display: block;
   box-sizing: border-box;
-  height: 34px;
-  padding: 0 15px !important;
-  border-color: rgba(52, 211, 153, 0.5) !important;
-  background: rgba(16, 185, 129, 0.28) !important;
-  font-size: 13px !important;
-  font-weight: 700;
+  max-width: min(460px, 42vw);
+  height: auto;
+  margin: 0;
+  padding: 0;
+  font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
+    "SimSun", serif;
+  font-size: clamp(46px, 4.2vw, 76px) !important;
+  font-weight: 900;
   line-height: 1;
-  box-shadow: inset 0 0 0 1px rgba(187, 247, 208, 0.12);
+  letter-spacing: 0.06em;
+  text-align: left;
+  opacity: 1;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  transform: rotate(-2deg);
+  filter: drop-shadow(0 10px 18px rgba(255, 255, 255, 0.16))
+    drop-shadow(0 14px 24px rgba(2, 6, 23, 0.3));
 }
-.article-info .separator {
-  display: none;
+.article-category:before {
+  content: "";
+  position: absolute;
+  inset: 18% -12% 4% -8%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 8% 50%, rgba(255, 255, 255, 0.32), transparent 16%),
+    radial-gradient(circle at 92% 42%, rgba(250, 204, 21, 0.22), transparent 13%),
+    linear-gradient(95deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.02));
+  clip-path: polygon(0 48%, 9% 29%, 21% 39%, 35% 18%, 51% 35%, 70% 21%, 100% 42%, 89% 69%, 65% 57%, 51% 80%, 30% 63%, 9% 75%);
+  filter: blur(3px);
+  opacity: 0.9;
+  transform: rotate(1deg);
 }
 @media (min-width: 760px) {
   .banner {
     color: #eee !important;
   }
-  .article-info span {
-    font-size: 95%;
-  }
   .article-info-container {
     position: absolute;
-    bottom: 5.1rem;
+    bottom: 4.6rem;
     padding: 0 8%;
     width: 100%;
     text-align: center;
   }
   .article-title {
-    max-width: 900px;
-    margin: 0 auto 18px;
+    position: relative;
+    display: inline-block;
+    max-width: 1120px;
+    margin: 0 auto 16px;
     font-family: "SF Pro Display", "Inter", "PingFang SC", "Microsoft YaHei",
       sans-serif !important;
-    font-size: 48px;
+    font-size: 46px;
     font-weight: 900;
+    color: #fff;
     letter-spacing: 0;
-    line-height: 1.12;
-    text-shadow: 0 4px 28px rgba(2, 6, 23, 0.62);
+    line-height: 1.14;
+    text-shadow:
+      0 2px 0 rgba(15, 23, 42, 0.7),
+      0 8px 28px rgba(2, 6, 23, 0.84),
+      0 0 24px rgba(255, 255, 255, 0.38);
+  }
+  .article-title:after {
+    content: "";
+    position: absolute;
+    left: 3%;
+    right: 3%;
+    bottom: -10px;
+    z-index: -1;
+    height: 24px;
+    background:
+      radial-gradient(circle at 12% 50%, rgba(255, 255, 255, 0.22), transparent 18%),
+      linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+    clip-path: polygon(0 42%, 14% 25%, 31% 39%, 50% 22%, 74% 36%, 100% 27%, 94% 64%, 68% 53%, 49% 78%, 26% 57%, 8% 71%);
+    filter: blur(2px);
   }
   .article-time-row {
     justify-content: center;
-    margin-bottom: 20px;
   }
   .pagination-post {
     display: flex;
@@ -792,9 +983,6 @@ export default {
     color: #eee !important;
     height: 360px;
   }
-  .article-info span {
-    font-size: 90%;
-  }
   .separator:first-child {
     display: none;
   }
@@ -803,11 +991,26 @@ export default {
   }
   .article-info-container {
     position: absolute;
-    bottom: 1.3rem;
+    bottom: 1.25rem;
     padding: 0 5%;
     width: 100%;
     color: #eee;
-    text-align: left;
+    text-align: center;
+  }
+  .article-category {
+    top: 82px;
+    left: 5%;
+    max-width: 72vw;
+    height: auto;
+    font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
+      "SimSun", serif;
+    font-size: 2.2rem !important;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .article-category a {
+    font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
+      "SimSun", serif !important;
   }
   .article-title {
     font-size: 1.7rem;
@@ -819,28 +1022,12 @@ export default {
   .article-time-row {
     margin-bottom: 0.8rem;
   }
-  .article-info {
-    align-items: center;
-    font-size: 12px;
-  }
-  .article-info > div {
-    gap: 7px;
-  }
-  .article-info span:not(.separator) {
-    min-width: 0;
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    justify-content: center;
-    padding: 4px 9px;
-  }
-  .article-category {
-    width: auto !important;
-  }
   .article-tags {
     width: auto !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    max-width: 90%;
   }
   .post {
     width: 100%;
@@ -866,6 +1053,9 @@ export default {
   color: #263238;
   font-size: 16px;
   line-height: 2.05;
+}
+.article-content-chunk {
+  display: contents;
 }
 .article-time-row {
   display: flex;
@@ -927,39 +1117,70 @@ export default {
   box-shadow: 0 28px 78px rgba(15, 23, 42, 0.14) !important;
 }
 .article-category a {
+  display: block;
+  font-family: "ReejiChaoZeng", "Kaiti SC", "STKaiti", "KaiTi", "Songti SC",
+    "SimSun", serif !important;
   color: #fff !important;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.98) 38%,
+    rgba(255, 255, 255, 0.94) 68%,
+    rgba(254, 240, 138, 0.92)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.35px rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  word-break: keep-all;
+  text-shadow:
+    0 1px 0 rgba(15, 23, 42, 0.42),
+    0 0 24px rgba(255, 255, 255, 0.86),
+    0 0 48px rgba(254, 240, 138, 0.44),
+    0 14px 28px rgba(2, 6, 23, 0.62);
+}
+@media (max-width: 759px) {
+  .article-category,
+  .article-category a {
+    font-family: "Kaiti SC", "STKaiti", "KaiTi", "Songti SC", "SimSun", serif !important;
+  }
 }
 .article-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   backdrop-filter: none !important;
-  max-width: 520px;
+  max-width: 680px;
 }
 .article-tag-icon {
   display: none;
 }
 .article-tags a {
+  position: relative;
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  height: 34px;
-  margin-left: 8px;
-  padding: 0 15px;
-  border: 1px solid rgba(255, 255, 255, 0.36);
-  border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.28),
-    rgba(125, 211, 252, 0.14)
-  );
+  height: 32px;
+  margin-left: 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 16% 48%, rgba(255, 255, 255, 0.18), transparent 18%),
+    linear-gradient(135deg, rgba(2, 6, 23, 0.92), rgba(15, 23, 42, 0.72));
+  clip-path: polygon(4% 19%, 18% 4%, 34% 13%, 49% 0, 66% 12%, 91% 5%, 100% 33%, 93% 78%, 73% 91%, 55% 82%, 36% 100%, 18% 86%, 0 75%);
   color: #f8fafc !important;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   line-height: 1;
-  backdrop-filter: blur(14px) saturate(150%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 10px 24px rgba(2, 6, 23, 0.14);
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.22);
 }
 .article-summary {
   max-width: none;
