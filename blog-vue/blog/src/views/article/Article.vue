@@ -50,7 +50,10 @@
     </div>
     <!-- 内容 -->
     <div class="article-container article-detail-layout">
-      <aside class="article-layout-side article-left-side">
+      <aside
+        class="article-layout-side article-left-side"
+        :class="{ 'is-mobile-toc-open': mobileTocOpen }"
+      >
         <div
           ref="articleSidebar"
           class="article-sidebar-sticky"
@@ -253,6 +256,7 @@ export default {
       passive: true
     });
     window.addEventListener("resize", this.requestSyncArticleSidebarTop);
+    window.addEventListener("toggle-article-toc", this.toggleMobileToc);
     this.$nextTick(() => {
       this.requestSyncArticleSidebarTop();
       window.setTimeout(() => {
@@ -267,6 +271,7 @@ export default {
     window.removeEventListener("scroll", this.requestSyncTocActiveLink);
     window.removeEventListener("scroll", this.requestSyncArticleSidebarTop);
     window.removeEventListener("resize", this.requestSyncArticleSidebarTop);
+    window.removeEventListener("toggle-article-toc", this.toggleMobileToc);
     if (this.tocScrollRaf) {
       window.cancelAnimationFrame(this.tocScrollRaf);
     }
@@ -305,6 +310,7 @@ export default {
       likeEffectId: 0,
       likeEffects: [],
       tocHeadingCount: 0,
+      mobileTocOpen: false,
       tocScrollRaf: null,
       tocClickScrollTimer: null,
       tocLockedHash: "",
@@ -477,28 +483,26 @@ export default {
         }
       }
       this.tocHeadingCount = tocHeadingCount;
-      if (!this.isMobileArticleReader) {
-        tocbot.init({
-          tocSelector: "#toc", //要把目录添加元素位置，支持选择器
-          contentSelector: ".article-content", //获取html的元素
-          headingSelector: "h1, h2, h3, h4, h5", //要显示的id的目录
-          headingsOffset: this.getArticleHeadingOffset(),
-          scrollSmoothOffset: -this.getArticleHeadingOffset(),
-          hasInnerContainers: true,
-          collapseDepth: 6,
-          disableTocScrollSync: true,
-          onClick: function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            that.handleTocClick(e);
-          }
-        });
-        this.markKeyChapterTocLinks(keyChapterHeadingIds);
-        window.addEventListener("scroll", this.requestSyncTocActiveLink, {
-          passive: true
-        });
-        this.requestSyncTocActiveLink();
-      }
+      tocbot.init({
+        tocSelector: "#toc", //要把目录添加元素位置，支持选择器
+        contentSelector: ".article-content", //获取html的元素
+        headingSelector: "h1, h2, h3, h4, h5", //要显示的id的目录
+        headingsOffset: this.getArticleHeadingOffset(),
+        scrollSmoothOffset: -this.getArticleHeadingOffset(),
+        hasInnerContainers: true,
+        collapseDepth: 6,
+        disableTocScrollSync: true,
+        onClick: function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          that.handleTocClick(e);
+        }
+      });
+      this.markKeyChapterTocLinks(keyChapterHeadingIds);
+      window.addEventListener("scroll", this.requestSyncTocActiveLink, {
+        passive: true
+      });
+      this.requestSyncTocActiveLink();
       this.requestSyncArticleSidebarTop();
       // 添加图片预览功能
       this.imgList = [];
@@ -714,6 +718,9 @@ export default {
         behavior
       });
     },
+    toggleMobileToc() {
+      this.mobileTocOpen = !this.mobileTocOpen;
+    },
     handleTocClick(e) {
       const link = e.target.closest(".toc-link");
       if (!link || !link.hash) {
@@ -748,6 +755,9 @@ export default {
         top: Math.max(targetTop, 0),
         behavior: "smooth"
       });
+      if (this.isMobileArticleReader || window.innerWidth <= 759) {
+        this.mobileTocOpen = false;
+      }
     },
     like() {
       // 判断登录
@@ -1796,7 +1806,45 @@ hr {
     padding: 0 5px;
   }
   .article-layout-side {
+    display: block;
+    width: auto;
+    margin-bottom: 18px;
+  }
+  .article-sidebar-sticky {
+    position: static;
+    max-height: none;
+  }
+  .toc-card {
+    max-height: none;
+  }
+  #toc {
+    max-height: 360px;
+  }
+}
+@media (max-width: 959px) {
+  .article-detail-layout {
+    animation: none !important;
+    transform: none !important;
+  }
+  .article-layout-side {
     display: none;
+    position: fixed;
+    top: 68px;
+    right: 10px;
+    z-index: 12;
+    width: min(330px, calc(100vw - 20px));
+    margin-bottom: 0;
+  }
+  .article-layout-side.is-mobile-toc-open {
+    display: block;
+  }
+  .article-sidebar-sticky {
+    display: block;
+  }
+  .toc-card {
+    width: 100%;
+    margin-top: 0;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.2) !important;
   }
 }
 @media (max-width: 759px) {
@@ -1813,6 +1861,20 @@ hr {
     height: 32px;
     padding: 0 10px;
     font-size: 12px;
+  }
+  .toc-header {
+    padding: 18px 18px 12px;
+    font-size: 16px;
+  }
+  .toc-doc-entry {
+    padding: 14px 18px 10px;
+  }
+  .toc-doc-title {
+    font-size: 14px;
+  }
+  #toc {
+    max-height: 300px;
+    padding: 2px 12px 16px 14px;
   }
 }
 </style>

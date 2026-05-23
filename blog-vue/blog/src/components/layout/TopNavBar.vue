@@ -14,8 +14,22 @@
         </router-link>
         <span>{{ currentRouteStyle.label }}</span>
       </div>
-      <div style="margin-left:auto">
-        <a @click="openDrawer" style="margin-left:10px;font-size:20px">
+      <div class="mobile-nav-actions">
+        <button
+          v-if="isArticleDetailPage"
+          type="button"
+          class="mobile-nav-action mobile-toc-nav-btn"
+          @click="toggleArticleToc"
+          aria-label="打开文章目录"
+        >
+          <v-icon size="17" color="currentColor">mdi-menu</v-icon>
+          <span>目录</span>
+        </button>
+        <a
+          v-else
+          class="mobile-nav-action mobile-drawer-btn"
+          @click="openDrawer"
+        >
           <i class="iconfont iconhanbao" />
         </a>
       </div>
@@ -151,6 +165,9 @@ export default {
     openDrawer() {
       this.$store.state.drawer = true;
     },
+    toggleArticleToc() {
+      window.dispatchEvent(new CustomEvent("toggle-article-toc"));
+    },
     isActive(item) {
       if (item.exact) {
         return this.$route.path === item.to;
@@ -164,6 +181,9 @@ export default {
         this.routeStyles.find(item => item.match(this.$route.path)) ||
         this.routeStyles[0]
       );
+    },
+    isArticleDetailPage() {
+      return this.$route.path.startsWith("/articles/");
     },
     blogInfo() {
       return this.$store.state.blogInfo;
@@ -285,6 +305,41 @@ ul {
 .mobile-brand span {
   margin-top: 2px;
   font-size: 11px;
+}
+.mobile-nav-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+.mobile-nav-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  margin-left: 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.mobile-drawer-btn {
+  font-size: 20px;
+}
+.mobile-toc-nav-btn {
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid var(--active-border);
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    var(--active-glass-start),
+    var(--active-glass-end)
+  );
+  color: var(--active-text);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 8px 24px var(--active-shadow);
 }
 .blog-title,
 .nav-title {
