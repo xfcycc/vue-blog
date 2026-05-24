@@ -24,8 +24,6 @@ import com.minzheng.blog.util.UserUtils;
 import com.minzheng.blog.vo.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -72,8 +70,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     private UploadStrategyContext uploadStrategyContext;
     @Resource
     private SiteMapService siteMapService;
-    @Resource
-    private ArticleSummaryService articleSummaryService;
 
     @Override
     public PageResult<ArchiveDTO> listArchives() {
@@ -205,8 +201,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         siteMapService.apiPull(article);
         // 保存文章标签
         saveArticleTag(articleVO, article.getId());
-        // 异步生成文章概要
-        generateArticleSummaryAfterCommit(article);
     }
 
     /**
@@ -223,33 +217,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
             categoryDao.insert(category);
         }
         return category;
-    }
-
-    /**
-     * 事务提交后异步生成文章概要
-     *
-     * @param article 文章信息
-     */
-    private void generateArticleSummaryAfterCommit(Article article) {
-        if (Objects.equals(article.getStatus(), DRAFT.getStatus())) {
-            return;
-        }
-        Runnable task = () -> CompletableFuture.runAsync(() ->
-                articleSummaryService.generateAndSaveSummary(article.getId(), article.getArticleTitle(), article.getArticleContent()));
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    task.run();
-                }
-
-                @Override
-                public void afterCompletion(int status) {
-                }
-            });
-            return;
-        }
-        task.run();
     }
 
     @Override

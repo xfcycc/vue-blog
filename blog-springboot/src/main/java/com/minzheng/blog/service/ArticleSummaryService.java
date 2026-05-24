@@ -8,12 +8,12 @@ package com.minzheng.blog.service;
 public interface ArticleSummaryService {
 
     /**
-     * 生成并保存文章概要
+     * 生成文章概要
      *
-     * @param articleId      文章id
      * @param articleTitle   文章标题
      * @param articleContent 文章内容
+     * @return 文章概要
      */
-    void generateAndSaveSummary(Integer articleId, String articleTitle, String articleContent);
+    String generateSummary(String articleTitle, String articleContent);
 
 }

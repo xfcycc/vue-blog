@@ -5,6 +5,7 @@ import com.minzheng.blog.annotation.OptLog;
 import com.minzheng.blog.dto.*;
 import com.minzheng.blog.enums.FilePathEnum;
 import com.minzheng.blog.service.ArticleService;
+import com.minzheng.blog.service.ArticleSummaryService;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
 import com.minzheng.blog.vo.*;
 import io.swagger.annotations.Api;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +34,8 @@ import static com.minzheng.blog.constant.OptTypeConst.*;
 public class ArticleController {
     @Resource
     private ArticleService articleService;
+    @Resource
+    private ArticleSummaryService articleSummaryService;
     @Resource
     private UploadStrategyContext uploadStrategyContext;
 
@@ -81,6 +85,22 @@ public class ArticleController {
     public Result<?> saveOrUpdateArticle(@Valid @RequestBody ArticleVO articleVO) {
         articleService.saveOrUpdateArticle(articleVO);
         return Result.ok();
+    }
+
+    /**
+     * 生成文章概要
+     *
+     * @param articleSummaryVO 文章内容
+     * @return {@link Result<String>} 文章概要
+     */
+    @ApiOperation(value = "生成文章概要")
+    @PostMapping("/admin/articles/summary")
+    public Result<String> generateArticleSummary(@Valid @RequestBody ArticleSummaryVO articleSummaryVO) {
+        String summary = articleSummaryService.generateSummary(articleSummaryVO.getArticleTitle(), articleSummaryVO.getArticleContent());
+        if (!StringUtils.hasText(summary)) {
+            return Result.fail("生成概要失败");
+        }
+        return Result.ok(summary);
     }
 
     /**
@@ -229,4 +249,3 @@ public class ArticleController {
     }
 
 }
-

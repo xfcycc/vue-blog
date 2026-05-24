@@ -172,6 +172,27 @@
             正文中暂无二级到五级标题
           </span>
         </el-form-item>
+        <el-form-item label="当前概要">
+          <el-input
+            v-model="article.articleSummary"
+            type="textarea"
+            :rows="4"
+            maxlength="200"
+            show-word-limit
+            placeholder="可手动填写，也可根据当前正文生成"
+          />
+          <el-button
+            type="primary"
+            plain
+            size="small"
+            icon="el-icon-refresh"
+            class="summary-btn"
+            :loading="summaryLoading"
+            @click="generateArticleSummary"
+          >
+            更新概要
+          </el-button>
+        </el-form-item>
         <!-- 文章类型 -->
         <el-form-item label="原文地址" v-if="article.type != 1">
           <el-input
@@ -258,6 +279,7 @@ export default {
     return {
       addOrEdit: false,
       autoSave: true,
+      summaryLoading: false,
       categoryName: "",
       tagName: "",
       selectedKeyChapterKeys: [],
@@ -281,6 +303,7 @@ export default {
         id: null,
         articleTitle: this.$moment(new Date()).format("YYYY-MM-DD"),
         articleContent: "",
+        articleSummary: null,
         articleCover: "",
         categoryName: null,
         tagNameList: [],
@@ -438,6 +461,45 @@ export default {
       });
       //关闭自动保存功能
       this.autoSave = false;
+    },
+    generateArticleSummary() {
+      if (this.article.articleTitle.trim() == "") {
+        this.$message.error("文章标题不能为空");
+        return false;
+      }
+      if (this.article.articleContent.trim() == "") {
+        this.$message.error("文章内容不能为空");
+        return false;
+      }
+      this.summaryLoading = true;
+      this.axios
+        .post("/api/admin/articles/summary", {
+          articleTitle: this.article.articleTitle,
+          articleContent: this.article.articleContent
+        })
+        .then(({ data }) => {
+          if (data.flag && data.data) {
+            this.article.articleSummary = data.data;
+            this.$notify.success({
+              title: "成功",
+              message: "概要已更新"
+            });
+          } else {
+            this.$notify.error({
+              title: "失败",
+              message: data.message || "生成概要失败"
+            });
+          }
+        })
+        .catch(() => {
+          this.$notify.error({
+            title: "失败",
+            message: "生成概要失败"
+          });
+        })
+        .finally(() => {
+          this.summaryLoading = false;
+        });
     },
     autoSaveArticle() {
       // 自动上传文章
@@ -666,6 +728,9 @@ export default {
 }
 .key-chapter-empty {
   color: #909399;
+}
+.summary-btn {
+  margin-top: 0.75rem;
 }
 .tag-item {
   margin-right: 1rem;
