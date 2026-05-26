@@ -244,6 +244,13 @@ import Clipboard from "clipboard";
 import markdownToHtml from "../../utils/markdown";
 import Comment from "../../components/Comment";
 import tocbot from "tocbot";
+import {
+  addArticleBookmark,
+  getArticleBookmarkAnchorIds,
+  getArticleBookmarkCount,
+  getReadingPosition,
+  saveReadingHistory
+} from "../../utils/readingStore";
 export default {
   components: {
     Comment
@@ -251,8 +258,16 @@ export default {
   created() {
     this.getArticle();
   },
+  watch: {
+    "$route.params.articleId"() {
+      this.getArticle();
+    }
+  },
   mounted() {
     window.addEventListener("scroll", this.requestSyncArticleSidebarTop, {
+      passive: true
+    });
+    window.addEventListener("scroll", this.requestRecordReadingHistory, {
       passive: true
     });
     window.addEventListener("resize", this.requestSyncArticleSidebarTop);
@@ -270,6 +285,7 @@ export default {
     }
     window.removeEventListener("scroll", this.requestSyncTocActiveLink);
     window.removeEventListener("scroll", this.requestSyncArticleSidebarTop);
+    window.removeEventListener("scroll", this.requestRecordReadingHistory);
     window.removeEventListener("resize", this.requestSyncArticleSidebarTop);
     window.removeEventListener("toggle-article-toc", this.toggleMobileToc);
     if (this.tocScrollRaf) {
@@ -284,6 +300,11 @@ export default {
     if (this.tocClickScrollTimer) {
       window.clearTimeout(this.tocClickScrollTimer);
     }
+    if (this.readingHistoryTimer) {
+      window.clearTimeout(this.readingHistoryTimer);
+      this.readingHistoryTimer = null;
+    }
+    this.recordCurrentReadingHistory(true);
     this.clearArticleRenderTask();
     tocbot.destroy();
   },
@@ -317,9 +338,13 @@ export default {
       articleSidebarRaf: null,
       articleSidebarTimer: null,
       articleSidebarTop: "80px",
+      readingHistoryTimer: null,
       articleContentChunks: [],
       articleRenderToken: 0,
-      articleRenderCancel: null
+      articleRenderCancel: null,
+      bookmarkCount: 0,
+      readingPositionRestored: false,
+      readingHistoryReady: false
     };
   },
   methods: {
@@ -330,7 +355,13 @@ export default {
         return;
       }
       this.clearArticleRenderTask();
+      if (this.readingHistoryTimer) {
+        window.clearTimeout(this.readingHistoryTimer);
+        this.readingHistoryTimer = null;
+      }
       this.articleContentChunks = [];
+      this.readingPositionRestored = false;
+      this.readingHistoryReady = false;
       //查询文章
       this.axios.get("/api/articles/" + articleId).then(({ data }) => {
         const article = data.data || {};
@@ -350,8 +381,184 @@ export default {
           newestArticleList: article.newestArticleList || [],
           articleContent: ""
         };
+        this.syncLocalBookmarkCount(this.article);
         this.renderArticleContent(article.articleContent || "");
-        });
+      });
+    },
+    syncLocalBookmarkCount(article) {
+      this.bookmarkCount = getArticleBookmarkCount(article.id);
+    },
+    getLocalBookmarkAnchorIdSet() {
+      return new Set(getArticleBookmarkAnchorIds(this.article.id));
+    },
+    toggleLocalBookmark() {
+      if (!this.article.id) {
+        return;
+      }
+      const position = this.getCurrentReadingPosition("手动书签");
+      const result = addArticleBookmark(this.article, position);
+      this.bookmarkCount = result.count;
+      this.$toast({
+        type: "success",
+        message: "已夹住当前位置"
+      });
+    },
+    recordCurrentReadingHistory(force) {
+      if (
+        !this.article.id ||
+        !this.$refs.article ||
+        (!this.readingHistoryReady && !force)
+      ) {
+        return;
+      }
+      saveReadingHistory(this.article, this.getCurrentReadingPosition("最近阅读"));
+    },
+    requestRecordReadingHistory() {
+      if (this.readingHistoryTimer) {
+        return;
+      }
+      this.readingHistoryTimer = window.setTimeout(() => {
+        this.readingHistoryTimer = null;
+        this.recordCurrentReadingHistory();
+      }, 700);
+    },
+    getCurrentReadingPosition(fallbackText) {
+      const articleElement = this.$refs.article;
+      const scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+      const maxScroll = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1
+      );
+      const basePosition = {
+        anchorId: "",
+        anchorText: fallbackText || "文章开头",
+        tocPath: [this.article.articleTitle || fallbackText || "文章开头"],
+        scrollY: scrollTop,
+        percent: Math.round((scrollTop / maxScroll) * 1000) / 10
+      };
+      if (!articleElement) {
+        return basePosition;
+      }
+      const readingLine = window.innerHeight * 0.35;
+      const headings = Array.from(
+        articleElement.querySelectorAll("h1, h2, h3, h4, h5")
+      );
+      let target = null;
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const rect = heading.getBoundingClientRect();
+        if (rect.height <= 0 || rect.top > readingLine) {
+          continue;
+        }
+        target = heading;
+      }
+      if (!target && headings.length) {
+        target = headings[0];
+      }
+      if (!target) {
+        return basePosition;
+      }
+      return this.getHeadingReadingPosition(target, fallbackText || "文章开头", scrollTop);
+    },
+    getHeadingReadingPosition(target, fallbackText, currentScrollTop) {
+      if (!target.id) {
+        target.id = "reading-heading-" + Date.now();
+      }
+      const scrollTop =
+        currentScrollTop != null
+          ? currentScrollTop
+          : Math.max(
+              target.getBoundingClientRect().top +
+                window.pageYOffset -
+                this.getArticleHeadingOffset(),
+              0
+            );
+      const maxScroll = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1
+      );
+      const headings = Array.from(
+        this.$refs.article
+          ? this.$refs.article.querySelectorAll("h1, h2, h3, h4, h5")
+          : []
+      );
+      const anchorText = (target.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 42);
+      return {
+        anchorId: target.id,
+        anchorText: anchorText || fallbackText || "文章开头",
+        tocPath: this.getHeadingTocPath(headings, target, anchorText),
+        scrollY: scrollTop,
+        percent: Math.round((scrollTop / maxScroll) * 1000) / 10
+      };
+    },
+    getHeadingTocPath(headings, target, fallbackText) {
+      const pathStack = [];
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const level = Number((heading.tagName || "").replace("H", ""));
+        const text = (heading.textContent || "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 42);
+        if (level >= 1 && level <= 5 && text) {
+          pathStack[level - 1] = text;
+          pathStack.length = level;
+        }
+        if (heading === target) {
+          break;
+        }
+      }
+      const tocPath = pathStack.filter(Boolean);
+      if (tocPath.length) {
+        return tocPath;
+      }
+      return [fallbackText || this.article.articleTitle || "文章开头"];
+    },
+    restoreReadingPosition() {
+      if (this.readingPositionRestored) {
+        return;
+      }
+      this.readingPositionRestored = true;
+      const positionId = this.$route.query.bookmark;
+      const position = getReadingPosition(this.article.id, positionId);
+      if (!position) {
+        this.readingHistoryReady = true;
+        this.recordCurrentReadingHistory();
+        return;
+      }
+      this.scrollToReadingPosition(position);
+      saveReadingHistory(this.article, {
+        ...position,
+        updatedAt: Date.now()
+      });
+      window.setTimeout(() => {
+        this.readingHistoryReady = true;
+      }, 260);
+    },
+    scrollToReadingPosition(position) {
+      this.$nextTick(() => {
+        window.setTimeout(() => {
+          const target = position.anchorId
+            ? document.getElementById(position.anchorId)
+            : null;
+          const targetTop = target
+            ? target.getBoundingClientRect().top +
+              window.pageYOffset -
+              this.getArticleHeadingOffset()
+            : Number(position.scrollY || 0);
+          window.scrollTo({
+            top: Math.max(targetTop, 0),
+            behavior: "auto"
+          });
+        }, 80);
+      });
     },
     renderArticleContent(content) {
       const token = ++this.articleRenderToken;
@@ -499,6 +706,7 @@ export default {
         }
       });
       this.markKeyChapterTocLinks(keyChapterHeadingIds);
+      this.mountTocBookmarkButtons();
       window.addEventListener("scroll", this.requestSyncTocActiveLink, {
         passive: true
       });
@@ -515,6 +723,7 @@ export default {
           that.previewImg(e.target.currentSrc);
         });
       }
+      this.restoreReadingPosition();
     },
     markKeyChapterHeadings(headingNodes) {
       const keyChapterList = this.getKeyChapterList();
@@ -603,6 +812,79 @@ export default {
           link.setAttribute("data-key-chapter-label", "重点");
         }
       }
+    },
+    mountTocBookmarkButtons() {
+      const toc = document.getElementById("toc");
+      if (!toc) {
+        return;
+      }
+      const bookmarkedAnchorIds = this.getLocalBookmarkAnchorIdSet();
+      const tocLinks = toc.querySelectorAll(".toc-link");
+      for (let i = 0; i < tocLinks.length; i++) {
+        const link = tocLinks[i];
+        if (link.parentElement && link.parentElement.classList.contains("toc-row")) {
+          continue;
+        }
+        const row = document.createElement("span");
+        row.className = "toc-row";
+        link.parentNode.insertBefore(row, link);
+        row.appendChild(link);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "toc-leaf-btn";
+        const targetId = decodeURIComponent((link.hash || "").slice(1));
+        if (targetId && bookmarkedAnchorIds.has(targetId)) {
+          button.classList.add("is-bookmarked");
+          button.setAttribute("aria-label", "这个目录已有书签，继续添加一片");
+          button.setAttribute("title", "已有书签，点击再夹一片");
+        } else {
+          button.setAttribute("aria-label", "夹住这个目录");
+          button.setAttribute("title", "夹住这个目录");
+        }
+        button.addEventListener("click", e => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.addTocBookmark(link);
+        });
+        row.appendChild(button);
+      }
+    },
+    addTocBookmark(link) {
+      if (!this.article.id || !link || !link.hash) {
+        return;
+      }
+      const targetId = decodeURIComponent(link.hash.slice(1));
+      const target = document.getElementById(targetId);
+      if (!target) {
+        return;
+      }
+      const result = addArticleBookmark(
+        this.article,
+        this.getHeadingReadingPosition(target, "手动书签")
+      );
+      this.bookmarkCount = result.count;
+      this.markTocBookmarkButton(targetId);
+      this.$toast({
+        type: "success",
+        message: "已夹住这个目录"
+      });
+    },
+    markTocBookmarkButton(anchorId) {
+      const toc = document.getElementById("toc");
+      if (!toc || !anchorId) {
+        return;
+      }
+      const link = toc.querySelector(
+        `.toc-link[href="#${String(anchorId).replace(/"/g, '\\"')}"]`
+      );
+      const row = link ? link.parentElement : null;
+      const button = row ? row.querySelector(".toc-leaf-btn") : null;
+      if (!button) {
+        return;
+      }
+      button.classList.add("is-bookmarked");
+      button.setAttribute("aria-label", "这个目录已有书签，继续添加一片");
+      button.setAttribute("title", "已有书签，点击再夹一片");
     },
     requestSyncArticleSidebarTop() {
       if (this.articleSidebarRaf) {
@@ -2081,6 +2363,11 @@ hr {
   list-style: none;
 }
 
+.article-detail-page #toc .toc-row {
+  position: relative;
+  display: block;
+}
+
 .article-detail-page #toc .toc-link {
   position: relative;
   display: block;
@@ -2093,6 +2380,62 @@ hr {
   color: #1f2937 !important;
   letter-spacing: 0;
   transition: color 0.08s ease, background 0.08s ease;
+}
+
+.article-detail-page #toc .toc-leaf-btn {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.article-detail-page #toc .toc-leaf-btn:before {
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  width: 12px;
+  height: 15px;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(135deg, #86efac, #22c55e);
+  content: "";
+  transform: rotate(-26deg);
+  box-shadow: 0 5px 10px rgba(34, 197, 94, 0.24);
+}
+
+.article-detail-page #toc .toc-leaf-btn.is-bookmarked:before {
+  background: linear-gradient(135deg, #10b981, #047857);
+  box-shadow: 0 5px 12px rgba(4, 120, 87, 0.34);
+}
+
+.article-detail-page #toc .toc-leaf-btn.is-bookmarked:after {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: #047857;
+  content: "";
+}
+
+.article-detail-page #toc .toc-leaf-btn:hover {
+  background: #dcfce7;
+  opacity: 1;
+}
+
+.article-detail-page #toc .toc-row:hover > .toc-leaf-btn {
+  opacity: 1;
 }
 
 .article-detail-page #toc .toc-link:hover {
@@ -2151,6 +2494,10 @@ hr {
   line-height: 1.45;
 }
 
+.article-detail-page #toc .toc-link {
+  padding-right: 38px !important;
+}
+
 .article-detail-page #toc .toc-link.is-active-link {
   background: rgba(209, 250, 229, 0.72);
   color: #065f46 !important;
@@ -2158,7 +2505,7 @@ hr {
 }
 
 .article-detail-page #toc .toc-link.is-key-chapter {
-  padding-right: 54px;
+  padding-right: 78px !important;
   background: rgba(255, 251, 235, 0.86);
   color: #92400e !important;
   font-weight: 800;
@@ -2166,7 +2513,7 @@ hr {
 
 .article-detail-page #toc .toc-link.is-key-chapter::after {
   position: absolute;
-  right: 8px;
+  right: 34px;
   top: 50%;
   display: inline-flex;
   align-items: center;

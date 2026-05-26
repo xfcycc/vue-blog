@@ -20,6 +20,13 @@ const routes = [
     }
   },
   {
+    path: "/reading",
+    component: () => import("../views/article/Reading.vue"),
+    meta: {
+      title: "书签"
+    }
+  },
+  {
     path: "/albums",
     component: () => import("../views/album/Album.vue"),
     meta: {

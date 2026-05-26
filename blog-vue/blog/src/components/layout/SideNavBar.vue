@@ -54,6 +54,11 @@
         </router-link>
       </div>
       <div class="menus-item">
+        <router-link to="/reading">
+          <i class="iconfont iconbiaoqian" /> 书叶
+        </router-link>
+      </div>
+      <div class="menus-item">
         <router-link to="/categories">
           <i class="iconfont iconfenlei" /> 星图
         </router-link>

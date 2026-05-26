@@ -78,6 +78,7 @@ export default {
       navItems: [
         { to: "/", label: "星港", icon: "iconzhuye", exact: true },
         { to: "/archives", label: "星历", icon: "iconguidang" },
+        { to: "/reading", label: "书叶", icon: "iconbiaoqian" },
         { to: "/categories", label: "星图", icon: "iconfenlei" },
         { to: "/tags", label: "星标", icon: "iconbiaoqian" },
         { to: "/links", label: "星链", icon: "iconlianjie" },
@@ -102,6 +103,12 @@ export default {
           label: "星历",
           tagline: "把时间折进一册航行日志",
           className: "nav-theme-archive"
+        },
+        {
+          match: path => path.startsWith("/reading"),
+          label: "书叶",
+          tagline: "夹住想反复回看的段落",
+          className: "nav-theme-reading"
         },
         {
           match: path => path.startsWith("/categories"),
@@ -499,6 +506,34 @@ ul {
   --active-border: rgba(167, 243, 208, 0.38);
   --active-shadow: rgba(16, 185, 129, 0.26);
   --active-liquid: rgba(52, 211, 153, 0.4);
+}
+.nav-theme-reading {
+  --glass-start: rgba(20, 83, 45, 0.22);
+  --glass-end: rgba(217, 164, 65, 0.16);
+  --fixed-glass-start: rgba(240, 253, 244, 0.76);
+  --fixed-glass-end: rgba(254, 243, 199, 0.62);
+  --nav-text: #f8fafc;
+  --fixed-nav-text: #13251c;
+  --active-text: #13251c;
+  --copy-start: #ffffff;
+  --copy-end: #bbf7d0;
+  --copy-glow: rgba(34, 197, 94, 0.34);
+  --fixed-copy-start: #2f855a;
+  --fixed-copy-end: #b7791f;
+  --text-glow: rgba(20, 83, 45, 0.32);
+  --brand-glow: rgba(34, 197, 94, 0.34);
+  --glass-border: rgba(255, 255, 255, 0.34);
+  --fixed-border: rgba(47, 133, 90, 0.18);
+  --glass-shadow: rgba(20, 83, 45, 0.16);
+  --fixed-shadow: rgba(47, 133, 90, 0.14);
+  --liquid-glow: rgba(134, 239, 172, 0.26);
+  --liquid-glow-soft: rgba(252, 211, 77, 0.2);
+  --liquid-shift: 2%;
+  --active-glass-start: rgba(255, 255, 255, 0.74);
+  --active-glass-end: rgba(220, 252, 231, 0.52);
+  --active-border: rgba(255, 255, 255, 0.72);
+  --active-shadow: rgba(47, 133, 90, 0.22);
+  --active-liquid: rgba(252, 211, 77, 0.34);
 }
 .nav-theme-category {
   --glass-start: rgba(37, 99, 235, 0.18);
