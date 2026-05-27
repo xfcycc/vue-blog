@@ -1,50 +1,79 @@
 <template>
   <div class="reading-page">
     <div class="reading-shell">
-      <main
-        v-if="articleTrees.length"
-        class="tree-scroll"
-      >
-        <section class="tree-stage">
-          <article
-            v-for="(article, index) of articleTrees"
-            :key="article.articleId"
-            class="article-tree-group"
-            :style="{ animationDelay: index * 80 + 'ms' }"
+      <main v-if="articleList.length" class="card-grid">
+        <article
+          v-for="(article, index) of articleList"
+          :key="article.articleId"
+          class="article-card"
+          :style="{ animationDelay: index * 50 + 'ms' }"
+        >
+          <router-link
+            :to="getArticleLink(article)"
+            class="card-title"
           >
-            <router-link
-              :to="getArticleLink(article)"
-              class="root-card"
-              :title="article.articleTitle"
-              :data-title="article.articleTitle"
-            >
-              <span class="root-kicker">
-                <v-icon size="15" color="#059669">mdi-book-open-page-variant</v-icon>
-                ARTICLE
-              </span>
-              <strong>{{ article.articleTitle }}</strong>
-            </router-link>
+            {{ article.articleTitle }}
+          </router-link>
 
-            <div class="root-connector"></div>
-
-            <div class="tree-root">
-              <tree-node
-                :node="article.rootNode"
-                :article-id="article.articleId"
-                @remove-bookmark="removeBookmark"
-              />
+          <div v-if="article.history" class="card-progress">
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                :style="{ '--target-width': Math.round(article.history.percent || 0) + '%' }"
+              ></div>
             </div>
-          </article>
-        </section>
+            <span class="progress-label">{{ Math.round(article.history.percent || 0) }}%</span>
+          </div>
+
+          <div v-if="article.history" class="record-section">
+            <div class="section-label">最近阅读</div>
+            <router-link :to="getHistoryLink(article)" class="record-item">
+              <i class="record-dot is-history"></i>
+              <span class="record-text">{{ article.history.anchorText || '文章开头' }}</span>
+              <span class="record-time">{{ formatDate(article.history.updatedAt) }}</span>
+            </router-link>
+          </div>
+
+          <div v-if="article.positions.length" class="record-section">
+            <div class="section-label">
+              书签
+              <span class="bookmark-count">{{ article.positions.length }}</span>
+            </div>
+            <div v-for="pos of article.positions" :key="pos.positionId" class="record-item-wrap">
+              <router-link :to="getBookmarkLink(article, pos)" class="record-item">
+                <i class="record-dot is-bookmark"></i>
+                <span class="record-text">{{ pos.anchorText || '书签' }}</span>
+              </router-link>
+              <button
+                class="remove-btn"
+                title="删除书签"
+                @click="handleRemoveBookmark(article.articleId, pos.positionId)"
+              >
+                <v-icon size="16">mdi-close</v-icon>
+              </button>
+            </div>
+          </div>
+        </article>
       </main>
 
       <section v-else class="reading-empty">
         <span class="empty-leaf" aria-hidden="true"></span>
         <h2>还没有书叶</h2>
-        <p>打开文章会生成黄色阅读叶，目录旁的小绿叶可以保存书签。</p>
+        <p>打开文章会自动记录阅读位置，目录旁的小绿叶可以保存书签</p>
         <router-link to="/archives">去归档里翻一篇</router-link>
       </section>
     </div>
+
+    <v-dialog v-model="confirmDialog.show" max-width="340">
+      <v-card class="confirm-card">
+        <v-card-title class="confirm-title">确认删除</v-card-title>
+        <v-card-text class="confirm-text">{{ confirmDialog.message }}</v-card-text>
+        <v-card-actions class="confirm-actions">
+          <v-btn text @click="confirmDialog.show = false">取消</v-btn>
+          <v-btn class="confirm-delete-btn" dark @click="confirmDialog.onConfirm">删除</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -55,13 +84,9 @@ import {
 } from "../../utils/readingStore";
 
 function formatDate(value) {
-  if (!value) {
-    return "刚刚";
-  }
+  if (!value) return "刚刚";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "刚刚";
-  }
+  if (Number.isNaN(date.getTime())) return "刚刚";
   return date.toLocaleString("zh-CN", {
     month: "2-digit",
     day: "2-digit",
@@ -70,582 +95,291 @@ function formatDate(value) {
   });
 }
 
-function normalizePath(path, fallback) {
-  const nextPath = Array.isArray(path)
-    ? path
-        .map(item => String(item || "").replace(/\s+/g, " ").trim())
-        .filter(Boolean)
-    : [];
-  return nextPath.length ? nextPath : [fallback || "文章开头"];
-}
-
-function createBranch(title) {
-  return {
-    title,
-    children: [],
-    branchMap: new Map()
-  };
-}
-
-function insertRecord(root, record) {
-  let current = root;
-  record.tocPath.forEach(title => {
-    if (!current.branchMap.has(title)) {
-      const child = createBranch(title);
-      current.branchMap.set(title, child);
-      current.children.push(child);
-    }
-    current = current.branchMap.get(title);
-  });
-  current.children.push({
-    title: record.anchorText || record.tocPath[record.tocPath.length - 1],
-    type: record.type,
-    positionId: record.positionId,
-    progress: Math.round(Number(record.percent || 0)),
-    date: formatDate(record.updatedAt || record.createdAt)
-  });
-}
-
-function stripBranchMap(node) {
-  return {
-    ...node,
-    branchMap: undefined,
-    children: (node.children || []).map(child =>
-      child.children ? stripBranchMap(child) : child
-    )
-  };
-}
-
-const TreeNode = {
-  name: "TreeNode",
-  props: {
-    node: {
-      type: Object,
-      required: true
-    },
-    articleId: {
-      type: Number,
-      required: true
-    }
-  },
-  methods: {
-    getLeafLink(node) {
-      return {
-        path: "/articles/" + this.articleId,
-        query: {
-          bookmark: node.positionId
-        }
-      };
-    },
-    emitRemove(node, event) {
-      event.preventDefault();
-      event.stopPropagation();
-      this.$emit("remove-bookmark", this.articleId, node.positionId);
-    }
-  },
-  render(h) {
-    const hasChildren = this.node.children && this.node.children.length > 0;
-    const isLeaf = this.node.type === "history" || this.node.type === "bookmark";
-    const cardChildren = [
-      h("span", { class: "tree-node-title" }, this.node.title)
-    ];
-
-    if (isLeaf) {
-      cardChildren.push(
-        h("span", { class: "tree-leaf-meta" }, [
-          h("i", { class: ["tree-leaf-icon", "is-" + this.node.type] }),
-          h("strong", String(this.node.progress || 0) + "%"),
-          h("small", this.node.date)
-        ])
-      );
-    }
-
-    let nodeCard = h(
-      isLeaf ? "router-link" : "div",
-      {
-        class: ["tree-node-card", isLeaf ? "is-leaf is-" + this.node.type : "is-branch"],
-        attrs: {
-          "data-title": this.node.title,
-          title: isLeaf ? "跳到：" + this.node.title : this.node.title
-        },
-        props: isLeaf ? { to: this.getLeafLink(this.node) } : undefined
-      },
-      cardChildren
-    );
-
-    if (isLeaf && this.node.type === "bookmark") {
-      nodeCard = h(
-        "div",
-        { class: "tree-node-card-wrap" },
-        [
-          nodeCard,
-          h(
-            "button",
-            {
-              class: "tree-leaf-remove",
-              attrs: {
-                type: "button",
-                title: "摘下记录",
-                "aria-label": "摘下书签"
-              },
-              on: {
-                click: event => this.emitRemove(this.node, event)
-              }
-            },
-            "×"
-          )
-        ]
-      );
-    }
-
-    const children = [nodeCard];
-    if (hasChildren) {
-      children.push(
-        h("div", { class: "tree-children-wrap" }, [
-          h("div", { class: "tree-horizontal-line" }),
-          h(
-            "div",
-            { class: "tree-children" },
-            this.node.children.map((child, index) => {
-              const count = this.node.children.length;
-              return h("div", {
-                class: [
-                  "tree-child",
-                  index === 0 ? "is-first" : "",
-                  index === count - 1 ? "is-last" : "",
-                  count === 1 ? "is-only" : ""
-                ],
-                key: index,
-                style: {
-                  animationDelay: index * 35 + "ms"
-                }
-              }, [
-                h(TreeNode, {
-                  props: {
-                    node: child,
-                    articleId: this.articleId
-                  },
-                  on: {
-                    "remove-bookmark": (articleId, positionId) =>
-                      this.$emit("remove-bookmark", articleId, positionId)
-                  }
-                })
-              ]);
-            })
-          )
-        ])
-      );
-    }
-    return h("div", { class: "tree-node" }, children);
-  }
-};
-
 export default {
-  components: {
-    TreeNode
-  },
-  mounted() {
-    this.refreshReadingTree();
-  },
-  data: function() {
+  data() {
     return {
-      treeList: []
+      treeList: [],
+      confirmDialog: {
+        show: false,
+        message: "",
+        onConfirm: null
+      }
     };
   },
+  mounted() {
+    document.body.classList.add("reading-page-active");
+    this.treeList = listReadingTree();
+  },
+  beforeDestroy() {
+    document.body.classList.remove("reading-page-active");
+  },
   methods: {
-    refreshReadingTree() {
-      this.treeList = listReadingTree();
-    },
+    formatDate,
     getArticleLink(article) {
-      const link = {
-        path: "/articles/" + article.articleId
-      };
+      const link = { path: "/articles/" + article.articleId };
       if (article.history && article.history.positionId) {
-        link.query = {
-          bookmark: article.history.positionId
-        };
+        link.query = { bookmark: article.history.positionId };
       }
       return link;
     },
-    removeBookmark(articleId, positionId) {
-      this.treeList = removeArticleBookmark(articleId, positionId);
+    getHistoryLink(article) {
+      return {
+        path: "/articles/" + article.articleId,
+        query: { bookmark: article.history.positionId }
+      };
     },
-    createArticleTree(article) {
-      const root = createBranch(article.articleTitle);
-      if (article.history) {
-        insertRecord(root, {
-          ...article.history,
-          type: "history",
-          tocPath: normalizePath(article.history.tocPath, article.history.anchorText)
-        });
-      }
-      article.positions.forEach(position => {
-        insertRecord(root, {
-          ...position,
-          type: "bookmark",
-          tocPath: normalizePath(position.tocPath, position.anchorText)
-        });
-      });
-      return stripBranchMap(root);
+    getBookmarkLink(article, pos) {
+      return {
+        path: "/articles/" + article.articleId,
+        query: { bookmark: pos.positionId }
+      };
+    },
+    handleRemoveBookmark(articleId, positionId) {
+      this.confirmDialog = {
+        show: true,
+        message: "删除后无法恢复此书签，确定继续？",
+        onConfirm: () => {
+          this.treeList = removeArticleBookmark(articleId, positionId);
+          this.confirmDialog.show = false;
+        }
+      };
     }
   },
   computed: {
-    articleTrees() {
-      return this.treeList.map(article => ({
-        ...article,
-        rootNode: this.createArticleTree(article)
-      }));
+    articleList() {
+      return this.treeList;
     }
   }
 };
 </script>
 
-<style>
+<style scoped>
 .reading-page {
-  position: relative;
   min-height: 100vh;
-  overflow-x: hidden;
-  padding: 92px 24px 64px;
-  background:
-    linear-gradient(180deg, rgba(247, 251, 252, 0.58), rgba(248, 250, 252, 0.7)),
-    url("../../assets/images/link-galaxy/space-bg.png") center top / cover fixed no-repeat;
-}
-.reading-page:before {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 14% 12%, rgba(112, 193, 179, 0.14), transparent 32%),
-    radial-gradient(circle at 78% 42%, rgba(255, 255, 255, 0.36), transparent 34%),
-    linear-gradient(90deg, rgba(248, 250, 252, 0.22), rgba(248, 250, 252, 0.46));
-  content: "";
-}
-.reading-page,
-.reading-page * {
-  box-sizing: border-box;
+  padding: 92px 24px 180px;
+  background-image: url("https://pic.caiguoyu.cn/typora/202605271022662.png");
+  background-position: center 30%;
+  background-size: cover;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 .reading-shell {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: none;
+  max-width: 1080px;
   margin: 0 auto;
 }
-.tree-leaf-icon {
-  display: inline-block;
-  width: 14px;
-  height: 16px;
-  border-radius: 80% 0 80% 0;
-  transform: rotate(-26deg);
-  transform-origin: 70% 70%;
-  animation: readingLeafFloat 2.8s ease-in-out infinite;
+
+/* 三列网格 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
-.is-history.tree-leaf-icon {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.2);
-}
-.is-bookmark.tree-leaf-icon {
-  background: linear-gradient(135deg, #86efac, #22c55e);
-  box-shadow: 0 3px 10px rgba(34, 197, 94, 0.22);
-}
-.tree-scroll {
-  overflow: visible;
-  padding: 72px clamp(28px, 5vw, 96px) 72px;
-}
-.tree-stage {
-  width: 100%;
-  min-width: 0;
-  padding: 2px 0 0;
-}
-.article-tree-group {
+.article-card {
   display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 34px;
-  opacity: 0;
-  transform: translateY(12px);
-  animation: readingTreeEnter 0.52s ease forwards;
-}
-.root-card {
-  position: relative;
-  z-index: 20;
-  display: flex;
-  flex: 0 0 clamp(210px, 12vw, 260px);
   flex-direction: column;
-  justify-content: center;
-  width: clamp(210px, 12vw, 260px);
-  height: 108px;
-  overflow: visible;
-  padding: 18px 20px;
-  border: 1px solid rgba(207, 229, 231, 0.92);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.86);
-  color: #26323f !important;
-  box-shadow: 0 10px 28px rgba(31, 41, 55, 0.05);
-  backdrop-filter: blur(12px);
-  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 12px rgba(31, 41, 55, 0.04);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: cardEnter 0.4s ease forwards;
+  transition: box-shadow 0.22s, transform 0.22s, border-color 0.22s;
 }
-.root-card:after {
-  position: absolute;
-  right: -36px;
-  bottom: -42px;
-  width: 108px;
-  height: 108px;
-  border-radius: 50%;
-  background: rgba(112, 193, 179, 0.12);
-  content: "";
-  transition: transform 0.35s ease;
-}
-.root-card:hover {
+.article-card:hover {
   border-color: rgba(112, 193, 179, 0.45);
-  box-shadow: 0 16px 34px rgba(31, 41, 55, 0.08);
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
   transform: translateY(-2px);
 }
-.root-card:active {
-  transform: translateY(0) scale(0.995);
-}
-.root-card:hover:before,
-.tree-node-card:hover:before {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  z-index: 40;
-  max-width: 320px;
-  padding: 8px 10px;
-  border: 1px solid rgba(203, 213, 225, 0.9);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
-  color: #334155;
-  content: attr(data-title);
-  font-size: 12px;
+
+/* 标题 */
+.card-title {
+  display: block;
+  color: #1e293b;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.55;
-  overflow-wrap: anywhere;
-  pointer-events: none;
-  transform: translateX(-50%);
-  white-space: normal;
-}
-.root-card:hover:after {
-  transform: scale(1.18);
-}
-.root-kicker {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 10px;
-  color: rgba(35, 132, 118, 0.9);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-.root-card strong {
-  position: relative;
-  z-index: 1;
+  line-height: 1.5;
+  text-decoration: none;
   display: -webkit-box;
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.38;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s;
 }
-.root-connector,
-.tree-horizontal-line {
-  flex: 1 1 clamp(18px, 2vw, 54px);
-  width: auto;
-  min-width: 18px;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(112, 193, 179, 0.35), rgba(112, 193, 179, 0.78));
-  transform-origin: left center;
-  animation: readingLineGrow 0.46s ease both;
+.card-title:hover {
+  color: #059669;
 }
-.tree-root {
+
+/* 进度条 */
+.card-progress {
   display: flex;
-  align-items: center;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 14px 0;
-}
-.tree-node {
-  display: flex;
-  align-items: center;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.tree-node-card,
-.tree-node-card-wrap {
-  position: relative;
-  z-index: 10;
-  flex: 0 0 auto;
-  min-width: 0;
-}
-.tree-node-card {
-  display: inline-flex;
   align-items: center;
   gap: 8px;
-  width: clamp(124px, 9vw, 178px);
-  max-width: 100%;
-  min-height: 42px;
-  padding: 10px 13px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  color: #334155 !important;
-  box-shadow: 0 8px 18px rgba(31, 41, 55, 0.045);
-  backdrop-filter: blur(10px);
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
-.tree-node-card:hover {
-  border-color: rgba(112, 193, 179, 0.52);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 13px 24px rgba(31, 41, 55, 0.075);
-  transform: translateY(-2px);
-}
-.tree-node-card.is-leaf:active {
-  transform: translateY(0) scale(0.995);
-}
-.tree-node-card.is-leaf {
-  width: clamp(138px, 10vw, 184px);
-}
-.tree-node-card.is-history:hover {
-  border-color: rgba(245, 158, 11, 0.38);
-}
-.tree-node-card.is-bookmark:hover {
-  border-color: rgba(34, 197, 94, 0.36);
-}
-.tree-node-title {
-  display: block;
-  min-width: 0;
+.progress-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(226, 232, 240, 0.7);
   overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  width: var(--target-width);
+  animation: progressGrow 0.8s ease-out forwards;
+}
+.progress-label {
+  flex-shrink: 0;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* 记录区 */
+.record-section {
+  padding-top: 6px;
+}
+.record-section + .record-section {
+  border-top: 1px dashed rgba(226, 232, 240, 0.6);
+  padding-top: 10px;
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.bookmark-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #86efac, #22c55e);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+.record-item-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.record-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+.record-item:hover {
+  background: rgba(112, 193, 179, 0.08);
+}
+.record-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 10px;
+  border-radius: 80% 0 80% 0;
+  transform: rotate(-26deg);
+}
+.record-dot.is-history {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+.record-dot.is-bookmark {
+  background: linear-gradient(135deg, #86efac, #22c55e);
+}
+.record-text {
+  flex: 1;
+  min-width: 0;
   color: #334155;
   font-size: 13px;
-  font-weight: 700;
-  line-height: 1.35;
+  font-weight: 600;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tree-leaf-meta {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 7px;
-  margin-left: 6px;
-  padding-left: 8px;
-  border-left: 1px solid rgba(226, 232, 240, 0.9);
-}
-.tree-leaf-meta strong {
-  color: #334155;
-  font-size: 12px;
-  font-weight: 800;
-}
-.tree-leaf-meta small {
-  display: none;
+.record-time {
+  flex-shrink: 0;
   color: #94a3b8;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
-.tree-leaf-remove {
-  position: absolute;
-  top: 50%;
-  right: 4px;
-  z-index: 12;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #f1f5f9;
-  border-radius: 999px;
-  background: #fff;
-  color: #94a3b8;
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 1;
+
+/* 删除按钮 - 危险风格 */
+.remove-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #cbd5e1;
   cursor: pointer;
   opacity: 0;
-  transform: translate(12px, -50%);
-  transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease;
+  transition: opacity 0.15s, color 0.15s, background 0.15s, transform 0.15s;
 }
-.tree-node-card-wrap .tree-node-card {
-  padding-right: 34px;
-}
-.tree-node-card-wrap:hover .tree-leaf-remove {
+.record-item-wrap:hover .remove-btn {
   opacity: 1;
-  transform: translate(0, -50%);
 }
-.tree-leaf-remove:hover {
-  border-color: #fecaca;
+.remove-btn:hover {
   background: #fef2f2;
-  color: #ef4444;
+  color: #dc2626;
+  transform: scale(1.15);
+  animation: dangerPulse 0.6s ease-in-out;
 }
-.tree-children-wrap {
-  display: flex;
-  align-items: center;
-  flex: 1 1 auto;
-  min-width: 0;
+
+/* 确认弹窗 */
+.confirm-card {
+  border-radius: 12px !important;
 }
-.tree-children {
-  position: relative;
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 0;
-  padding: 2px 0;
+.confirm-title {
+  color: #991b1b !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
 }
-.tree-child {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  padding: 10px 0 10px clamp(18px, 2vw, 54px);
-  opacity: 0;
-  transform: translateX(-8px);
-  animation: readingBranchEnter 0.42s ease forwards;
+.confirm-text {
+  color: #64748b !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
 }
-.tree-child:before,
-.tree-child:after {
-  position: absolute;
-  left: 0;
-  background: rgba(112, 193, 179, 0.58);
-  content: "";
+.confirm-actions {
+  padding: 8px 16px 16px !important;
+  justify-content: flex-end !important;
+  gap: 8px;
 }
-.tree-child:before {
-  width: 2px;
+.confirm-delete-btn {
+  background: #dc2626 !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
 }
-.tree-child:after {
-  top: calc(50% - 1px);
-  width: clamp(18px, 2vw, 54px);
-  height: 2px;
-  border-radius: 999px;
-  transform: scaleX(0);
-  transform-origin: left center;
-  animation: readingLineGrow 0.38s ease forwards;
+.confirm-delete-btn:hover {
+  background: #b91c1c !important;
 }
-.tree-child.is-first:before {
-  top: 50%;
-  bottom: 0;
-}
-.tree-child.is-last:before {
-  top: 0;
-  bottom: 50%;
-}
-.tree-child:not(.is-first):not(.is-last):before {
-  top: 0;
-  bottom: 0;
-}
-.tree-child.is-only:before {
-  display: none;
-}
-.article-tree-group:hover .root-connector,
-.tree-node:hover > .tree-children-wrap > .tree-horizontal-line,
-.tree-child:hover:before,
-.tree-child:hover:after {
-  background: rgba(73, 167, 151, 0.86);
-}
+
+/* 空状态 */
 .reading-empty {
   display: flex;
   flex-direction: column;
@@ -653,7 +387,7 @@ export default {
   justify-content: center;
   min-height: 320px;
   text-align: center;
-  animation: readingTreeEnter 0.42s ease both;
+  animation: cardEnter 0.4s ease both;
 }
 .empty-leaf {
   width: 64px;
@@ -681,166 +415,86 @@ export default {
   padding: 0 16px;
   border-radius: 8px;
   background: #31425f;
-  color: #fff !important;
+  color: #fff;
   font-weight: 800;
-  transition: background 0.2s ease, transform 0.2s ease;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
 }
 .reading-empty a:hover {
   background: #253248;
   transform: translateY(-1px);
 }
-@keyframes readingTreeEnter {
+
+@keyframes cardEnter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-@keyframes readingBranchEnter {
+@keyframes progressGrow {
   from {
-    opacity: 0;
-    transform: translateX(-8px);
+    width: 0;
   }
   to {
-    opacity: 1;
-    transform: translateX(0);
+    width: var(--target-width);
   }
 }
-@keyframes readingLineGrow {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-@keyframes readingLeafFloat {
-  0%,
-  100% {
-    transform: rotate(-26deg) translateY(0);
+@keyframes dangerPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
   }
   50% {
-    transform: rotate(-22deg) translateY(-1px);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
   }
 }
-@media (max-width: 759px) {
+
+@media (max-width: 900px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
   .reading-page {
-    padding: 82px 18px 44px;
-    background-attachment: scroll;
+    padding: 76px 16px 150px;
   }
-  .tree-scroll {
-    overflow: visible;
-    padding: 54px 0 36px;
-    cursor: default;
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
-  .tree-stage {
-    min-width: 0;
-    width: 100%;
-    padding: 0;
+  .record-time {
+    display: none;
   }
-  .article-tree-group {
-    align-items: stretch;
-    flex-direction: column;
-    margin-bottom: 30px;
-  }
-  .root-card {
-    width: 100%;
-    height: auto;
-    min-height: 104px;
-    flex-basis: auto;
-  }
-  .root-card strong {
-    -webkit-line-clamp: 2;
-  }
-  .root-connector,
-  .tree-horizontal-line {
-    width: 2px;
-    height: 26px;
-    flex: 0 0 26px;
-    margin-left: 26px;
-    background: linear-gradient(180deg, rgba(112, 193, 179, 0.28), rgba(112, 193, 179, 0.78));
-    animation-name: readingVerticalLineGrow;
-    transform-origin: center top;
-  }
-  .tree-root {
-    align-items: stretch;
-    padding: 0;
-  }
-  .tree-node {
-    align-items: stretch;
-    flex-direction: column;
-    width: 100%;
-  }
-  .tree-node-card,
-  .tree-node-card-wrap {
-    width: 100%;
-  }
-  .tree-node-card {
-    align-items: flex-start;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  .tree-node-title {
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  .tree-leaf-meta {
-    flex: 0 0 auto;
-    margin-left: 0;
-  }
-  .tree-leaf-meta small {
-    display: inline;
-  }
-  .tree-leaf-remove {
+  .remove-btn {
     opacity: 1;
-    transform: translate(0, -50%);
-  }
-  .tree-children-wrap {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .tree-children {
-    padding: 0;
-  }
-  .tree-child {
-    display: block;
-    padding: 0 0 12px 28px;
-  }
-  .tree-child:before {
-    left: 12px;
-  }
-  .tree-child:after {
-    top: 21px;
-    left: 12px;
-    width: 16px;
-  }
-  .tree-child.is-first:before {
-    top: 0;
-    bottom: 0;
-  }
-  .tree-child.is-last:before {
-    top: 0;
-    bottom: calc(100% - 22px);
-  }
-  .tree-child.is-only:before {
-    display: block;
-    top: 0;
-    bottom: calc(100% - 22px);
-  }
-  .tree-child:last-child {
-    padding-bottom: 0;
   }
 }
-@keyframes readingVerticalLineGrow {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
-  }
+</style>
+
+<style>
+body.reading-page-active {
+  background: url("https://pic.caiguoyu.cn/typora/202605271022662.png") center 30% / cover fixed no-repeat;
+}
+body.reading-page-active .theme--light.v-application {
+  background: transparent;
+}
+body.reading-page-active .nav-theme-reading.nav,
+body.reading-page-active .nav-theme-reading.nav-fixed {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+body.reading-page-active .theme--light.v-footer {
+  background: transparent !important;
+}
+body.reading-page-active .footer-wrap {
+  padding: 24px 20px;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: 0 2px 10px rgba(15, 23, 42, 0.58);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: none;
 }
 </style>

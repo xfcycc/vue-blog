@@ -400,7 +400,7 @@ export default {
       this.bookmarkCount = result.count;
       this.$toast({
         type: "success",
-        message: "已夹住当前位置"
+        message: "已添加到书叶"
       });
     },
     recordCurrentReadingHistory(force) {
@@ -835,11 +835,11 @@ export default {
         const targetId = decodeURIComponent((link.hash || "").slice(1));
         if (targetId && bookmarkedAnchorIds.has(targetId)) {
           button.classList.add("is-bookmarked");
-          button.setAttribute("aria-label", "这个目录已有书签，继续添加一片");
-          button.setAttribute("title", "已有书签，点击再夹一片");
+          button.setAttribute("aria-label", "此目录已有书签，点击继续保存");
+          button.setAttribute("title", "已有书签，点击继续保存");
         } else {
-          button.setAttribute("aria-label", "夹住这个目录");
-          button.setAttribute("title", "夹住这个目录");
+          button.setAttribute("aria-label", "保存此目录为书签");
+          button.setAttribute("title", "保存此目录为书签");
         }
         button.addEventListener("click", e => {
           e.preventDefault();
@@ -866,7 +866,7 @@ export default {
       this.markTocBookmarkButton(targetId);
       this.$toast({
         type: "success",
-        message: "已夹住这个目录"
+        message: "已添加到书叶"
       });
     },
     markTocBookmarkButton(anchorId) {
@@ -883,8 +883,8 @@ export default {
         return;
       }
       button.classList.add("is-bookmarked");
-      button.setAttribute("aria-label", "这个目录已有书签，继续添加一片");
-      button.setAttribute("title", "已有书签，点击再夹一片");
+      button.setAttribute("aria-label", "此目录已有书签，点击继续保存");
+      button.setAttribute("title", "已有书签，点击继续保存");
     },
     requestSyncArticleSidebarTop() {
       if (this.articleSidebarRaf) {
@@ -2395,6 +2395,7 @@ hr {
   background: transparent;
   cursor: pointer;
   opacity: 0;
+  pointer-events: none;
   transform: translateY(-50%);
   transition: opacity 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
@@ -2417,6 +2418,11 @@ hr {
   box-shadow: 0 5px 12px rgba(4, 120, 87, 0.34);
 }
 
+.article-detail-page #toc .toc-leaf-btn.is-bookmarked {
+  opacity: 0.88;
+  pointer-events: auto;
+}
+
 .article-detail-page #toc .toc-leaf-btn.is-bookmarked:after {
   position: absolute;
   right: 4px;
@@ -2436,6 +2442,11 @@ hr {
 
 .article-detail-page #toc .toc-row:hover > .toc-leaf-btn {
   opacity: 1;
+  pointer-events: auto;
+}
+
+.article-detail-page #toc .toc-row:hover > .toc-leaf-btn.is-bookmarked {
+  background: #dcfce7;
 }
 
 .article-detail-page #toc .toc-link:hover {
