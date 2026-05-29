@@ -78,7 +78,7 @@ export default {
       navItems: [
         { to: "/", label: "星港", icon: "iconzhuye", exact: true },
         { to: "/archives", label: "星历", icon: "iconguidang" },
-        { to: "/reading", label: "书叶", icon: "iconbiaoqian" },
+        { to: "/reading", label: "星签", icon: "iconbiaoqian" },
         { to: "/categories", label: "星图", icon: "iconfenlei" },
         { to: "/tags", label: "星标", icon: "iconbiaoqian" },
         { to: "/links", label: "星链", icon: "iconlianjie" },
@@ -106,7 +106,7 @@ export default {
         },
         {
           match: path => path.startsWith("/reading"),
-          label: "书叶",
+          label: "星签",
           tagline: "夹住想反复回看的段落",
           className: "nav-theme-reading"
         },

@@ -58,7 +58,7 @@
 
       <section v-else class="reading-empty">
         <span class="empty-leaf" aria-hidden="true"></span>
-        <h2>还没有书叶</h2>
+        <h2>还没有星签</h2>
         <p>打开文章会自动记录阅读位置，目录旁的小绿叶可以保存书签</p>
         <router-link to="/archives">去归档里翻一篇</router-link>
       </section>
@@ -155,8 +155,13 @@ export default {
 
 <style scoped>
 .reading-page {
-  min-height: 100vh;
-  padding: 92px 24px 180px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 92px 24px 0;
+  box-sizing: border-box;
   background-image: url("https://pic.caiguoyu.cn/typora/202605271022662.png");
   background-position: center 30%;
   background-size: cover;
@@ -166,6 +171,14 @@ export default {
 .reading-shell {
   max-width: 1080px;
   margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 180px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.reading-shell::-webkit-scrollbar {
+  display: none;
 }
 
 /* 三列网格 */
@@ -459,7 +472,10 @@ export default {
 }
 @media (max-width: 600px) {
   .reading-page {
-    padding: 76px 16px 150px;
+    padding: 76px 16px 0;
+  }
+  .reading-shell {
+    padding-bottom: 150px;
   }
   .card-grid {
     grid-template-columns: 1fr;
