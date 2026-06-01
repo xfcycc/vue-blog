@@ -268,6 +268,28 @@ export function removeArticleBookmark(articleId, positionId) {
   return writeTree(tree);
 }
 
+export function removeArticleBookmarkByAnchorId(articleId, anchorId) {
+  const id = Number(articleId);
+  const targetAnchorId = String(anchorId || "");
+  const tree = readTree()
+    .map(node => {
+      if (node.articleId !== id) {
+        return node;
+      }
+      return {
+        ...node,
+        positions: node.positions.filter(item => item.anchorId !== targetAnchorId)
+      };
+    })
+    .filter(node => node.history || node.positions.length);
+  const nextTree = writeTree(tree);
+  const nextNode = nextTree.find(node => node.articleId === id);
+  return {
+    tree: nextTree,
+    count: nextNode ? nextNode.positions.length : 0
+  };
+}
+
 export function clearReadingTree() {
   return writeTree([]);
 }

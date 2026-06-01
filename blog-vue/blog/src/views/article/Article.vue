@@ -249,6 +249,7 @@ import {
   getArticleBookmarkAnchorIds,
   getArticleBookmarkCount,
   getReadingPosition,
+  removeArticleBookmarkByAnchorId,
   saveReadingHistory
 } from "../../utils/readingStore";
 export default {
@@ -400,7 +401,7 @@ export default {
       this.bookmarkCount = result.count;
       this.$toast({
         type: "success",
-        message: "已添加到书叶"
+        message: "已添加到星签"
       });
     },
     recordCurrentReadingHistory(force) {
@@ -835,25 +836,36 @@ export default {
         const targetId = decodeURIComponent((link.hash || "").slice(1));
         if (targetId && bookmarkedAnchorIds.has(targetId)) {
           button.classList.add("is-bookmarked");
-          button.setAttribute("aria-label", "此目录已有书签，点击继续保存");
-          button.setAttribute("title", "已有书签，点击继续保存");
+          button.setAttribute("aria-label", "此目录已有星签，点击取消");
+          button.setAttribute("title", "已有星签，点击取消");
         } else {
-          button.setAttribute("aria-label", "保存此目录为书签");
-          button.setAttribute("title", "保存此目录为书签");
+          button.setAttribute("aria-label", "保存此目录为星签");
+          button.setAttribute("title", "保存此目录为星签");
         }
         button.addEventListener("click", e => {
           e.preventDefault();
           e.stopPropagation();
-          this.addTocBookmark(link);
+          this.toggleTocBookmark(link);
         });
         row.appendChild(button);
       }
     },
-    addTocBookmark(link) {
+    toggleTocBookmark(link) {
       if (!this.article.id || !link || !link.hash) {
         return;
       }
       const targetId = decodeURIComponent(link.hash.slice(1));
+      const bookmarkedAnchorIds = this.getLocalBookmarkAnchorIdSet();
+      if (bookmarkedAnchorIds.has(targetId)) {
+        const result = removeArticleBookmarkByAnchorId(this.article.id, targetId);
+        this.bookmarkCount = result.count;
+        this.syncTocBookmarkButton(targetId, false);
+        this.$toast({
+          type: "success",
+          message: "已取消星签"
+        });
+        return;
+      }
       const target = document.getElementById(targetId);
       if (!target) {
         return;
@@ -863,28 +875,40 @@ export default {
         this.getHeadingReadingPosition(target, "手动书签")
       );
       this.bookmarkCount = result.count;
-      this.markTocBookmarkButton(targetId);
+      this.syncTocBookmarkButton(targetId, true);
       this.$toast({
         type: "success",
-        message: "已添加到书叶"
+        message: "已添加到星签"
       });
     },
-    markTocBookmarkButton(anchorId) {
+    syncTocBookmarkButton(anchorId, active) {
       const toc = document.getElementById("toc");
       if (!toc || !anchorId) {
         return;
       }
-      const link = toc.querySelector(
-        `.toc-link[href="#${String(anchorId).replace(/"/g, '\\"')}"]`
-      );
-      const row = link ? link.parentElement : null;
-      const button = row ? row.querySelector(".toc-leaf-btn") : null;
+      const tocLinks = toc.querySelectorAll(".toc-link");
+      let button = null;
+      for (let i = 0; i < tocLinks.length; i++) {
+        const link = tocLinks[i];
+        const targetId = decodeURIComponent((link.hash || "").slice(1));
+        if (targetId === anchorId) {
+          const row = link.parentElement;
+          button = row ? row.querySelector(".toc-leaf-btn") : null;
+          break;
+        }
+      }
       if (!button) {
         return;
       }
-      button.classList.add("is-bookmarked");
-      button.setAttribute("aria-label", "此目录已有书签，点击继续保存");
-      button.setAttribute("title", "已有书签，点击继续保存");
+      if (active) {
+        button.classList.add("is-bookmarked");
+        button.setAttribute("aria-label", "此目录已有星签，点击取消");
+        button.setAttribute("title", "已有星签，点击取消");
+      } else {
+        button.classList.remove("is-bookmarked");
+        button.setAttribute("aria-label", "保存此目录为星签");
+        button.setAttribute("title", "保存此目录为星签");
+      }
     },
     requestSyncArticleSidebarTop() {
       if (this.articleSidebarRaf) {
