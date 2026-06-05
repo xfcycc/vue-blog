@@ -1436,9 +1436,9 @@ export default {
 .article-content {
   max-width: none;
   margin: 0 auto;
-  color: #263238;
+  color: #1e293b;
   font-size: 17px;
-  line-height: 2.08;
+  line-height: 1.85;
 }
 .article-content-chunk {
   display: contents;
@@ -2200,7 +2200,8 @@ hr {
 .article-detail-page .article-content.markdown-body h1 {
   margin: 48px 0 24px;
   padding-bottom: 14px;
-  border-bottom: 2px solid #bbf7d0;
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, #22c55e, transparent) 1;
   font-size: 2em;
   font-weight: 900;
   line-height: 1.25;
@@ -2210,9 +2211,8 @@ hr {
   position: relative;
   margin: 44px 0 20px;
   padding: 12px 0 12px 28px;
-  border-bottom: 1px solid #dcfce7;
   font-size: 1.58em;
-  font-weight: 850;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -2220,7 +2220,7 @@ hr {
   position: absolute;
   left: 0;
   top: 50%;
-  width: 5px;
+  width: 4px;
   height: calc(100% - 24px);
   min-height: 1.05em;
   margin: 0;
@@ -2233,10 +2233,9 @@ hr {
 .article-detail-page .article-content.markdown-body h3 {
   margin: 36px 0 16px;
   padding: 10px 0 10px 12px;
-  border-left: 4px solid #22c55e;
-  border-bottom: 1px solid #dcfce7;
+  border-left: 3px solid #22c55e;
   font-size: 1.28em;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.35;
 }
 
@@ -2284,29 +2283,16 @@ hr {
 .article-detail-page .article-content.markdown-body h3.is-key-chapter::after,
 .article-detail-page .article-content.markdown-body h4.is-key-chapter::after,
 .article-detail-page .article-content.markdown-body h5.is-key-chapter::after {
-  display: inline-flex;
-  align-items: center;
-  height: 22px;
-  margin-left: 10px;
-  padding: 0 8px;
-  border: 1px solid rgba(245, 158, 11, 0.34);
-  border-radius: 999px;
-  background: #fff7ed;
-  color: #b45309;
-  content: attr(data-key-chapter-label);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1;
-  vertical-align: 0.14em;
+  display: none;
 }
 
 .article-detail-page .article-content.markdown-body h4 {
   margin: 30px 0 12px;
   padding: 6px 0 6px 12px;
-  border-left: 3px solid #86efac;
+  border-left: 2px solid #a7f3d0;
   color: #166534;
   font-size: 1.08em;
-  font-weight: 760;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -2314,14 +2300,14 @@ hr {
   margin: 24px 0 10px;
   color: #15803d;
   font-size: 0.98em;
-  font-weight: 720;
+  font-weight: 600;
   line-height: 1.45;
 }
 
 .article-detail-page .article-content.markdown-body h5::before {
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   margin-right: 8px;
   border-radius: 999px;
   background: #22c55e;
@@ -2339,7 +2325,7 @@ hr {
 
 .article-detail-page .article-content.markdown-body p {
   margin-bottom: 26px !important;
-  line-height: 2.08 !important;
+  line-height: 1.85 !important;
 }
 
 .article-detail-page .article-content.markdown-body ul,
@@ -2350,17 +2336,178 @@ hr {
 
 .article-detail-page .article-content.markdown-body li {
   padding-left: 0.15em;
+  margin-bottom: 6px;
+  line-height: 1.75;
+}
+
+.article-detail-page .article-content.markdown-body li li {
+  margin-bottom: 4px;
+}
+
+/* === 列表标记 === */
+.article-detail-page .article-content.markdown-body ul > li::marker {
+  color: #34d399;
+  font-size: 1.2em;
+}
+
+.article-detail-page .article-content.markdown-body ol > li::marker {
+  color: #0d9488;
+  font-weight: 600;
+}
+
+/* 多级嵌套：● → ○ → ■ */
+.article-detail-page .article-content.markdown-body ul > li > ul > li::marker {
+  content: "○";
+  color: #6ee7b7;
+}
+
+.article-detail-page .article-content.markdown-body ul > li > ul > li > ul > li::marker {
+  content: "■";
+  color: #a7f3d0;
+  font-size: 0.7em;
+}
+
+/* 列表项 hover */
+.article-detail-page .article-content.markdown-body ul > li:hover,
+.article-detail-page .article-content.markdown-body ol > li:hover {
+  background: rgba(34, 197, 94, 0.04);
+  border-radius: 4px;
+}
+
+/* 任务列表复选框 */
+.article-detail-page .article-content.markdown-body .contains-task-list {
+  list-style: none;
+  padding-left: 0.5em !important;
+}
+
+.article-detail-page .article-content.markdown-body .task-list-item {
+  position: relative;
+  padding-left: 1.8em;
+  margin-bottom: 6px;
+}
+
+.article-detail-page .article-content.markdown-body .task-list-item::before {
+  display: none;
+}
+
+.article-detail-page .article-content.markdown-body .task-list-item input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  width: 16px;
+  height: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid #86efac;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.article-detail-page .article-content.markdown-body .task-list-item input[type="checkbox"]:checked {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.article-detail-page .article-content.markdown-body .task-list-item input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .article-detail-page .article-content.markdown-body blockquote {
-  padding: 14px 18px 12px;
-  color: #475569;
-  background: #f8fafc;
-  border-left-color: #cbd5e1;
+  padding: 16px 20px;
+  color: #374151;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border-left: 4px solid #86efac;
+  border-radius: 0 6px 6px 0;
 }
 
 .article-detail-page .article-content.markdown-body blockquote > :last-child {
   margin-bottom: 0 !important;
+}
+
+/* === CSS 变量体系 === */
+.article-detail-page {
+  --article-text: #1e293b;
+  --article-heading: #14532d;
+  --article-accent: #22c55e;
+  --article-accent-light: #dcfce7;
+  --article-accent-bg: #f0fdf4;
+  --article-link: #0d9488;
+  --article-link-hover: #0f766e;
+  --article-code-bg: #f8fafb;
+  --article-quote-bg: #f0fdf4;
+  --article-border: #e2e8f0;
+}
+
+/* === 平滑滚动 === */
+.article-detail-page .article-content {
+  scroll-behavior: smooth;
+}
+
+/* === 链接样式 === */
+.article-detail-page .article-content.markdown-body a {
+  color: var(--article-link);
+  text-decoration: underline;
+  text-decoration-color: #99f6e4;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.article-detail-page .article-content.markdown-body a:hover {
+  color: var(--article-link-hover);
+  text-decoration-color: #2dd4bf;
+}
+
+/* === 行内代码 === */
+.article-detail-page .article-content.markdown-body code:not(pre code) {
+  background: var(--article-accent-bg);
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.88em;
+}
+
+/* === 表格 === */
+.article-detail-page .article-content.markdown-body table {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #d1fae5;
+}
+
+.article-detail-page .article-content.markdown-body table th {
+  background: #f0fdf4;
+  color: #14532d;
+  font-weight: 600;
+  border-color: #d1fae5;
+}
+
+.article-detail-page .article-content.markdown-body table td {
+  border-color: #e2e8f0;
+}
+
+.article-detail-page .article-content.markdown-body table tr:hover {
+  background: #ecfdf5;
+}
+
+/* === 图片悬停 === */
+.article-detail-page .article-content.markdown-body img {
+  border-radius: 6px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.article-detail-page .article-content.markdown-body img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .article-detail-page #toc .toc-list,
@@ -2481,7 +2628,7 @@ hr {
 .article-detail-page #toc .toc-link.node-name--H1 {
   padding-left: 8px;
   color: #0f172a !important;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -2491,7 +2638,7 @@ hr {
   padding: 8px 12px 8px 16px;
   border-radius: 0 8px 8px 0;
   color: #111827 !important;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 650;
   line-height: 1.75;
 }
@@ -2502,7 +2649,7 @@ hr {
   padding: 7px 12px 7px 16px;
   border-radius: 0 8px 8px 0;
   color: #1f2937 !important;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.65;
 }
@@ -2513,7 +2660,7 @@ hr {
   padding: 6px 12px 6px 14px;
   border-radius: 0 8px 8px 0;
   color: #334155 !important;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.55;
 }
@@ -2524,7 +2671,7 @@ hr {
   padding: 5px 10px 5px 12px;
   border-radius: 0 8px 8px 0;
   color: #334155 !important;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.45;
 }
@@ -2540,28 +2687,13 @@ hr {
 }
 
 .article-detail-page #toc .toc-link.is-key-chapter {
-  padding-right: 78px !important;
   background: rgba(255, 251, 235, 0.86);
   color: #92400e !important;
   font-weight: 800;
 }
 
 .article-detail-page #toc .toc-link.is-key-chapter::after {
-  position: absolute;
-  right: 34px;
-  top: 50%;
-  display: inline-flex;
-  align-items: center;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #f59e0b;
-  color: #fff;
-  content: attr(data-key-chapter-label);
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1;
-  transform: translateY(-50%);
+  display: none;
 }
 
 .article-detail-page #toc .toc-link.is-key-chapter.is-active-link {
@@ -2610,9 +2742,9 @@ hr {
 <style lang="scss">
 pre.hljs {
   padding: 14px 2px 14px 42px !important;
-  border-radius: 5px !important;
+  border-radius: 6px !important;
   position: relative;
-  background: #f6f8fa !important;
+  background: #f8fafb !important;
   border: 1px solid #e5e7eb !important;
   color: #24292f !important;
   font-size: 14px !important;
@@ -2673,6 +2805,7 @@ pre.hljs {
     text-align: center;
     letter-spacing: -1px;
     border-right: 1px solid #d0d7de;
+    background: #f1f3f5;
     user-select: none;
     counter-reset: linenumber;
     span {
