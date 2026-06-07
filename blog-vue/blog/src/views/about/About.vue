@@ -56,7 +56,7 @@
               <div class="skill-track">
                 <span
                   :class="['skill-bar', getGrade(skill.level).bar]"
-                  :style="{ width: mounted ? normalizedLevel(skill.level) + '%' : 0 }"
+                  :style="{ width: normalizedLevel(skill.level) + '%' }"
                 />
               </div>
             </div>
@@ -487,12 +487,10 @@ export default {
   gap: 22px;
 }
 .skill-item {
-  opacity: 0;
-  clip-path: inset(0 100% 0 0);
+  opacity: 1;
 }
 .skill-item.mounted {
-  animation: skill-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) var(--skill-delay)
-    both;
+  animation: none;
 }
 .skill-item.mounted:hover {
   transform: translateX(4px);
@@ -581,21 +579,19 @@ export default {
 .paper-item {
   position: relative;
   overflow: hidden;
-  opacity: 0;
+  opacity: 1;
   padding: 22px;
   border: 1px solid #f1f5f9;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.74);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-  clip-path: inset(0 100% 0 0);
   transition:
     transform 0.28s,
     box-shadow 0.28s,
     border-color 0.28s;
 }
 .paper-item.mounted {
-  animation: paper-item-reveal 0.45s cubic-bezier(0.16, 1, 0.3, 1)
-    var(--paper-delay) both;
+  animation: none;
 }
 .paper-item::before {
   position: absolute;
@@ -712,40 +708,20 @@ export default {
   line-height: 1.8;
 }
 .about-animate {
-  opacity: 0;
-  transform: translateY(24px);
-  transition:
-    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 .about-animate.mounted {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 .paper-panel.about-animate {
-  opacity: 0;
-  transform: translateX(-24px);
+  opacity: 1;
+  transform: none;
 }
 .paper-panel.about-animate.mounted {
-  animation: paper-reveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.5s both;
-}
-@keyframes skill-reveal {
-  to {
-    opacity: 1;
-    clip-path: inset(0);
-  }
-}
-@keyframes paper-reveal {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-@keyframes paper-item-reveal {
-  to {
-    opacity: 1;
-    clip-path: inset(0);
-  }
+  animation: none;
 }
 @media (max-width: 960px) {
   .about-hero {
