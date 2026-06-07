@@ -2,6 +2,7 @@
   <div>
     <!-- banner -->
     <div class="home-banner" :style="cover">
+      <HomeThreeScene />
       <div class="banner-container">
         <!-- 联系方式 -->
         <h1 class="blog-title animated zoomIn">
@@ -193,11 +194,13 @@
 
 <script>
 import Swiper from "../../components/Swiper.vue";
+import HomeThreeScene from "../../components/HomeThreeScene.vue";
 import EasyTyper from "easy-typer-js";
 import MarkdownIt from "markdown-it";
 export default {
   components: {
-    Swiper
+    Swiper,
+    HomeThreeScene
   },
   created() {
     this.init();
@@ -386,11 +389,15 @@ export default {
   text-align: center;
   color: #fff !important;
   animation: header-effect 1s;
+  overflow: hidden;
 }
 .banner-container {
+  position: relative;
+  z-index: 2;
   margin-top: 43vh;
   line-height: 1.5;
   color: #eee;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
 }
 .blog-contact a {
   color: #fff !important;
@@ -482,6 +489,7 @@ export default {
 .scroll-down {
   cursor: pointer;
   position: absolute;
+  z-index: 3;
   bottom: 0;
   width: 100%;
 }
