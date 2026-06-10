@@ -45,47 +45,47 @@
     <div class="menu-container">
       <div class="menus-item">
         <router-link to="/">
-          <i class="iconfont iconzhuye" /> 星港
+          <i class="iconfont iconzhuye" /> 首页
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/archives">
-          <i class="iconfont iconguidang" /> 星历
+          <i class="iconfont iconguidang" /> 卷宗
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/reading">
-          <i class="iconfont iconbiaoqian" /> 星签
+          <i class="iconfont iconbiaoqian" /> 书签
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/bangumi">
-          <i class="iconfont iconzhifeiji" /> 星番
+          <i class="iconfont iconzhifeiji" /> 追番
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/categories">
-          <i class="iconfont iconfenlei" /> 星图
+          <i class="iconfont iconfenlei" /> 分类
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/tags">
-          <i class="iconfont iconbiaoqian" /> 星标
+          <i class="iconfont iconbiaoqian" /> 标签
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/links">
-          <i class="iconfont iconlianjie" /> 星链
+          <i class="iconfont iconlianjie" /> 友链
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/about">
-          <i class="iconfont iconyueliang" /> 星星
+          <i class="iconfont iconyueliang" /> 关于
         </router-link>
       </div>
       <div class="menus-item">
         <router-link to="/message">
-          <i class="iconfont iconqunliao" /> 星声
+          <i class="iconfont iconqunliao" /> 留言
         </router-link>
       </div>
     </div>

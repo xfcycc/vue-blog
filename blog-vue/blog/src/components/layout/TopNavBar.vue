@@ -76,20 +76,20 @@ export default {
     return {
       navClass: "nav",
       navItems: [
-        { to: "/", label: "星港", icon: "iconzhuye", exact: true },
-        { to: "/archives", label: "星历", icon: "iconguidang" },
-        { to: "/reading", label: "星签", icon: "iconbiaoqian" },
-        { to: "/bangumi", label: "星番", icon: "iconzhifeiji" },
-        { to: "/categories", label: "星图", icon: "iconfenlei" },
-        { to: "/tags", label: "星标", icon: "iconbiaoqian" },
-        { to: "/links", label: "星链", icon: "iconlianjie" },
-        { to: "/about", label: "星星", icon: "iconyueliang" },
-        { to: "/message", label: "星声", icon: "iconqunliao" }
+        { to: "/", label: "首页", icon: "iconzhuye", exact: true },
+        { to: "/archives", label: "卷宗", icon: "iconguidang" },
+        { to: "/reading", label: "书签", icon: "iconbiaoqian" },
+        { to: "/bangumi", label: "追番", icon: "iconzhifeiji" },
+        { to: "/categories", label: "分类", icon: "iconfenlei" },
+        { to: "/tags", label: "标签", icon: "iconbiaoqian" },
+        { to: "/links", label: "友链", icon: "iconlianjie" },
+        { to: "/about", label: "关于", icon: "iconyueliang" },
+        { to: "/message", label: "留言", icon: "iconqunliao" }
       ],
       routeStyles: [
         {
           match: path => path === "/",
-          label: "星港",
+          label: "首页",
           tagline: "从这里启程去看灵感发光",
           className: "nav-theme-home"
         },
@@ -101,49 +101,49 @@ export default {
         },
         {
           match: path => path.startsWith("/archives"),
-          label: "星历",
+          label: "卷宗",
           tagline: "把时间折进一册航行日志",
           className: "nav-theme-archive"
         },
         {
           match: path => path.startsWith("/reading"),
-          label: "星签",
+          label: "书签",
           tagline: "夹住想反复回看的段落",
           className: "nav-theme-reading"
         },
         {
           match: path => path.startsWith("/bangumi"),
-          label: "星番",
+          label: "追番",
           tagline: "把追过的番剧收进一格光",
           className: "nav-theme-bangumi"
         },
         {
           match: path => path.startsWith("/categories"),
-          label: "星图",
+          label: "分类",
           tagline: "沿着主题航线寻找答案",
           className: "nav-theme-category"
         },
         {
           match: path => path.startsWith("/tags"),
-          label: "星标",
+          label: "标签",
           tagline: "在关键词坐标里捕捉灵感",
           className: "nav-theme-tag"
         },
         {
           match: path => path.startsWith("/links"),
-          label: "星链",
+          label: "友链",
           tagline: "接入星河里的朋友信号",
           className: "nav-theme-link"
         },
         {
           match: path => path.startsWith("/about"),
-          label: "星星",
+          label: "关于",
           tagline: "看看这趟航行的驾驶者",
           className: "nav-theme-about"
         },
         {
           match: path => path.startsWith("/message"),
-          label: "星声",
+          label: "留言",
           tagline: "向这片星域留下一段讯息",
           className: "nav-theme-message"
         },

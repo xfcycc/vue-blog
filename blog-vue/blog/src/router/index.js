@@ -16,7 +16,7 @@ const routes = [
     path: "/archives",
     component: () => import("../views/archive/Archive.vue"),
     meta: {
-      title: "归档"
+      title: "卷宗"
     }
   },
   {
