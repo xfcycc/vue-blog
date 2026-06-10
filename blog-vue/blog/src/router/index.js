@@ -27,6 +27,13 @@ const routes = [
     }
   },
   {
+    path: "/bangumi",
+    component: () => import("../views/bangumi/Bangumi.vue"),
+    meta: {
+      title: "追番"
+    }
+  },
+  {
     path: "/albums",
     component: () => import("../views/album/Album.vue"),
     meta: {

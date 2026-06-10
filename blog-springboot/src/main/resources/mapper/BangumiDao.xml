@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minzheng.blog.dao.BangumiDao">
+
+    <resultMap id="BaseResultMap" type="com.minzheng.blog.entity.Bangumi">
+        <id property="seasonId" column="season_id" jdbcType="INTEGER"/>
+        <result property="mediaId" column="media_id" jdbcType="BIGINT"/>
+        <result property="sortOrder" column="sort_order" jdbcType="INTEGER"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="seasonType" column="season_type" jdbcType="INTEGER"/>
+        <result property="seasonTypeName" column="season_type_name" jdbcType="VARCHAR"/>
+        <result property="cover" column="cover" jdbcType="VARCHAR"/>
+        <result property="squareCover" column="square_cover" jdbcType="VARCHAR"/>
+        <result property="url" column="url" jdbcType="VARCHAR"/>
+        <result property="progress" column="progress" jdbcType="VARCHAR"/>
+        <result property="latestEpIndex" column="latest_ep_index" jdbcType="VARCHAR"/>
+        <result property="latestEpTitle" column="latest_ep_title" jdbcType="VARCHAR"/>
+        <result property="latestEpLongTitle" column="latest_ep_long_title" jdbcType="VARCHAR"/>
+        <result property="latestEpCover" column="latest_ep_cover" jdbcType="VARCHAR"/>
+        <result property="latestEpPubTime" column="latest_ep_pub_time" jdbcType="TIMESTAMP"/>
+        <result property="ratingScore" column="rating_score" jdbcType="DECIMAL"/>
+        <result property="ratingCount" column="rating_count" jdbcType="INTEGER"/>
+        <result property="area" column="area" jdbcType="VARCHAR"/>
+        <result property="styles" column="styles" jdbcType="VARCHAR"/>
+        <result property="isFinish" column="is_finish" jdbcType="INTEGER"/>
+        <result property="canWatch" column="can_watch" jdbcType="INTEGER"/>
+        <result property="followStatus" column="follow_status" jdbcType="INTEGER"/>
+        <result property="renewalTime" column="renewal_time" jdbcType="VARCHAR"/>
+        <result property="pubTime" column="pub_time" jdbcType="TIMESTAMP"/>
+        <result property="releaseDate" column="release_date" jdbcType="VARCHAR"/>
+        <result property="followCount" column="follow_count" jdbcType="BIGINT"/>
+        <result property="viewCount" column="view_count" jdbcType="BIGINT"/>
+        <result property="danmakuCount" column="danmaku_count" jdbcType="BIGINT"/>
+        <result property="favoriteCount" column="favorite_count" jdbcType="BIGINT"/>
+        <result property="evaluate" column="evaluate" jdbcType="LONGVARCHAR"/>
+        <result property="followTime" column="follow_time" jdbcType="TIMESTAMP"/>
+        <result property="syncTime" column="sync_time" jdbcType="TIMESTAMP"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        season_id,media_id,sort_order,title,season_type,season_type_name,
+        cover,square_cover,url,progress,latest_ep_index,latest_ep_title,
+        latest_ep_long_title,latest_ep_cover,latest_ep_pub_time,rating_score,
+        rating_count,area,styles,is_finish,can_watch,follow_status,renewal_time,
+        pub_time,release_date,follow_count,view_count,danmaku_count,favorite_count,
+        evaluate,follow_time,sync_time,create_time,update_time
+    </sql>
+</mapper>

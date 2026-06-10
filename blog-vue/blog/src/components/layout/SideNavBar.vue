@@ -59,6 +59,11 @@
         </router-link>
       </div>
       <div class="menus-item">
+        <router-link to="/bangumi">
+          <i class="iconfont iconzhifeiji" /> 星番
+        </router-link>
+      </div>
+      <div class="menus-item">
         <router-link to="/categories">
           <i class="iconfont iconfenlei" /> 星图
         </router-link>
