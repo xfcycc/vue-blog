@@ -4,12 +4,12 @@
     <div class="home-banner" :style="cover">
       <div class="banner-container">
         <!-- 联系方式 -->
-        <h1 class="blog-title">
+        <h1 class="blog-title animated zoomIn">
           {{ blogInfo.websiteConfig.websiteName }}
         </h1>
         <!-- 一言 -->
         <div class="blog-intro">
-          {{ obj.output }}
+          {{ obj.output }} <span class="typed-cursor">|</span>
         </div>
         <!-- 联系方式 -->
         <div class="blog-contact">
@@ -32,11 +32,11 @@
     <v-row class="home-container">
       <v-col md="9" cols="12">
         <!-- 说说轮播 -->
-        <v-card v-if="talkList.length > 0">
+        <v-card class="animated zoomIn" v-if="talkList.length > 0">
           <Swiper :list="talkList" />
         </v-card>
         <v-card
-          class="article-card"
+          class="animated zoomIn article-card"
           style="border-radius: 12px 8px 8px 12px"
           v-for="(item, index) of articleList"
           :key="item.id"
@@ -107,7 +107,7 @@
       <!-- 博主信息 -->
       <v-col md="3" cols="12" class="d-md-block d-none">
         <div class="blog-wrapper">
-          <v-card class="blog-card profile-card mt-5">
+          <v-card class="animated zoomIn blog-card profile-card mt-5">
             <div class="author-wrapper">
               <!-- 博主头像 -->
               <v-avatar size="110">
@@ -159,7 +159,7 @@
             </a>
           </v-card>
           <!-- 网站信息 -->
-          <v-card class="blog-card mt-5 big">
+          <v-card class="blog-card animated zoomIn mt-5 big">
             <div class="web-info-title">
               <v-icon size="18">mdi-bell</v-icon>
               公告
@@ -169,7 +169,7 @@
             </div>
           </v-card>
           <!-- 网站信息 -->
-          <v-card class="blog-card mt-5">
+          <v-card class="blog-card animated zoomIn mt-5">
             <div class="web-info-title">
               <v-icon size="18">mdi-chart-line</v-icon>
               网站资讯
@@ -193,6 +193,7 @@
 
 <script>
 import Swiper from "../../components/Swiper.vue";
+import EasyTyper from "easy-typer-js";
 import MarkdownIt from "markdown-it";
 export default {
   components: {
@@ -213,7 +214,14 @@ export default {
     return {
       time: "",
       obj: {
-        output: ""
+        output: "",
+        isEnd: false,
+        speed: 300,
+        singleBack: false,
+        sleep: 0,
+        type: "rollback",
+        backSpeed: 40,
+        sentencePause: true
       },
       articleList: [],
       talkList: [],
@@ -225,13 +233,13 @@ export default {
     // 初始化
     init() {
       document.title = this.blogInfo.websiteConfig.websiteName;
-      // 一言Api
+      // 一言Api进行打字机循环输出效果
       fetch("https://v1.hitokoto.cn?c=i")
         .then(res => {
           return res.json();
         })
         .then(({ hitokoto }) => {
-          this.obj.output = hitokoto;
+          this.initTyped(hitokoto);
         });
     },
     listHomeTalks() {
@@ -239,8 +247,14 @@ export default {
         this.talkList = data.data;
       });
     },
+    initTyped(input, fn, hooks) {
+      const obj = this.obj;
+      // eslint-disable-next-line no-unused-vars
+      const typed = new EasyTyper(obj, input, fn, hooks);
+    },
     scrollDown() {
       window.scrollTo({
+        behavior: "smooth",
         top: document.documentElement.clientHeight
       });
     },
@@ -339,13 +353,27 @@ export default {
           this.count = data.data.count;
           window.scrollTo({
             top: 0,
-            left: 0
+            left: 0,
+            behavior: "smooth"
           });
         });
     }
   }
 };
 </script>
+
+<style lang="stylus">
+.typed-cursor
+  opacity: 1
+  animation: blink 0.7s infinite
+@keyframes blink
+  0%
+    opacity: 1
+  50%
+    opacity: 0
+  100%
+    opacity: 1
+</style>
 
 <style scoped>
 .home-banner {
@@ -357,6 +385,7 @@ export default {
   background-attachment: fixed;
   text-align: center;
   color: #fff !important;
+  animation: header-effect 1s;
 }
 .banner-container {
   margin-top: 43vh;
@@ -404,12 +433,19 @@ export default {
     height: 100%;
     width: 45%;
   }
+  .on-hover {
+    transition: all 0.6s;
+  }
+  .article-card:hover .on-hover {
+    transform: scale(1.1);
+  }
   .article-wrapper {
     padding: 0 2.5rem;
     width: 55%;
   }
   .article-wrapper a {
     font-size: 1.5rem;
+    transition: all 0.3s;
   }
 }
 @media (max-width: 759px) {
@@ -440,6 +476,7 @@ export default {
   }
   .article-wrapper a {
     font-size: 1.25rem;
+    transition: all 0.3s;
   }
 }
 .scroll-down {
@@ -453,12 +490,6 @@ export default {
 }
 .article-wrapper a:hover {
   color: #8e8cd8;
-}
-.home-container :deep(.v-card) {
-  transition: none !important;
-}
-.home-container :deep(.v-card:hover) {
-  box-shadow: 0 4px 8px 6px rgba(7, 17, 27, 0.06) !important;
 }
 .article-info {
   font-size: 95%;
@@ -548,6 +579,12 @@ export default {
 .github-home-btn:hover {
   background: #00c4b6;
 }
+.author-avatar {
+  transition: all 0.5s;
+}
+.author-avatar:hover {
+  transform: rotate(360deg);
+}
 .web-info {
   padding: 0.25rem;
   font-size: 0.875rem;
@@ -560,8 +597,36 @@ export default {
   display: inline-block;
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
+  animation: scroll-down-effect 1.5s infinite;
+}
+@keyframes scroll-down-effect {
+  0% {
+    top: 0;
+    opacity: 0.4;
+    filter: alpha(opacity=40);
+  }
+  50% {
+    top: -16px;
+    opacity: 1;
+    filter: none;
+  }
+  100% {
+    top: 0;
+    opacity: 0.4;
+    filter: alpha(opacity=40);
+  }
 }
 .big i {
   color: #f00;
+  animation: big 0.8s linear infinite;
+}
+@keyframes big {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
 }
 </style>

@@ -23,6 +23,9 @@ importers:
       dayjs:
         specifier: ^1.10.6
         version: 1.10.6
+      easy-typer-js:
+        specifier: ^2.1.0
+        version: 2.1.0
       highlight.js:
         specifier: ^10.7.3
         version: 10.7.3
@@ -782,6 +785,9 @@ packages:
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
+
+  easy-typer-js@2.1.0:
+    resolution: {integrity: sha512-P1G1oPO26lPfuPdaS3KyywFc36HRVKBJvzxJiOMbn5+Z3n9JLzhTT4cJK121mnjujyOWQiRla4ikHZQHPcoa/g==}
 
   emoji-regex@7.0.3:
     resolution: {integrity: sha512-CwBLREIQ7LvYFB0WyRvwhq5N5qPhc6PMjD6bYggFlI5YyDgl+0vxq5VHbMOFqLg7hfWzmu8T5Z1QofhmTIhItA==}
@@ -2132,6 +2138,8 @@ snapshots:
       esutils: 2.0.3
 
   eastasianwidth@0.2.0: {}
+
+  easy-typer-js@2.1.0: {}
 
   emoji-regex@7.0.3: {}
 
