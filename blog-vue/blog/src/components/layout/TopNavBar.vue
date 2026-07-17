@@ -96,7 +96,7 @@ export default {
       navClass: "nav",
       navItems: [
         { to: "/", label: "首页", icon: "iconzhuye", exact: true },
-        { to: "/archives", label: "卷宗", icon: "iconguidang" },
+        { to: "/archives", label: "归档", icon: "iconguidang" },
         { to: "/reading", label: "书签", icon: "iconbiaoqian" },
         { to: "/bangumi", label: "追番", icon: "iconzhifeiji" },
         { to: "/categories", label: "分类", icon: "iconfenlei" },
@@ -120,7 +120,7 @@ export default {
         },
         {
           match: path => path.startsWith("/archives"),
-          label: "卷宗",
+          label: "归档",
           tagline: "把时间折进一册航行日志",
           className: "nav-theme-archive"
         },

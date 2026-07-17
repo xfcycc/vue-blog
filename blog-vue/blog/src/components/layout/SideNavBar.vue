@@ -50,7 +50,7 @@
       </div>
       <div class="menus-item">
         <router-link to="/archives">
-          <i class="iconfont iconguidang" /> 卷宗
+          <i class="iconfont iconguidang" /> 归档
         </router-link>
       </div>
       <div class="menus-item">
