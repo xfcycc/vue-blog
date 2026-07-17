@@ -64,6 +64,11 @@
         </router-link>
       </div>
       <div class="menus-item">
+        <router-link to="/games">
+          <i class="iconfont iconyueliang" /> 游戏
+        </router-link>
+      </div>
+      <div class="menus-item">
         <router-link to="/categories">
           <i class="iconfont iconfenlei" /> 分类
         </router-link>

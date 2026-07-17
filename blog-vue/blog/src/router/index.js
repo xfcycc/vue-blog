@@ -34,6 +34,20 @@ const routes = [
     }
   },
   {
+    path: "/games",
+    component: () => import("../views/game/GameList.vue"),
+    meta: {
+      title: "游戏档案"
+    }
+  },
+  {
+    path: "/games/:gameId",
+    component: () => import("../views/game/GameDetail.vue"),
+    meta: {
+      title: "游戏详情"
+    }
+  },
+  {
     path: "/albums",
     component: () => import("../views/album/Album.vue"),
     meta: {

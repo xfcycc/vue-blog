@@ -37,6 +37,10 @@ public enum FilePathEnum {
      */
     TALK("talks/", "说说图片路径"),
     /**
+     * 游戏图片路径
+     */
+    GAME("games/", "游戏图片路径"),
+    /**
      * md文件路径
      */
     MD("markdown/", "md文件路径");

@@ -99,6 +99,7 @@ export default {
         { to: "/archives", label: "归档", icon: "iconguidang" },
         { to: "/reading", label: "书签", icon: "iconbiaoqian" },
         { to: "/bangumi", label: "追番", icon: "iconzhifeiji" },
+        { to: "/games", label: "游戏", icon: "iconyueliang" },
         { to: "/categories", label: "分类", icon: "iconfenlei" },
         { to: "/tags", label: "标签", icon: "iconbiaoqian" },
         { to: "/links", label: "友链", icon: "iconlianjie" },
@@ -135,6 +136,12 @@ export default {
           label: "追番",
           tagline: "把追过的番剧收进一格光",
           className: "nav-theme-bangumi"
+        },
+        {
+          match: path => path.startsWith("/games"),
+          label: "游戏",
+          tagline: "记录玩过的世界与旅程",
+          className: "nav-theme-game"
         },
         {
           match: path => path.startsWith("/categories"),
@@ -674,6 +681,34 @@ ul {
   --active-border: rgba(255, 255, 255, 0.68);
   --active-shadow: rgba(239, 93, 168, 0.2);
   --active-liquid: rgba(20, 184, 166, 0.32);
+}
+.nav-theme-game {
+  --glass-start: rgba(37, 99, 235, 0.18);
+  --glass-end: rgba(15, 159, 143, 0.15);
+  --fixed-glass-start: rgba(239, 246, 255, 0.8);
+  --fixed-glass-end: rgba(240, 253, 250, 0.7);
+  --nav-text: #ffffff;
+  --fixed-nav-text: #172033;
+  --active-text: #172033;
+  --copy-start: #dbeafe;
+  --copy-end: #ccfbf1;
+  --copy-glow: rgba(37, 99, 235, 0.3);
+  --fixed-copy-start: #1d4ed8;
+  --fixed-copy-end: #0f766e;
+  --text-glow: rgba(29, 78, 216, 0.24);
+  --brand-glow: rgba(15, 159, 143, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.32);
+  --fixed-border: rgba(37, 99, 235, 0.16);
+  --glass-shadow: rgba(37, 99, 235, 0.14);
+  --fixed-shadow: rgba(15, 159, 143, 0.12);
+  --liquid-glow: rgba(37, 99, 235, 0.22);
+  --liquid-glow-soft: rgba(15, 159, 143, 0.18);
+  --liquid-shift: 8%;
+  --active-glass-start: rgba(255, 255, 255, 0.78);
+  --active-glass-end: rgba(204, 251, 241, 0.42);
+  --active-border: rgba(255, 255, 255, 0.7);
+  --active-shadow: rgba(37, 99, 235, 0.2);
+  --active-liquid: rgba(15, 159, 143, 0.34);
 }
 .nav-theme-link {
   --glass-start: rgba(30, 41, 59, 0.2);
