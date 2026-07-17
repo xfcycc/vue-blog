@@ -56,10 +56,10 @@ public class MySqlSearchStrategyImpl implements SearchStrategy {
                 int postIndex = postLength > 175 ? last + 175 : last + postLength;
                 String postText = item.getArticleContent().substring(index, postIndex);
                 // 文章内容高亮
-                articleContent = (preText + postText).replaceAll(keywords, PRE_TAG + keywords + POST_TAG);
+                articleContent = (preText + postText).replace(keywords, PRE_TAG + keywords + POST_TAG);
             }
             // 文章标题高亮
-            String articleTitle = item.getArticleTitle().replaceAll(keywords, PRE_TAG + keywords + POST_TAG);
+            String articleTitle = item.getArticleTitle().replace(keywords, PRE_TAG + keywords + POST_TAG);
             return ArticleSearchDTO.builder()
                     .id(item.getId())
                     .articleTitle(articleTitle)

@@ -1,40 +1,48 @@
 <template>
-  <!-- 搜索框 -->
-  <v-dialog v-model="searchFlag" max-width="600" :fullscreen="isMobile">
-    <v-card class="search-wrapper" style="border-radius:4px">
+  <v-dialog v-model="searchFlag" max-width="640" :fullscreen="isMobile">
+    <v-card class="search-wrapper">
       <div class="mb-3">
-        <span class="search-title">本地搜索</span>
-        <!-- 关闭按钮 -->
-        <v-icon class="float-right" @click="searchFlag = false">
+        <span class="search-title">搜索文章</span>
+        <v-icon class="float-right close-btn" @click="searchFlag = false">
           mdi-close
         </v-icon>
       </div>
-      <!-- 输入框 -->
       <div class="search-input-wrapper">
         <v-icon>mdi-magnify</v-icon>
-        <input v-model="keywords" placeholder="输入文章标题或内容..." />
+        <input
+          ref="searchInput"
+          v-model="keywords"
+          placeholder="输入文章标题或内容..."
+          aria-label="搜索文章"
+        />
       </div>
-      <!-- 搜索结果 -->
+      <v-progress-linear
+        v-if="loading"
+        class="search-progress"
+        indeterminate
+        height="2"
+        color="#8e8cd8"
+      />
       <div class="search-result-wrapper">
         <hr class="divider" />
-        <ul>
-          <li class="search-reslut" v-for="item of articleList" :key="item.id">
-            <!-- 文章标题 -->
+        <ul v-if="articleList.length">
+          <li class="search-result" v-for="item of articleList" :key="item.id">
             <a @click="goTo(item.id)" v-html="item.articleTitle" />
-            <!-- 文章内容 -->
             <p
-              class="search-reslut-content text-justify"
+              class="search-result-content text-justify"
+              @click="goTo(item.id)"
               v-html="item.articleContent"
             />
           </li>
         </ul>
-        <!-- 搜索结果不存在提示 -->
-        <div
-          v-show="flag && articleList.length == 0"
-          style="font-size:0.875rem"
-        >
+        <div v-else-if="loading" class="search-status">正在搜索...</div>
+        <div v-else-if="searchError" class="search-status">
+          搜索暂时不可用，请稍后重试
+        </div>
+        <div v-else-if="flag" class="search-status">
           找不到您查询的内容：{{ keywords }}
         </div>
+        <div v-else class="search-status">输入关键词，查找标题或正文内容</div>
       </div>
     </v-card>
   </v-dialog>
@@ -46,8 +54,15 @@ export default {
     return {
       keywords: "",
       articleList: [],
-      flag: false
+      flag: false,
+      loading: false,
+      searchError: false,
+      searchTimer: null,
+      searchRequestId: 0
     };
+  },
+  beforeDestroy() {
+    clearTimeout(this.searchTimer);
   },
   methods: {
     goTo(articleId) {
@@ -73,15 +88,49 @@ export default {
     }
   },
   watch: {
+    searchFlag(value) {
+      if (value) {
+        this.$nextTick(() => this.$refs.searchInput.focus());
+      }
+    },
     keywords(value) {
-      this.flag = value.trim() != "" ? true : false;
-      this.axios
-        .get("/api/articles/search", {
-          params: { current: 1, keywords: value }
-        })
-        .then(({ data }) => {
-          this.articleList = data.data;
-        });
+      clearTimeout(this.searchTimer);
+      const keywords = value.trim();
+      this.flag = keywords !== "";
+      this.searchError = false;
+
+      if (!keywords) {
+        this.articleList = [];
+        this.loading = false;
+        this.searchRequestId += 1;
+        return;
+      }
+
+      this.loading = true;
+      this.articleList = [];
+      const requestId = ++this.searchRequestId;
+      this.searchTimer = setTimeout(() => {
+        this.axios
+          .get("/api/articles/search", {
+            params: { current: 1, keywords }
+          })
+          .then(({ data }) => {
+            if (requestId === this.searchRequestId) {
+              this.articleList = data.data || [];
+            }
+          })
+          .catch(() => {
+            if (requestId === this.searchRequestId) {
+              this.articleList = [];
+              this.searchError = true;
+            }
+          })
+          .finally(() => {
+            if (requestId === this.searchRequestId) {
+              this.loading = false;
+            }
+          });
+      }, 300);
     }
   }
 };
@@ -92,16 +141,22 @@ export default {
   padding: 1.25rem;
   height: 100%;
   background: #fff !important;
+  border-radius: 16px !important;
 }
 .search-title {
-  color: #49b1f5;
+  color: #6f6db6;
   font-size: 1.25rem;
+  font-weight: 700;
   line-height: 1;
+}
+.close-btn {
+  cursor: pointer;
 }
 .search-input-wrapper {
   display: flex;
+  align-items: center;
   padding: 5px;
-  height: 35px;
+  height: 42px;
   width: 100%;
   border: 2px solid #8e8cd8;
   border-radius: 2rem;
@@ -110,6 +165,9 @@ export default {
   width: 100%;
   margin-left: 5px;
   outline: none;
+}
+.search-progress {
+  margin-top: 8px;
 }
 @media (min-width: 960px) {
   .search-result-wrapper {
@@ -124,13 +182,17 @@ export default {
     overflow: auto;
   }
 }
-.search-reslut a {
+.search-result {
+  margin-bottom: 18px;
+}
+.search-result a {
   color: #555;
   font-weight: bold;
   border-bottom: 1px solid #999;
   text-decoration: none;
+  cursor: pointer;
 }
-.search-reslut-content {
+.search-result-content {
   color: #555;
   cursor: pointer;
   border-bottom: 1px dashed #ccc;
@@ -141,6 +203,12 @@ export default {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+.search-status {
+  color: #777;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 42px 0;
 }
 .divider {
   margin: 20px 0;

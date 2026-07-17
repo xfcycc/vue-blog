@@ -16,6 +16,14 @@
       </div>
       <div class="mobile-nav-actions">
         <button
+          type="button"
+          class="mobile-nav-action mobile-search-btn"
+          @click="openSearch"
+          aria-label="搜索文章"
+        >
+          <v-icon size="20" color="currentColor">mdi-magnify</v-icon>
+        </button>
+        <button
           v-if="isArticleDetailPage"
           type="button"
           class="mobile-nav-action mobile-toc-nav-btn"
@@ -45,6 +53,17 @@
         </span>
       </div>
       <div class="float-right nav-title">
+        <div class="menus-item">
+          <button
+            type="button"
+            class="menu-btn nav-search-btn"
+            @click="openSearch"
+            aria-label="搜索文章"
+            title="搜索文章"
+          >
+            <i class="iconfont iconsousuo" />
+          </button>
+        </div>
         <div
           v-for="item of navItems"
           :key="item.to"
@@ -179,6 +198,9 @@ export default {
     openDrawer() {
       this.$store.state.drawer = true;
     },
+    openSearch() {
+      this.$store.state.searchFlag = true;
+    },
     toggleArticleToc() {
       window.dispatchEvent(new CustomEvent("toggle-article-toc"));
     },
@@ -247,10 +269,13 @@ ul {
   opacity: 0.72;
 }
 .nav a,
-.nav-fixed a {
+.nav button,
+.nav-fixed a,
+.nav-fixed button {
   color: var(--nav-text) !important;
 }
-.nav-fixed a {
+.nav-fixed a,
+.nav-fixed button {
   color: var(--fixed-nav-text, var(--nav-text)) !important;
 }
 .nav .menu-btn {
@@ -271,6 +296,7 @@ ul {
   -webkit-backdrop-filter: blur(22px) saturate(160%);
 }
 .nav-fixed .menus-item a,
+.nav-fixed .menus-item button,
 .nav-fixed .blog-title a {
   text-shadow: none;
 }
@@ -339,6 +365,17 @@ ul {
 .mobile-drawer-btn {
   font-size: 20px;
 }
+.mobile-search-btn {
+  width: 34px;
+  border: 1px solid var(--active-border);
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--active-glass-start),
+    var(--active-glass-end)
+  );
+  box-shadow: 0 8px 24px var(--active-shadow);
+}
 .mobile-toc-nav-btn {
   gap: 5px;
   padding: 0 10px;
@@ -387,7 +424,8 @@ ul {
   display: inline-block;
   margin: 0 0 0 0.5rem;
 }
-.menus-item a {
+.menus-item a,
+.menus-item button {
   transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .menu-btn {
@@ -400,6 +438,17 @@ ul {
   border: 1px solid transparent;
   border-radius: 999px;
   overflow: hidden;
+}
+.nav-search-btn {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.nav-search-btn i {
+  margin-right: 0;
 }
 .menu-btn:hover,
 .menu-btn.active {
