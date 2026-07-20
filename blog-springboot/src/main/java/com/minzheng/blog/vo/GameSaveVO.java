@@ -35,6 +35,8 @@ public class GameSaveVO {
 
     private List<String> screenshotList;
 
+    private List<GameScreenshotSaveVO> screenshotItemList;
+
     private String screenshotLayout;
 
     private String playStatus;

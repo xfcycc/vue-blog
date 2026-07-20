@@ -106,13 +106,10 @@
         </div>
       </section>
 
-      <section
-        v-if="game.screenshotList && game.screenshotList.length"
-        class="detail-section screenshot-section"
-      >
+      <section v-if="hasScreenshots" class="detail-section screenshot-section">
         <game-screenshot-gallery
+          :items="game.screenshotItemList || []"
           :images="game.screenshotList"
-          :layout="game.screenshotLayout"
           :game-name="game.gameName"
         />
       </section>
@@ -166,6 +163,14 @@ export default {
     },
     fieldList() {
       return (this.game && this.game.fieldList) || [];
+    },
+    hasScreenshots() {
+      return Boolean(
+        this.game &&
+          ((this.game.screenshotItemList &&
+            this.game.screenshotItemList.length) ||
+            (this.game.screenshotList && this.game.screenshotList.length))
+      );
     },
     scoreStars() {
       if (!this.game || this.game.personalScore == null) return 0;

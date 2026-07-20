@@ -44,6 +44,8 @@ public class GameDetailDTO {
 
     private List<String> screenshotList;
 
+    private List<GameScreenshotDTO> screenshotItemList;
+
     private String screenshotLayout;
 
     private String playStatus;

@@ -125,6 +125,24 @@ CREATE TABLE IF NOT EXISTS `tb_game_field` (
   KEY `idx_game_card` (`game_id`, `show_on_card`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='游戏自定义字段';
 
+CREATE TABLE IF NOT EXISTS `tb_game_screenshot` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `game_id` int NOT NULL COMMENT '游戏id',
+  `original_url` varchar(500) NOT NULL COMMENT '原图地址，仅后台使用',
+  `display_url` varchar(500) NOT NULL COMMENT '前台展示图地址',
+  `original_width` int DEFAULT NULL COMMENT '原图宽度',
+  `original_height` int DEFAULT NULL COMMENT '原图高度',
+  `display_width` int DEFAULT NULL COMMENT '展示图宽度',
+  `display_height` int DEFAULT NULL COMMENT '展示图高度',
+  `frame_type` varchar(20) NOT NULL DEFAULT 'AUTO' COMMENT '画框 AUTO/LANDSCAPE/PORTRAIT/SQUARE',
+  `column_span` int NOT NULL DEFAULT 6 COMMENT '十二列网格占用列数 4/6/8/12',
+  `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_game_sort` (`game_id`, `sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='游戏截图排版';
+
 CREATE TABLE IF NOT EXISTS `tb_game_config` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '主键',
   `platform` varchar(20) NOT NULL COMMENT '平台编码',
@@ -252,6 +270,10 @@ INSERT INTO `tb_resource` (`id`, `resource_name`, `url`, `request_method`, `pare
 SELECT 9111, '一次性同步PSN游戏', '/admin/games/psn/sync-once', 'POST', 9100, 0, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM `tb_resource` WHERE `url` = '/admin/games/psn/sync-once' AND `request_method` = 'POST');
 
+INSERT INTO `tb_resource` (`id`, `resource_name`, `url`, `request_method`, `parent_id`, `is_anonymous`, `create_time`)
+SELECT 9112, '读取游戏图片源文件', '/admin/games/images/source', 'POST', 9100, 0, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM `tb_resource` WHERE `url` = '/admin/games/images/source' AND `request_method` = 'POST');
+
 INSERT INTO `tb_role_resource` (`role_id`, `resource_id`)
 SELECT r.`id`, re.`id`
 FROM `tb_role` r
@@ -266,6 +288,16 @@ INSERT INTO `tb_role_resource` (`role_id`, `resource_id`)
 SELECT r.`id`, re.`id`
 FROM `tb_role` r
 JOIN `tb_resource` re ON re.`id` = 9111
+WHERE r.`role_label` = 'admin'
+  AND NOT EXISTS (
+    SELECT 1 FROM `tb_role_resource` rr
+    WHERE rr.`role_id` = r.`id` AND rr.`resource_id` = re.`id`
+  );
+
+INSERT INTO `tb_role_resource` (`role_id`, `resource_id`)
+SELECT r.`id`, re.`id`
+FROM `tb_role` r
+JOIN `tb_resource` re ON re.`id` = 9112
 WHERE r.`role_label` = 'admin'
   AND NOT EXISTS (
     SELECT 1 FROM `tb_role_resource` rr

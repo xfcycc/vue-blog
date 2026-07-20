@@ -1,71 +1,26 @@
 <template>
   <div
-    v-if="images.length"
-    class="screenshot-preview"
-    :class="'layout-' + safeLayout.toLowerCase()"
+    v-if="normalizedItems.length"
+    ref="grid"
+    class="screenshot-masonry"
+    :class="{ 'is-mobile': previewMode === 'mobile' }"
   >
-    <template v-if="safeLayout === 'CAROUSEL'">
-      <div class="carousel-frame media-frame">
-        <img class="frame-backdrop" :src="images[activeIndex]" alt="" />
-        <el-image
-          class="frame-image"
-          fit="contain"
-          :src="images[activeIndex]"
-          :preview-src-list="images"
-          :initial-index="activeIndex"
-        />
-        <button
-          v-if="images.length > 1"
-          type="button"
-          class="carousel-button previous"
-          aria-label="上一张"
-          @click="changeActive(-1)"
-        >
-          <i class="el-icon-arrow-left" />
-        </button>
-        <button
-          v-if="images.length > 1"
-          type="button"
-          class="carousel-button next"
-          aria-label="下一张"
-          @click="changeActive(1)"
-        >
-          <i class="el-icon-arrow-right" />
-        </button>
-        <span class="carousel-count">
-          {{ activeIndex + 1 }} / {{ images.length }}
-        </span>
-      </div>
-      <div v-if="images.length > 1" class="thumbnail-list">
-        <button
-          v-for="(image, index) in images"
-          :key="image + index"
-          type="button"
-          class="thumbnail-item"
-          :class="{ active: index === activeIndex }"
-          @click="activeIndex = index"
-        >
-          <img :src="image" :alt="'截图 ' + (index + 1)" />
-        </button>
-      </div>
-    </template>
-
-    <div v-else class="frame-grid">
-      <div
-        v-for="(image, index) in images"
-        :key="image + index"
-        class="media-frame grid-frame"
-        :class="{ featured: safeLayout === 'FEATURED' && index === 0 }"
-      >
-        <img class="frame-backdrop" :src="image" alt="" />
-        <el-image
-          class="frame-image"
-          fit="contain"
-          :src="image"
-          :preview-src-list="images"
-          :initial-index="index"
-        />
-      </div>
+    <div
+      v-for="(item, index) in normalizedItems"
+      :key="item.displayUrl + index"
+      class="masonry-item"
+      :class="'frame-' + frameType(item).toLowerCase()"
+      :style="itemStyle(item, index)"
+    >
+      <el-image
+        class="masonry-image"
+        :fit="frameType(item) === 'AUTO' ? 'contain' : 'cover'"
+        :src="item.displayUrl"
+        :preview-src-list="previewImages"
+        :initial-index="index"
+        @load="imageLoaded($event, index)"
+      />
+      <span class="image-order">{{ index + 1 }}</span>
     </div>
   </div>
 </template>
@@ -74,154 +29,166 @@
 export default {
   name: "GameScreenshotPreview",
   props: {
+    items: {
+      type: Array,
+      default: () => []
+    },
     images: {
       type: Array,
       default: () => []
     },
-    layout: {
+    previewMode: {
       type: String,
-      default: "CAROUSEL"
+      default: "desktop"
     }
   },
   data() {
     return {
-      activeIndex: 0
+      gridWidth: 0,
+      imageRatios: {},
+      resizeObserver: null
     };
   },
   computed: {
-    safeLayout() {
-      return ["CAROUSEL", "FEATURED", "GRID"].includes(this.layout)
-        ? this.layout
-        : "CAROUSEL";
+    normalizedItems() {
+      if (this.items.length) return this.items;
+      return this.images.map((url, index) => ({
+        displayUrl: url,
+        frameType: "AUTO",
+        columnSpan: 6,
+        sortOrder: index + 1
+      }));
+    },
+    previewImages() {
+      return this.normalizedItems.map(item => item.displayUrl);
     }
   },
   watch: {
-    images() {
-      if (this.activeIndex >= this.images.length) this.activeIndex = 0;
+    normalizedItems: {
+      deep: true,
+      handler() {
+        this.$nextTick(this.measureGrid);
+      }
+    },
+    previewMode() {
+      this.$nextTick(this.measureGrid);
     }
   },
+  mounted() {
+    this.measureGrid();
+    if (window.ResizeObserver) {
+      this.resizeObserver = new window.ResizeObserver(this.measureGrid);
+      this.resizeObserver.observe(this.$refs.grid);
+    } else {
+      window.addEventListener("resize", this.measureGrid);
+    }
+  },
+  beforeDestroy() {
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    window.removeEventListener("resize", this.measureGrid);
+  },
   methods: {
-    changeActive(step) {
-      this.activeIndex =
-        (this.activeIndex + step + this.images.length) % this.images.length;
+    measureGrid() {
+      if (this.$refs.grid) this.gridWidth = this.$refs.grid.clientWidth;
+    },
+    frameType(item) {
+      return ["AUTO", "LANDSCAPE", "PORTRAIT", "SQUARE"].includes(
+        item.frameType
+      )
+        ? item.frameType
+        : "AUTO";
+    },
+    columnSpan(item) {
+      if (this.previewMode === "mobile") return 12;
+      return [4, 6, 8, 12].includes(Number(item.columnSpan))
+        ? Number(item.columnSpan)
+        : 6;
+    },
+    aspectRatio(item, index) {
+      const frame = this.frameType(item);
+      if (frame === "LANDSCAPE") return 16 / 9;
+      if (frame === "PORTRAIT") return 9 / 16;
+      if (frame === "SQUARE") return 1;
+      if (item.displayWidth && item.displayHeight) {
+        return item.displayWidth / item.displayHeight;
+      }
+      return this.imageRatios[index] || 16 / 9;
+    },
+    itemStyle(item, index) {
+      const gap = this.previewMode === "mobile" ? 12 : 16;
+      const rowHeight = 8;
+      const span = this.columnSpan(item);
+      const columnWidth = Math.max(0, (this.gridWidth - gap * 11) / 12);
+      const width = columnWidth * span + gap * (span - 1);
+      const height = width / this.aspectRatio(item, index);
+      const rowSpan = Math.max(
+        1,
+        Math.ceil((height + gap) / (rowHeight + gap))
+      );
+      return {
+        gridColumnEnd: "span " + span,
+        gridRowEnd: "span " + rowSpan
+      };
+    },
+    imageLoaded(event, index) {
+      const image = event && event.target ? event.target : null;
+      if (image && image.naturalWidth && image.naturalHeight) {
+        this.$set(
+          this.imageRatios,
+          index,
+          image.naturalWidth / image.naturalHeight
+        );
+      }
     }
   }
 };
 </script>
 
 <style scoped>
-.screenshot-preview {
+.screenshot-masonry {
+  display: grid;
   width: 100%;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  grid-auto-rows: 8px;
+  gap: 16px;
 }
-.media-frame {
+.screenshot-masonry.is-mobile {
+  max-width: 390px;
+  margin: 0 auto;
+  gap: 12px;
+}
+.masonry-item {
   position: relative;
+  min-width: 0;
   overflow: hidden;
+  border: 1px solid #e4e7ed;
   border-radius: 10px;
-  background: #111b25;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  background: #eef1f5;
+  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08);
 }
-.frame-backdrop {
-  position: absolute;
-  inset: -28px;
-  width: calc(100% + 56px);
-  height: calc(100% + 56px);
-  opacity: 0.24;
-  filter: blur(22px) saturate(0.85);
-  object-fit: cover;
-  transform: scale(1.06);
-}
-.frame-image {
-  position: relative;
-  z-index: 1;
+.masonry-image {
   display: block;
   width: 100%;
   height: 100%;
 }
-.carousel-frame {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+.frame-auto .masonry-image {
+  background: #fff;
 }
-.carousel-button {
+.image-order {
   position: absolute;
-  z-index: 3;
-  top: 50%;
-  display: flex;
-  width: 38px;
-  height: 38px;
+  z-index: 2;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
-  color: #263442;
-  cursor: pointer;
-  transform: translateY(-50%);
-}
-.carousel-button.previous {
-  left: 16px;
-}
-.carousel-button.next {
-  right: 16px;
-}
-.carousel-count {
-  position: absolute;
-  z-index: 3;
-  right: 14px;
-  bottom: 13px;
-  padding: 5px 9px;
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.72);
+  border-radius: 7px;
+  background: rgba(31, 45, 61, 0.72);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-}
-.thumbnail-list {
-  display: grid;
-  margin-top: 10px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
-}
-.thumbnail-item {
-  overflow: hidden;
-  padding: 0;
-  aspect-ratio: 16 / 9;
-  border: 2px solid transparent;
-  border-radius: 7px;
-  background: #e9eef2;
-  cursor: pointer;
-}
-.thumbnail-item.active {
-  border-color: #409eff;
-}
-.thumbnail-item img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.frame-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.grid-frame {
-  aspect-ratio: 16 / 10;
-}
-.layout-featured .grid-frame.featured {
-  aspect-ratio: 16 / 9;
-  grid-column: 1 / -1;
-}
-@media (max-width: 760px) {
-  .thumbnail-list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .frame-grid {
-    grid-template-columns: 1fr;
-  }
-  .layout-featured .grid-frame.featured {
-    aspect-ratio: 16 / 10;
-    grid-column: auto;
-  }
 }
 </style>

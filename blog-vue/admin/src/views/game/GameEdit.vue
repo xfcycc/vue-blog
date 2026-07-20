@@ -284,83 +284,144 @@
       <div class="section-heading">
         <div>
           <h3>游戏截图</h3>
-          <p>支持横屏和竖屏图片，可调整顺序并预览前台排版效果。</p>
+          <p>拖拽调整顺序，每张图可以独立设置形状、宽度并编辑内容。</p>
         </div>
-        <el-upload
-          action="/api/admin/games/images"
-          multiple
-          :show-file-list="false"
-          :before-upload="beforeUpload"
-          :on-success="uploadScreenshot"
-          :on-error="screenshotUploadFailed"
-        >
-          <el-button type="primary" plain size="small" icon="el-icon-upload2">
-            上传截图
+        <div class="screenshot-heading-actions">
+          <el-button
+            size="small"
+            icon="el-icon-magic-stick"
+            :disabled="!game.screenshotItemList.length"
+            @click="autoLayoutScreenshots"
+          >
+            自动排版
           </el-button>
-        </el-upload>
+          <el-upload
+            action="/api/admin/games/images"
+            multiple
+            :show-file-list="false"
+            :before-upload="beforeUpload"
+            :on-success="uploadScreenshot"
+            :on-error="screenshotUploadFailed"
+          >
+            <el-button type="primary" plain size="small" icon="el-icon-upload2">
+              上传截图
+            </el-button>
+          </el-upload>
+        </div>
       </div>
 
-      <template v-if="game.screenshotList.length">
+      <template v-if="game.screenshotItemList.length">
         <div class="screenshot-toolbar">
-          <el-radio-group v-model="game.screenshotLayout" size="small">
-            <el-radio-button
-              v-for="item in screenshotLayoutOptions"
-              :key="item.value"
-              :label="item.value"
-            >
-              {{ item.label }}
+          <el-radio-group v-model="screenshotPreviewMode" size="small">
+            <el-radio-button label="desktop">
+              <i class="el-icon-monitor" /> 桌面预览
+            </el-radio-button>
+            <el-radio-button label="mobile">
+              <i class="el-icon-mobile-phone" /> 手机预览
             </el-radio-button>
           </el-radio-group>
-          <span>共 {{ game.screenshotList.length }} 张</span>
+          <span>
+            共 {{ game.screenshotItemList.length }} 张
+            <em v-if="screenshotDirty">有未保存调整</em>
+          </span>
         </div>
 
         <div class="screenshot-editor-grid">
           <div class="screenshot-list-panel">
-            <div
-              v-for="(image, index) in game.screenshotList"
-              :key="image + index"
-              class="screenshot-list-item"
+            <draggable
+              v-model="game.screenshotItemList"
+              handle=".screenshot-drag-handle"
+              ghost-class="screenshot-drag-ghost"
+              :animation="180"
+              @end="screenshotOrderChanged"
             >
-              <el-image
-                fit="contain"
-                :src="image"
-                :preview-src-list="game.screenshotList"
-                :initial-index="index"
-              />
-              <div class="screenshot-item-meta">
-                <span>截图 {{ index + 1 }}</span>
-                <div>
-                  <el-button
-                    type="text"
-                    icon="el-icon-arrow-up"
-                    :disabled="index === 0"
-                    title="上移"
-                    @click="moveScreenshot(index, -1)"
-                  />
-                  <el-button
-                    type="text"
-                    icon="el-icon-arrow-down"
-                    :disabled="index === game.screenshotList.length - 1"
-                    title="下移"
-                    @click="moveScreenshot(index, 1)"
-                  />
-                  <el-button
-                    type="text"
-                    class="remove-screenshot"
-                    icon="el-icon-delete"
-                    title="删除"
-                    @click="removeScreenshot(index)"
-                  />
+              <article
+                v-for="(item, index) in game.screenshotItemList"
+                :key="item.displayUrl + index"
+                class="screenshot-list-item"
+              >
+                <button
+                  type="button"
+                  class="screenshot-drag-handle"
+                  title="拖拽调整顺序"
+                >
+                  <i class="el-icon-rank" />
+                </button>
+                <el-image
+                  fit="cover"
+                  :src="item.displayUrl"
+                  :preview-src-list="screenshotDisplayList"
+                  :initial-index="index"
+                />
+                <div class="screenshot-item-content">
+                  <div class="screenshot-item-heading">
+                    <div>
+                      <strong>截图 {{ index + 1 }}</strong>
+                      <span>{{ screenshotSizeText(item) }}</span>
+                    </div>
+                    <div class="screenshot-item-actions">
+                      <el-button
+                        type="text"
+                        icon="el-icon-edit-outline"
+                        @click="editScreenshot(index)"
+                      >
+                        编辑
+                      </el-button>
+                      <el-button
+                        type="text"
+                        class="remove-screenshot"
+                        icon="el-icon-delete"
+                        @click="removeScreenshot(index)"
+                      >
+                        删除
+                      </el-button>
+                    </div>
+                  </div>
+                  <div class="screenshot-item-options">
+                    <label>
+                      <span>形状</span>
+                      <el-select
+                        v-model="item.frameType"
+                        size="mini"
+                        @change="markScreenshotDirty"
+                      >
+                        <el-option
+                          v-for="option in screenshotFrameOptions"
+                          :key="option.value"
+                          :label="option.label"
+                          :value="option.value"
+                        />
+                      </el-select>
+                    </label>
+                    <label>
+                      <span>宽度</span>
+                      <el-select
+                        v-model="item.columnSpan"
+                        size="mini"
+                        @change="markScreenshotDirty"
+                      >
+                        <el-option
+                          v-for="option in screenshotWidthOptions"
+                          :key="option.value"
+                          :label="option.label"
+                          :value="option.value"
+                        />
+                      </el-select>
+                    </label>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </article>
+            </draggable>
           </div>
 
           <div class="screenshot-preview-panel">
-            <div class="preview-label">前台效果预览</div>
+            <div class="preview-label">
+              <span>前台效果预览</span>
+              <small>按保存顺序自动紧凑填充</small>
+            </div>
             <game-screenshot-preview
-              :images="game.screenshotList"
-              :layout="game.screenshotLayout"
+              :items="game.screenshotItemList"
+              :preview-mode="screenshotPreviewMode"
             />
           </div>
         </div>
@@ -369,7 +430,7 @@
       <el-empty
         v-else
         :image-size="72"
-        description="暂无游戏截图，上传后可选择排版并预览"
+        description="暂无游戏截图，上传横图或竖图后即可自由排版"
       />
     </section>
 
@@ -394,15 +455,25 @@
         >保存游戏</el-button
       >
     </div>
+
+    <game-screenshot-editor
+      v-model="screenshotEditorVisible"
+      :screenshot="editingScreenshot"
+      @saved="screenshotEdited"
+    />
   </el-card>
 </template>
 
 <script>
 import * as imageConversion from "image-conversion";
+import draggable from "vuedraggable";
+import GameScreenshotEditor from "../../components/game/GameScreenshotEditor";
 import GameScreenshotPreview from "../../components/game/GameScreenshotPreview";
 
 export default {
   components: {
+    draggable,
+    GameScreenshotEditor,
     GameScreenshotPreview
   },
   created() {
@@ -433,11 +504,23 @@ export default {
         { label: "日期", value: "DATE" },
         { label: "链接", value: "LINK" }
       ],
-      screenshotLayoutOptions: [
-        { label: "大图轮播", value: "CAROUSEL" },
-        { label: "主图优先", value: "FEATURED" },
-        { label: "等宽宫格", value: "GRID" }
-      ]
+      screenshotFrameOptions: [
+        { label: "自动", value: "AUTO" },
+        { label: "横图 16:9", value: "LANDSCAPE" },
+        { label: "竖图 9:16", value: "PORTRAIT" },
+        { label: "方图 1:1", value: "SQUARE" }
+      ],
+      screenshotWidthOptions: [
+        { label: "1/3", value: 4 },
+        { label: "1/2", value: 6 },
+        { label: "2/3", value: 8 },
+        { label: "整行", value: 12 }
+      ],
+      screenshotPreviewMode: "desktop",
+      screenshotEditorVisible: false,
+      editingScreenshot: {},
+      editingScreenshotIndex: -1,
+      screenshotDirty: false
     };
   },
   computed: {
@@ -449,6 +532,9 @@ export default {
     },
     displayCover() {
       return this.game.customCover || this.game.sourceCover || this.game.cover;
+    },
+    screenshotDisplayList() {
+      return this.game.screenshotItemList.map(item => item.displayUrl);
     }
   },
   methods: {
@@ -473,7 +559,8 @@ export default {
         playtimeForeverHours: 0,
         playtimeTwoWeeksHours: 0,
         screenshotList: [],
-        screenshotLayout: "CAROUSEL",
+        screenshotItemList: [],
+        screenshotLayout: "CUSTOM",
         reviewContent: "",
         fieldList: []
       };
@@ -490,9 +577,16 @@ export default {
             this.game.platformList = data.data.platformList || [];
             this.game.tagList = data.data.tagList || [];
             this.game.fieldList = data.data.fieldList || [];
-            this.game.screenshotList = data.data.screenshotList || [];
-            this.game.screenshotLayout =
-              data.data.screenshotLayout || "CAROUSEL";
+            this.game.screenshotItemList = this.normalizeScreenshotItems(
+              data.data.screenshotItemList,
+              data.data.screenshotList
+            );
+            this.game.screenshotList = this.game.screenshotItemList.map(
+              item => item.displayUrl
+            );
+            this.game.screenshotLayout = "CUSTOM";
+            this.enrichScreenshotSizes();
+            this.screenshotDirty = false;
             this.game.playtimeForeverHours = this.toHours(
               data.data.playtimeForever
             );
@@ -519,9 +613,21 @@ export default {
     removeField(index) {
       this.game.fieldList.splice(index, 1);
     },
-    uploadScreenshot(response) {
+    async uploadScreenshot(response) {
       if (response.flag && response.data) {
-        this.game.screenshotList.push(response.data);
+        const size = await this.loadImageSize(response.data);
+        this.game.screenshotItemList.push({
+          originalUrl: response.data,
+          displayUrl: response.data,
+          originalWidth: size.width,
+          originalHeight: size.height,
+          displayWidth: size.width,
+          displayHeight: size.height,
+          frameType: "AUTO",
+          columnSpan: size.height > size.width ? 4 : 6,
+          sortOrder: this.game.screenshotItemList.length + 1
+        });
+        this.markScreenshotDirty();
       } else {
         this.$notify.error({
           title: "上传失败",
@@ -532,16 +638,130 @@ export default {
     screenshotUploadFailed() {
       this.$notify.error({ title: "上传失败", message: "游戏截图上传失败" });
     },
-    moveScreenshot(index, step) {
-      const target = index + step;
-      if (target < 0 || target >= this.game.screenshotList.length) return;
-      const list = this.game.screenshotList.slice();
-      const current = list.splice(index, 1)[0];
-      list.splice(target, 0, current);
-      this.game.screenshotList = list;
+    screenshotOrderChanged() {
+      this.reindexScreenshots();
+      this.markScreenshotDirty();
     },
     removeScreenshot(index) {
-      this.game.screenshotList.splice(index, 1);
+      this.$confirm(
+        "确认从当前游戏中移除这张截图吗？保存游戏后才会生效。",
+        "删除截图",
+        {
+          confirmButtonText: "确认删除",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      )
+        .then(() => {
+          this.game.screenshotItemList.splice(index, 1);
+          this.reindexScreenshots();
+          this.markScreenshotDirty();
+        })
+        .catch(() => {});
+    },
+    editScreenshot(index) {
+      this.editingScreenshotIndex = index;
+      this.editingScreenshot = Object.assign(
+        {},
+        this.game.screenshotItemList[index]
+      );
+      this.screenshotEditorVisible = true;
+    },
+    screenshotEdited(result) {
+      if (this.editingScreenshotIndex < 0) return;
+      const current = this.game.screenshotItemList[this.editingScreenshotIndex];
+      this.$set(
+        this.game.screenshotItemList,
+        this.editingScreenshotIndex,
+        Object.assign({}, current, result)
+      );
+      this.markScreenshotDirty();
+      this.$message.success("截图编辑结果已上传，保存游戏后正式生效");
+    },
+    async autoLayoutScreenshots() {
+      await this.enrichScreenshotSizes();
+      this.game.screenshotItemList.forEach(item => {
+        item.frameType = "AUTO";
+        item.columnSpan =
+          item.displayHeight > item.displayWidth || !item.displayWidth ? 4 : 6;
+      });
+      this.markScreenshotDirty();
+    },
+    normalizeScreenshotItems(itemList, legacyList) {
+      const sourceList =
+        itemList && itemList.length
+          ? itemList
+          : (legacyList || []).map((url, index) => ({
+              originalUrl: url,
+              displayUrl: url,
+              frameType: "AUTO",
+              columnSpan: 6,
+              sortOrder: index + 1
+            }));
+      return sourceList
+        .filter(item => item && item.displayUrl)
+        .map((item, index) => ({
+          originalUrl: item.originalUrl || item.displayUrl,
+          displayUrl: item.displayUrl,
+          originalWidth: item.originalWidth || item.displayWidth || null,
+          originalHeight: item.originalHeight || item.displayHeight || null,
+          displayWidth: item.displayWidth || null,
+          displayHeight: item.displayHeight || null,
+          frameType: ["AUTO", "LANDSCAPE", "PORTRAIT", "SQUARE"].includes(
+            item.frameType
+          )
+            ? item.frameType
+            : "AUTO",
+          columnSpan: [4, 6, 8, 12].includes(Number(item.columnSpan))
+            ? Number(item.columnSpan)
+            : 6,
+          sortOrder: index + 1
+        }));
+    },
+    enrichScreenshotSizes() {
+      const tasks = this.game.screenshotItemList.map((item, index) => {
+        if (item.displayWidth && item.displayHeight) return Promise.resolve();
+        return this.loadImageSize(item.displayUrl).then(size => {
+          const updated = Object.assign({}, item, {
+            displayWidth: size.width,
+            displayHeight: size.height,
+            originalWidth: item.originalWidth || size.width,
+            originalHeight: item.originalHeight || size.height
+          });
+          this.$set(this.game.screenshotItemList, index, updated);
+        });
+      });
+      return Promise.all(tasks);
+    },
+    loadImageSize(url) {
+      return new Promise(resolve => {
+        const image = new Image();
+        image.onload = () =>
+          resolve({
+            width: image.naturalWidth || 1,
+            height: image.naturalHeight || 1
+          });
+        image.onerror = () => resolve({ width: null, height: null });
+        image.src = url;
+      });
+    },
+    screenshotSizeText(item) {
+      if (!item.displayWidth || !item.displayHeight) return "尺寸读取中";
+      const direction =
+        item.displayHeight > item.displayWidth
+          ? "竖图"
+          : item.displayHeight === item.displayWidth
+          ? "方图"
+          : "横图";
+      return item.displayWidth + " × " + item.displayHeight + " · " + direction;
+    },
+    reindexScreenshots() {
+      this.game.screenshotItemList.forEach((item, index) => {
+        item.sortOrder = index + 1;
+      });
+    },
+    markScreenshotDirty() {
+      this.screenshotDirty = true;
     },
     cardFieldChanged(field) {
       const count = this.game.fieldList.filter(item => item.showOnCard === 1)
@@ -559,7 +779,12 @@ export default {
       this.saving = true;
       const payload = Object.assign({}, this.game, {
         playtimeForever: this.toMinutes(this.game.playtimeForeverHours),
-        playtimeTwoWeeks: this.toMinutes(this.game.playtimeTwoWeeksHours)
+        playtimeTwoWeeks: this.toMinutes(this.game.playtimeTwoWeeksHours),
+        screenshotList: this.screenshotDisplayList,
+        screenshotItemList: this.game.screenshotItemList.map((item, index) =>
+          Object.assign({}, item, { sortOrder: index + 1 })
+        ),
+        screenshotLayout: "CUSTOM"
       });
       this.axios
         .post("/api/admin/games/save", payload)
@@ -695,12 +920,17 @@ export default {
 .game-review-editor {
   min-height: 520px;
 }
+.screenshot-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .screenshot-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid #ebeef5;
   border-radius: 8px;
   background: #fafbfd;
@@ -709,63 +939,154 @@ export default {
   color: #909399;
   font-size: 13px;
 }
+.screenshot-toolbar em {
+  margin-left: 8px;
+  color: #e6a23c;
+  font-size: 12px;
+  font-style: normal;
+}
 .screenshot-editor-grid {
   display: grid;
   align-items: start;
   margin-top: 14px;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: minmax(360px, 36%) minmax(0, 1fr);
   gap: 18px;
 }
 .screenshot-list-panel {
-  display: flex;
-  max-height: 620px;
+  max-height: 720px;
   overflow-y: auto;
-  flex-direction: column;
-  gap: 10px;
   padding-right: 4px;
 }
+.screenshot-list-panel > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .screenshot-list-item {
-  overflow: hidden;
+  position: relative;
+  display: grid;
+  min-height: 128px;
+  overflow: visible;
+  grid-template-columns: 118px minmax(0, 1fr);
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   background: #fff;
+  box-shadow: 0 4px 16px rgba(31, 45, 61, 0.05);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.screenshot-list-item:hover {
+  border-color: #c6e2ff;
+  box-shadow: 0 7px 20px rgba(31, 45, 61, 0.08);
 }
 .screenshot-list-item .el-image {
   display: block;
-  width: 100%;
-  height: 128px;
-  background: #111b25;
+  width: 118px;
+  height: 100%;
+  min-height: 128px;
+  overflow: hidden;
+  border-radius: 7px 0 0 7px;
+  background: #eef1f5;
 }
-.screenshot-item-meta {
+.screenshot-drag-handle {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  left: 8px;
   display: flex;
-  min-height: 42px;
+  width: 30px;
+  height: 30px;
   align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(31, 45, 61, 0.78);
+  color: #fff;
+  cursor: grab;
+  font-size: 16px;
+}
+.screenshot-drag-handle:active {
+  cursor: grabbing;
+}
+.screenshot-drag-ghost {
+  opacity: 0.46;
+}
+.screenshot-item-content {
+  min-width: 0;
+  padding: 12px;
+}
+.screenshot-item-heading {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 4px 10px 4px 12px;
+  gap: 8px;
 }
-.screenshot-item-meta > span {
-  color: #606266;
-  font-size: 13px;
-  font-weight: 600;
+.screenshot-item-heading > div:first-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
 }
-.screenshot-item-meta .el-button + .el-button {
-  margin-left: 4px;
+.screenshot-item-heading strong {
+  color: #303133;
+  font-size: 14px;
+}
+.screenshot-item-heading span {
+  overflow: hidden;
+  color: #909399;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.screenshot-item-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.screenshot-item-actions .el-button + .el-button {
+  margin-left: 0;
 }
 .remove-screenshot {
-  color: #f56c6c;
+  color: #f56c6c !important;
+}
+.screenshot-item-options {
+  display: grid;
+  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.screenshot-item-options label {
+  display: grid;
+  min-width: 0;
+  align-items: center;
+  grid-template-columns: 38px minmax(0, 1fr);
+  color: #909399;
+  font-size: 12px;
+  gap: 4px;
+}
+.screenshot-item-options .el-select {
+  width: 100%;
 }
 .screenshot-preview-panel {
   min-width: 0;
-  padding: 16px;
+  min-height: 420px;
+  padding: 18px;
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   background: #f6f8fa;
 }
 .preview-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
   color: #606266;
   font-size: 13px;
   font-weight: 700;
+}
+.preview-label small {
+  color: #a0a8b3;
+  font-size: 12px;
+  font-weight: 400;
 }
 .bottom-actions {
   display: flex;
@@ -784,17 +1105,25 @@ export default {
     grid-template-columns: 1fr;
   }
   .screenshot-list-panel {
-    display: grid;
     max-height: none;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (max-width: 720px) {
+  .screenshot-section .section-heading,
   .screenshot-toolbar {
     align-items: flex-start;
     flex-direction: column;
   }
-  .screenshot-list-panel {
+  .screenshot-heading-actions {
+    width: 100%;
+  }
+  .screenshot-list-item {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .screenshot-list-item .el-image {
+    width: 96px;
+  }
+  .screenshot-item-options {
     grid-template-columns: 1fr;
   }
 }

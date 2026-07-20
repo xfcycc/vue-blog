@@ -1,89 +1,23 @@
 <template>
-  <div
-    v-if="images.length"
-    class="screenshot-gallery"
-    :class="'layout-' + safeLayout.toLowerCase()"
-  >
-    <template v-if="safeLayout === 'CAROUSEL'">
-      <div
-        class="carousel-frame media-frame"
-        role="button"
-        tabindex="0"
-        :aria-label="'放大查看' + imageAlt(activeIndex)"
-        @click="preview(activeIndex)"
-        @keyup.enter="preview(activeIndex)"
-      >
-        <img class="frame-backdrop" :src="images[activeIndex]" alt="" />
-        <img
-          class="frame-image"
-          :src="images[activeIndex]"
-          :alt="imageAlt(activeIndex)"
-          referrerpolicy="no-referrer"
-        />
-        <button
-          v-if="images.length > 1"
-          type="button"
-          class="carousel-button previous"
-          aria-label="上一张截图"
-          @click.stop="changeActive(-1)"
-        >
-          <v-icon size="22" color="currentColor">mdi-chevron-left</v-icon>
-        </button>
-        <button
-          v-if="images.length > 1"
-          type="button"
-          class="carousel-button next"
-          aria-label="下一张截图"
-          @click.stop="changeActive(1)"
-        >
-          <v-icon size="22" color="currentColor">mdi-chevron-right</v-icon>
-        </button>
-        <span class="carousel-count">
-          {{ activeIndex + 1 }} / {{ images.length }}
-        </span>
-      </div>
-
-      <div v-if="images.length > 1" class="thumbnail-list">
-        <button
-          v-for="(image, index) in images"
-          :key="image + index"
-          type="button"
-          class="thumbnail-item"
-          :class="{ active: index === activeIndex }"
-          :aria-label="'查看' + imageAlt(index)"
-          @click="activeIndex = index"
-        >
-          <img
-            :src="image"
-            :alt="imageAlt(index)"
-            referrerpolicy="no-referrer"
-          />
-        </button>
-      </div>
-    </template>
-
-    <div v-else class="frame-grid">
-      <div
-        v-for="(image, index) in images"
-        :key="image + index"
-        class="media-frame grid-frame"
-        :class="{ featured: safeLayout === 'FEATURED' && index === 0 }"
-        role="button"
-        tabindex="0"
-        :aria-label="'放大查看' + imageAlt(index)"
-        @click="preview(index)"
-        @keyup.enter="preview(index)"
-      >
-        <img class="frame-backdrop" :src="image" alt="" />
-        <img
-          class="frame-image"
-          :src="image"
-          :alt="imageAlt(index)"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-        />
-      </div>
-    </div>
+  <div v-if="normalizedItems.length" ref="grid" class="screenshot-gallery">
+    <button
+      v-for="(item, index) in normalizedItems"
+      :key="item.displayUrl + index"
+      type="button"
+      class="screenshot-item"
+      :class="'frame-' + frameType(item).toLowerCase()"
+      :style="itemStyle(item, index)"
+      :aria-label="'放大查看' + imageAlt(index)"
+      @click="preview(index)"
+    >
+      <img
+        :src="item.displayUrl"
+        :alt="imageAlt(index)"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        @load="imageLoaded($event, index)"
+      />
+    </button>
   </div>
 </template>
 
@@ -91,13 +25,13 @@
 export default {
   name: "GameScreenshotGallery",
   props: {
-    images: {
+    items: {
       type: Array,
       default: () => []
     },
-    layout: {
-      type: String,
-      default: "CAROUSEL"
+    images: {
+      type: Array,
+      default: () => []
     },
     gameName: {
       type: String,
@@ -106,28 +40,102 @@ export default {
   },
   data() {
     return {
-      activeIndex: 0
+      gridWidth: 0,
+      imageRatios: {},
+      resizeObserver: null,
+      isMobile: false
     };
   },
   computed: {
-    safeLayout() {
-      return ["CAROUSEL", "FEATURED", "GRID"].includes(this.layout)
-        ? this.layout
-        : "CAROUSEL";
+    normalizedItems() {
+      if (this.items.length) return this.items;
+      return this.images.map((url, index) => ({
+        displayUrl: url,
+        frameType: "AUTO",
+        columnSpan: 6,
+        sortOrder: index + 1
+      }));
+    },
+    previewImages() {
+      return this.normalizedItems.map(item => item.displayUrl);
     }
   },
   watch: {
-    images() {
-      if (this.activeIndex >= this.images.length) this.activeIndex = 0;
+    normalizedItems: {
+      deep: true,
+      handler() {
+        this.$nextTick(this.measureGrid);
+      }
     }
   },
+  mounted() {
+    this.measureGrid();
+    if (window.ResizeObserver) {
+      this.resizeObserver = new window.ResizeObserver(this.measureGrid);
+      this.resizeObserver.observe(this.$refs.grid);
+    }
+    window.addEventListener("resize", this.measureGrid);
+  },
+  beforeDestroy() {
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    window.removeEventListener("resize", this.measureGrid);
+  },
   methods: {
-    changeActive(step) {
-      this.activeIndex =
-        (this.activeIndex + step + this.images.length) % this.images.length;
+    measureGrid() {
+      if (this.$refs.grid) this.gridWidth = this.$refs.grid.clientWidth;
+      this.isMobile = window.innerWidth <= 760;
+    },
+    frameType(item) {
+      return ["AUTO", "LANDSCAPE", "PORTRAIT", "SQUARE"].includes(
+        item.frameType
+      )
+        ? item.frameType
+        : "AUTO";
+    },
+    columnSpan(item) {
+      if (this.isMobile) return 12;
+      return [4, 6, 8, 12].includes(Number(item.columnSpan))
+        ? Number(item.columnSpan)
+        : 6;
+    },
+    aspectRatio(item, index) {
+      const frame = this.frameType(item);
+      if (frame === "LANDSCAPE") return 16 / 9;
+      if (frame === "PORTRAIT") return 9 / 16;
+      if (frame === "SQUARE") return 1;
+      if (item.displayWidth && item.displayHeight) {
+        return item.displayWidth / item.displayHeight;
+      }
+      return this.imageRatios[index] || 16 / 9;
+    },
+    itemStyle(item, index) {
+      const gap = this.isMobile ? 12 : 16;
+      const rowHeight = 8;
+      const span = this.columnSpan(item);
+      const columnWidth = Math.max(0, (this.gridWidth - gap * 11) / 12);
+      const width = columnWidth * span + gap * (span - 1);
+      const height = width / this.aspectRatio(item, index);
+      const rowSpan = Math.max(
+        1,
+        Math.ceil((height + gap) / (rowHeight + gap))
+      );
+      return {
+        gridColumnEnd: "span " + span,
+        gridRowEnd: "span " + rowSpan
+      };
+    },
+    imageLoaded(event, index) {
+      const image = event && event.target ? event.target : null;
+      if (image && image.naturalWidth && image.naturalHeight) {
+        this.$set(
+          this.imageRatios,
+          index,
+          image.naturalWidth / image.naturalHeight
+        );
+      }
     },
     preview(index) {
-      this.$imagePreview({ images: this.images, index });
+      this.$imagePreview({ images: this.previewImages, index });
     },
     imageAlt(index) {
       return this.gameName + " 游戏截图 " + (index + 1);
@@ -138,170 +146,55 @@ export default {
 
 <style scoped>
 .screenshot-gallery {
-  width: 100%;
-}
-.media-frame {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(220, 230, 231, 0.9);
-  border-radius: 14px;
-  background: #101923;
-  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.09);
-  cursor: zoom-in;
-}
-.frame-backdrop {
-  position: absolute;
-  inset: -34px;
-  width: calc(100% + 68px);
-  height: calc(100% + 68px);
-  opacity: 0.26;
-  filter: blur(26px) saturate(0.9);
-  object-fit: cover;
-  transform: scale(1.06);
-}
-.frame-image {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.carousel-frame {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-}
-.carousel-button {
-  position: absolute;
-  z-index: 3;
-  top: 50%;
-  display: flex;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
-  color: #15232f;
-  cursor: pointer;
-  transform: translateY(-50%);
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.carousel-button:hover {
-  background: #fff;
-  transform: translateY(-50%) scale(1.05);
-}
-.carousel-button.previous {
-  left: 18px;
-}
-.carousel-button.next {
-  right: 18px;
-}
-.carousel-count {
-  position: absolute;
-  z-index: 3;
-  right: 16px;
-  bottom: 15px;
-  min-width: 52px;
-  padding: 6px 10px;
-  border-radius: 14px;
-  background: rgba(15, 23, 42, 0.76);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-}
-.thumbnail-list {
   display: grid;
-  margin-top: 12px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  width: 100%;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  grid-auto-rows: 8px;
+  gap: 16px;
 }
-.thumbnail-item {
+.screenshot-item {
+  position: relative;
+  min-width: 0;
   overflow: hidden;
   padding: 0;
-  aspect-ratio: 16 / 9;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background: #e7edef;
-  cursor: pointer;
-  opacity: 0.72;
-  transition: border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  border: 1px solid rgba(220, 230, 231, 0.9);
+  border-radius: 14px;
+  background: #edf2f2;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.09);
+  cursor: zoom-in;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
 }
-.thumbnail-item:hover,
-.thumbnail-item.active {
-  opacity: 1;
-  transform: translateY(-1px);
+.screenshot-item:hover {
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.14);
+  transform: translateY(-2px);
 }
-.thumbnail-item.active {
-  border-color: #0f7c75;
+.screenshot-item:focus-visible {
+  outline: 3px solid rgba(15, 124, 117, 0.28);
+  outline-offset: 3px;
 }
-.thumbnail-item img {
+.screenshot-item img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.frame-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-.grid-frame {
-  aspect-ratio: 16 / 10;
-}
-.layout-featured .grid-frame.featured {
-  aspect-ratio: 16 / 9;
-  grid-column: 1 / -1;
+.frame-auto img {
+  object-fit: contain;
+  background: #fff;
 }
 @media (prefers-reduced-motion: reduce) {
-  .carousel-button,
-  .thumbnail-item {
+  .screenshot-item {
     transition: none;
   }
 }
 @media (max-width: 760px) {
-  .carousel-frame {
-    aspect-ratio: 4 / 3;
+  .screenshot-gallery {
+    gap: 12px;
   }
-  .thumbnail-list {
-    overflow-x: auto;
-    grid-auto-columns: 112px;
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    padding-bottom: 4px;
-  }
-  .frame-grid {
-    grid-template-columns: 1fr;
-  }
-  .layout-featured .grid-frame.featured {
-    aspect-ratio: 4 / 3;
-    grid-column: auto;
-  }
-}
-@media (max-width: 560px) {
-  .media-frame {
+  .screenshot-item {
+    grid-column-end: span 12 !important;
     border-radius: 12px;
-  }
-  .carousel-button {
-    width: 36px;
-    height: 36px;
-  }
-  .carousel-button.previous {
-    left: 10px;
-  }
-  .carousel-button.next {
-    right: 10px;
-  }
-  .carousel-count {
-    right: 10px;
-    bottom: 10px;
-  }
-  .grid-frame {
-    aspect-ratio: 4 / 3;
   }
 }
 </style>

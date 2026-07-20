@@ -9,19 +9,24 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.minzheng.blog.dao.GameDao;
 import com.minzheng.blog.dao.GameFieldDao;
+import com.minzheng.blog.dao.GameScreenshotDao;
 import com.minzheng.blog.dto.GameBackDTO;
 import com.minzheng.blog.dto.GameDTO;
 import com.minzheng.blog.dto.GameDeleteDTO;
 import com.minzheng.blog.dto.GameDetailDTO;
 import com.minzheng.blog.dto.GameFieldDTO;
 import com.minzheng.blog.dto.GameListDTO;
+import com.minzheng.blog.dto.GameScreenshotBackDTO;
+import com.minzheng.blog.dto.GameScreenshotDTO;
 import com.minzheng.blog.dto.SteamSyncDTO;
 import com.minzheng.blog.entity.Game;
 import com.minzheng.blog.entity.GameField;
+import com.minzheng.blog.entity.GameScreenshot;
 import com.minzheng.blog.exception.BizException;
 import com.minzheng.blog.service.GameConfigService;
 import com.minzheng.blog.service.GameFieldService;
 import com.minzheng.blog.service.GameService;
+import com.minzheng.blog.service.GameScreenshotService;
 import com.minzheng.blog.util.BeanCopyUtils;
 import com.minzheng.blog.vo.GameBackQueryVO;
 import com.minzheng.blog.vo.GameDeleteVO;
@@ -29,6 +34,7 @@ import com.minzheng.blog.vo.GameFieldVO;
 import com.minzheng.blog.vo.GameIdVO;
 import com.minzheng.blog.vo.GameQueryVO;
 import com.minzheng.blog.vo.GameSaveVO;
+import com.minzheng.blog.vo.GameScreenshotSaveVO;
 import com.minzheng.blog.vo.PageResult;
 import com.minzheng.blog.vo.SteamSyncVO;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +103,15 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
     ));
 
     private static final Set<String> SCREENSHOT_LAYOUT_SET = new LinkedHashSet<>(Arrays.asList(
-            "CAROUSEL", "FEATURED", "GRID"
+            "CAROUSEL", "FEATURED", "GRID", "CUSTOM"
+    ));
+
+    private static final Set<String> SCREENSHOT_FRAME_SET = new LinkedHashSet<>(Arrays.asList(
+            "AUTO", "LANDSCAPE", "PORTRAIT", "SQUARE"
+    ));
+
+    private static final Set<Integer> SCREENSHOT_COLUMN_SPAN_SET = new LinkedHashSet<>(Arrays.asList(
+            4, 6, 8, 12
     ));
 
     @Resource
@@ -108,6 +122,12 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
 
     @Resource
     private GameFieldService gameFieldService;
+
+    @Resource
+    private GameScreenshotDao gameScreenshotDao;
+
+    @Resource
+    private GameScreenshotService gameScreenshotService;
 
     @Resource
     private GameConfigService gameConfigService;
@@ -164,7 +184,12 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
                 .eq(GameField::getGameId, game.getId())
                 .orderByAsc(GameField::getSortOrder)
                 .orderByAsc(GameField::getId));
-        return convertGameDetail(game, fieldList, admin);
+        List<GameScreenshot> screenshotList = gameScreenshotDao.selectList(
+                new LambdaQueryWrapper<GameScreenshot>()
+                        .eq(GameScreenshot::getGameId, game.getId())
+                        .orderByAsc(GameScreenshot::getSortOrder)
+                        .orderByAsc(GameScreenshot::getId));
+        return convertGameDetail(game, fieldList, screenshotList, admin);
     }
 
     @Override
@@ -201,6 +226,7 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
         Game game = buildSavedGame(gameSaveVO, original);
         this.saveOrUpdate(game);
         saveGameFields(game.getId(), gameSaveVO.getFieldList());
+        saveGameScreenshots(game.getId(), gameSaveVO);
         return game.getId();
     }
 
@@ -219,6 +245,8 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
                 .collect(Collectors.toList());
         if (!customIdList.isEmpty()) {
             gameFieldService.remove(new LambdaQueryWrapper<GameField>().in(GameField::getGameId, customIdList));
+            gameScreenshotService.remove(new LambdaQueryWrapper<GameScreenshot>()
+                    .in(GameScreenshot::getGameId, customIdList));
             this.removeByIds(customIdList);
         }
         return GameDeleteDTO.builder()
@@ -321,7 +349,9 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
                 .build()).collect(Collectors.toList());
     }
 
-    private GameDetailDTO convertGameDetail(Game game, List<GameField> fieldList, boolean admin) {
+    private GameDetailDTO convertGameDetail(Game game, List<GameField> fieldList,
+                                            List<GameScreenshot> screenshotList, boolean admin) {
+        List<String> legacyScreenshotList = splitScreenshots(game.getScreenshots());
         return GameDetailDTO.builder()
                 .id(game.getId())
                 .source(game.getSource())
@@ -335,7 +365,8 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
                 .gameUrl(game.getGameUrl())
                 .platformList(splitPlatforms(game.getPlatforms()))
                 .tagList(splitTags(game.getTags()))
-                .screenshotList(splitScreenshots(game.getScreenshots()))
+                .screenshotList(resolveDisplayScreenshotList(screenshotList, legacyScreenshotList))
+                .screenshotItemList(convertGameScreenshots(screenshotList, legacyScreenshotList, admin))
                 .screenshotLayout(normalizeScreenshotLayout(game.getScreenshotLayout()))
                 .playStatus(normalizePlayStatus(game.getPlayStatus()))
                 .personalScore(game.getPersonalScore())
@@ -383,8 +414,8 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
                     .gameUrl(gameSaveVO.getGameUrl())
                     .platforms(joinPlatforms(gameSaveVO.getPlatformList(), null))
                     .tags(joinTags(gameSaveVO.getTagList()))
-                    .screenshots(joinScreenshots(gameSaveVO.getScreenshotList()))
-                    .screenshotLayout(normalizeScreenshotLayout(gameSaveVO.getScreenshotLayout()))
+                    .screenshots(joinScreenshots(resolveSubmittedScreenshotList(gameSaveVO)))
+                    .screenshotLayout(resolveSubmittedScreenshotLayout(gameSaveVO))
                     .playStatus(normalizePlayStatus(gameSaveVO.getPlayStatus()))
                     .personalScore(gameSaveVO.getPersonalScore())
                     .sortOrder(defaultInteger(gameSaveVO.getSortOrder(), 9999))
@@ -403,8 +434,8 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
         original.setGameUrl(synced ? original.getGameUrl() : gameSaveVO.getGameUrl());
         original.setPlatforms(joinPlatforms(gameSaveVO.getPlatformList(), synced ? original.getSource() : null));
         original.setTags(joinTags(gameSaveVO.getTagList()));
-        original.setScreenshots(joinScreenshots(gameSaveVO.getScreenshotList()));
-        original.setScreenshotLayout(normalizeScreenshotLayout(gameSaveVO.getScreenshotLayout()));
+        original.setScreenshots(joinScreenshots(resolveSubmittedScreenshotList(gameSaveVO)));
+        original.setScreenshotLayout(resolveSubmittedScreenshotLayout(gameSaveVO));
         original.setPlayStatus(normalizePlayStatus(gameSaveVO.getPlayStatus()));
         original.setPersonalScore(gameSaveVO.getPersonalScore());
         original.setSortOrder(defaultInteger(gameSaveVO.getSortOrder(), 9999));
@@ -457,6 +488,117 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
         if (!fieldList.isEmpty()) {
             gameFieldService.saveBatch(fieldList, 100);
         }
+    }
+
+    private void saveGameScreenshots(Integer gameId, GameSaveVO gameSaveVO) {
+        gameScreenshotService.remove(new LambdaQueryWrapper<GameScreenshot>()
+                .eq(GameScreenshot::getGameId, gameId));
+        List<GameScreenshotSaveVO> screenshotVOList = gameSaveVO.getScreenshotItemList();
+        if (screenshotVOList == null) {
+            screenshotVOList = buildLegacyScreenshotSaveList(gameSaveVO.getScreenshotList());
+        }
+        if (screenshotVOList.isEmpty()) {
+            return;
+        }
+        List<GameScreenshot> screenshotList = new ArrayList<>();
+        for (int i = 0; i < screenshotVOList.size(); i++) {
+            GameScreenshotSaveVO screenshotVO = screenshotVOList.get(i);
+            if (screenshotVO == null || !StringUtils.hasText(screenshotVO.getDisplayUrl())) {
+                continue;
+            }
+            String displayUrl = screenshotVO.getDisplayUrl().trim();
+            screenshotList.add(GameScreenshot.builder()
+                    .gameId(gameId)
+                    .originalUrl(defaultString(screenshotVO.getOriginalUrl(), displayUrl).trim())
+                    .displayUrl(displayUrl)
+                    .originalWidth(positiveInteger(screenshotVO.getOriginalWidth()))
+                    .originalHeight(positiveInteger(screenshotVO.getOriginalHeight()))
+                    .displayWidth(positiveInteger(screenshotVO.getDisplayWidth()))
+                    .displayHeight(positiveInteger(screenshotVO.getDisplayHeight()))
+                    .frameType(normalizeScreenshotFrame(screenshotVO.getFrameType()))
+                    .columnSpan(normalizeScreenshotColumnSpan(screenshotVO.getColumnSpan()))
+                    .sortOrder(i + 1)
+                    .build());
+        }
+        if (!screenshotList.isEmpty()) {
+            gameScreenshotService.saveBatch(screenshotList, 100);
+        }
+    }
+
+    private List<GameScreenshotSaveVO> buildLegacyScreenshotSaveList(List<String> screenshotList) {
+        if (screenshotList == null || screenshotList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<GameScreenshotSaveVO> result = new ArrayList<>();
+        for (int i = 0; i < screenshotList.size(); i++) {
+            String url = screenshotList.get(i);
+            if (!StringUtils.hasText(url)) {
+                continue;
+            }
+            result.add(GameScreenshotSaveVO.builder()
+                    .originalUrl(url.trim())
+                    .displayUrl(url.trim())
+                    .frameType("AUTO")
+                    .columnSpan(6)
+                    .sortOrder(i + 1)
+                    .build());
+        }
+        return result;
+    }
+
+    private List<GameScreenshotDTO> convertGameScreenshots(List<GameScreenshot> screenshotList,
+                                                           List<String> legacyScreenshotList,
+                                                           boolean admin) {
+        List<GameScreenshot> sourceList = screenshotList;
+        if (sourceList == null || sourceList.isEmpty()) {
+            sourceList = buildLegacyGameScreenshots(legacyScreenshotList);
+        }
+        return sourceList.stream()
+                .map(item -> convertGameScreenshot(item, admin))
+                .collect(Collectors.toList());
+    }
+
+    private GameScreenshotDTO convertGameScreenshot(GameScreenshot screenshot, boolean admin) {
+        GameScreenshotDTO screenshotDTO = admin ? new GameScreenshotBackDTO() : new GameScreenshotDTO();
+        screenshotDTO.setDisplayUrl(screenshot.getDisplayUrl());
+        screenshotDTO.setDisplayWidth(screenshot.getDisplayWidth());
+        screenshotDTO.setDisplayHeight(screenshot.getDisplayHeight());
+        screenshotDTO.setFrameType(normalizeScreenshotFrame(screenshot.getFrameType()));
+        screenshotDTO.setColumnSpan(normalizeScreenshotColumnSpan(screenshot.getColumnSpan()));
+        screenshotDTO.setSortOrder(screenshot.getSortOrder());
+        if (admin) {
+            GameScreenshotBackDTO backDTO = (GameScreenshotBackDTO) screenshotDTO;
+            backDTO.setOriginalUrl(defaultString(screenshot.getOriginalUrl(), screenshot.getDisplayUrl()));
+            backDTO.setOriginalWidth(screenshot.getOriginalWidth());
+            backDTO.setOriginalHeight(screenshot.getOriginalHeight());
+        }
+        return screenshotDTO;
+    }
+
+    private List<GameScreenshot> buildLegacyGameScreenshots(List<String> legacyScreenshotList) {
+        List<GameScreenshot> result = new ArrayList<>();
+        for (int i = 0; i < legacyScreenshotList.size(); i++) {
+            String url = legacyScreenshotList.get(i);
+            result.add(GameScreenshot.builder()
+                    .originalUrl(url)
+                    .displayUrl(url)
+                    .frameType("AUTO")
+                    .columnSpan(6)
+                    .sortOrder(i + 1)
+                    .build());
+        }
+        return result;
+    }
+
+    private List<String> resolveDisplayScreenshotList(List<GameScreenshot> screenshotList,
+                                                      List<String> legacyScreenshotList) {
+        if (screenshotList == null || screenshotList.isEmpty()) {
+            return legacyScreenshotList;
+        }
+        return screenshotList.stream()
+                .map(GameScreenshot::getDisplayUrl)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toList());
     }
 
     private JSONArray fetchSteamGames(boolean includeFreeGames, String steamApiKey, String steamId) {
@@ -589,6 +731,22 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
                 .collect(Collectors.toList());
     }
 
+    private List<String> resolveSubmittedScreenshotList(GameSaveVO gameSaveVO) {
+        if (gameSaveVO.getScreenshotItemList() == null) {
+            return gameSaveVO.getScreenshotList();
+        }
+        return gameSaveVO.getScreenshotItemList().stream()
+                .filter(Objects::nonNull)
+                .map(GameScreenshotSaveVO::getDisplayUrl)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toList());
+    }
+
+    private String resolveSubmittedScreenshotLayout(GameSaveVO gameSaveVO) {
+        return gameSaveVO.getScreenshotItemList() == null
+                ? normalizeScreenshotLayout(gameSaveVO.getScreenshotLayout()) : "CUSTOM";
+    }
+
     private String joinScreenshots(List<String> screenshotList) {
         if (screenshotList == null || screenshotList.isEmpty()) {
             return null;
@@ -619,6 +777,15 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
         String layout = StringUtils.hasText(screenshotLayout)
                 ? screenshotLayout.trim().toUpperCase() : "CAROUSEL";
         return SCREENSHOT_LAYOUT_SET.contains(layout) ? layout : "CAROUSEL";
+    }
+
+    private String normalizeScreenshotFrame(String frameType) {
+        String frame = StringUtils.hasText(frameType) ? frameType.trim().toUpperCase() : "AUTO";
+        return SCREENSHOT_FRAME_SET.contains(frame) ? frame : "AUTO";
+    }
+
+    private Integer normalizeScreenshotColumnSpan(Integer columnSpan) {
+        return SCREENSHOT_COLUMN_SPAN_SET.contains(columnSpan) ? columnSpan : 6;
     }
 
     private String normalizePlatform(String platform) {
@@ -664,6 +831,10 @@ public class GameServiceImpl extends ServiceImpl<GameDao, Game> implements GameS
 
     private Integer defaultInteger(Integer value, Integer defaultValue) {
         return Objects.isNull(value) ? defaultValue : value;
+    }
+
+    private Integer positiveInteger(Integer value) {
+        return Objects.isNull(value) || value <= 0 ? null : value;
     }
 
     private String defaultString(String value, String defaultValue) {
