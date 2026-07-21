@@ -270,10 +270,6 @@ INSERT INTO `tb_resource` (`id`, `resource_name`, `url`, `request_method`, `pare
 SELECT 9111, '一次性同步PSN游戏', '/admin/games/psn/sync-once', 'POST', 9100, 0, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM `tb_resource` WHERE `url` = '/admin/games/psn/sync-once' AND `request_method` = 'POST');
 
-INSERT INTO `tb_resource` (`id`, `resource_name`, `url`, `request_method`, `parent_id`, `is_anonymous`, `create_time`)
-SELECT 9112, '读取游戏图片源文件', '/admin/games/images/source', 'POST', 9100, 0, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM `tb_resource` WHERE `url` = '/admin/games/images/source' AND `request_method` = 'POST');
-
 INSERT INTO `tb_role_resource` (`role_id`, `resource_id`)
 SELECT r.`id`, re.`id`
 FROM `tb_role` r
@@ -294,20 +290,18 @@ WHERE r.`role_label` = 'admin'
     WHERE rr.`role_id` = r.`id` AND rr.`resource_id` = re.`id`
   );
 
-INSERT INTO `tb_role_resource` (`role_id`, `resource_id`)
-SELECT r.`id`, re.`id`
-FROM `tb_role` r
-JOIN `tb_resource` re ON re.`id` = 9112
-WHERE r.`role_label` = 'admin'
-  AND NOT EXISTS (
-    SELECT 1 FROM `tb_role_resource` rr
-    WHERE rr.`role_id` = r.`id` AND rr.`resource_id` = re.`id`
-  );
-
 DELETE rr
 FROM `tb_role_resource` rr
 JOIN `tb_resource` re ON re.`id` = rr.`resource_id`
 WHERE re.`url` IN ('/admin/games/switch/auth-once', '/admin/games/switch/sync-once');
 
+DELETE rr
+FROM `tb_role_resource` rr
+JOIN `tb_resource` re ON re.`id` = rr.`resource_id`
+WHERE re.`url` = '/admin/games/images/source';
+
 DELETE FROM `tb_resource`
 WHERE `url` IN ('/admin/games/switch/auth-once', '/admin/games/switch/sync-once');
+
+DELETE FROM `tb_resource`
+WHERE `url` = '/admin/games/images/source';

@@ -756,6 +756,7 @@ export default {
   color: #475569;
   font-size: 13px;
   line-height: 1.55;
+  white-space: pre-line;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }

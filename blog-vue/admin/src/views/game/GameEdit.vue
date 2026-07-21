@@ -284,7 +284,7 @@
       <div class="section-heading">
         <div>
           <h3>游戏截图</h3>
-          <p>拖拽调整顺序，每张图可以独立设置形状、宽度并编辑内容。</p>
+          <p>拖拽调整顺序，每张图可以独立设置形状和宽度。</p>
         </div>
         <div class="screenshot-heading-actions">
           <el-button
@@ -360,13 +360,6 @@
                       <span>{{ screenshotSizeText(item) }}</span>
                     </div>
                     <div class="screenshot-item-actions">
-                      <el-button
-                        type="text"
-                        icon="el-icon-edit-outline"
-                        @click="editScreenshot(index)"
-                      >
-                        编辑
-                      </el-button>
                       <el-button
                         type="text"
                         class="remove-screenshot"
@@ -455,25 +448,17 @@
         >保存游戏</el-button
       >
     </div>
-
-    <game-screenshot-editor
-      v-model="screenshotEditorVisible"
-      :screenshot="editingScreenshot"
-      @saved="screenshotEdited"
-    />
   </el-card>
 </template>
 
 <script>
 import * as imageConversion from "image-conversion";
 import draggable from "vuedraggable";
-import GameScreenshotEditor from "../../components/game/GameScreenshotEditor";
 import GameScreenshotPreview from "../../components/game/GameScreenshotPreview";
 
 export default {
   components: {
     draggable,
-    GameScreenshotEditor,
     GameScreenshotPreview
   },
   created() {
@@ -517,9 +502,6 @@ export default {
         { label: "整行", value: 12 }
       ],
       screenshotPreviewMode: "desktop",
-      screenshotEditorVisible: false,
-      editingScreenshot: {},
-      editingScreenshotIndex: -1,
       screenshotDirty: false
     };
   },
@@ -658,25 +640,6 @@ export default {
           this.markScreenshotDirty();
         })
         .catch(() => {});
-    },
-    editScreenshot(index) {
-      this.editingScreenshotIndex = index;
-      this.editingScreenshot = Object.assign(
-        {},
-        this.game.screenshotItemList[index]
-      );
-      this.screenshotEditorVisible = true;
-    },
-    screenshotEdited(result) {
-      if (this.editingScreenshotIndex < 0) return;
-      const current = this.game.screenshotItemList[this.editingScreenshotIndex];
-      this.$set(
-        this.game.screenshotItemList,
-        this.editingScreenshotIndex,
-        Object.assign({}, current, result)
-      );
-      this.markScreenshotDirty();
-      this.$message.success("截图编辑结果已上传，保存游戏后正式生效");
     },
     async autoLayoutScreenshots() {
       await this.enrichScreenshotSizes();

@@ -5,13 +5,11 @@ import com.minzheng.blog.dto.GameBackDTO;
 import com.minzheng.blog.dto.GameConfigDTO;
 import com.minzheng.blog.dto.GameDeleteDTO;
 import com.minzheng.blog.dto.GameDetailDTO;
-import com.minzheng.blog.dto.GameImageSourceDTO;
 import com.minzheng.blog.dto.GameListDTO;
 import com.minzheng.blog.dto.GameOneTimeSyncDTO;
 import com.minzheng.blog.dto.SteamSyncDTO;
 import com.minzheng.blog.enums.FilePathEnum;
 import com.minzheng.blog.service.GameConfigService;
-import com.minzheng.blog.service.GameImageService;
 import com.minzheng.blog.service.GameOneTimeSyncService;
 import com.minzheng.blog.service.GameService;
 import com.minzheng.blog.strategy.context.UploadStrategyContext;
@@ -19,7 +17,6 @@ import com.minzheng.blog.vo.GameBackQueryVO;
 import com.minzheng.blog.vo.GameConfigSaveVO;
 import com.minzheng.blog.vo.GameDeleteVO;
 import com.minzheng.blog.vo.GameIdVO;
-import com.minzheng.blog.vo.GameImageSourceVO;
 import com.minzheng.blog.vo.GameQueryVO;
 import com.minzheng.blog.vo.GameSaveVO;
 import com.minzheng.blog.vo.PageResult;
@@ -59,9 +56,6 @@ public class GameController {
 
     @Resource
     private GameOneTimeSyncService gameOneTimeSyncService;
-
-    @Resource
-    private GameImageService gameImageService;
 
     @Resource
     private UploadStrategyContext uploadStrategyContext;
@@ -136,9 +130,4 @@ public class GameController {
         return Result.ok(uploadStrategyContext.executeUploadStrategy(file, FilePathEnum.GAME.getPath()));
     }
 
-    @ApiOperation(value = "读取游戏图片源文件")
-    @PostMapping("/admin/games/images/source")
-    public Result<GameImageSourceDTO> getGameImageSource(@RequestBody GameImageSourceVO sourceVO) {
-        return Result.ok(gameImageService.getImageSource(sourceVO));
-    }
 }
