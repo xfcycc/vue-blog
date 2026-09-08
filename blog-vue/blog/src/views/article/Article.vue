@@ -242,6 +242,7 @@
 <script>
 import Clipboard from "clipboard";
 import markdownToHtml from "../../utils/markdown";
+import { renderMermaid } from "../../utils/mermaid";
 import Comment from "../../components/Comment";
 import tocbot from "tocbot";
 import {
@@ -650,12 +651,17 @@ export default {
         this.articleRenderCancel = null;
       }
     },
-    initArticleDom() {
+    // 无入参；正文图表渲染完成后初始化目录、复制和阅读位置，无返回数据。
+    async initArticleDom() {
       const that = this;
       const articleElement = this.$refs.article;
       const articleHtml = articleElement ? articleElement.innerHTML : "";
       // 统计文章字数
       this.wordNum = this.deleteHTMLTag(articleHtml).length;
+      await renderMermaid(articleElement);
+      if (!articleElement || !articleElement.isConnected) {
+        return;
+      }
       if (this.clipboard) {
         this.clipboard.destroy();
         this.clipboard = null;
@@ -2186,6 +2192,20 @@ hr {
 </style>
 
 <style>
+.article-detail-page .article-mermaid {
+  margin: 24px 0;
+  padding: 16px;
+  overflow-x: auto;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+.article-detail-page .article-mermaid svg {
+  display: block;
+  margin: 0 auto;
+}
+
 .article-detail-page .article-content.markdown-body h1,
 .article-detail-page .article-content.markdown-body h2,
 .article-detail-page .article-content.markdown-body h3,
