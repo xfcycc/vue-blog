@@ -20,6 +20,7 @@
       <a href="https://icp.gov.moe/?keyword=20235555" target="_blank"
         >萌ICP备20235555号</a
       >
+      <div><a href="/api/rss" target="_blank" rel="noopener">RSS 订阅</a></div>
     </div>
   </v-footer>
 </template>
